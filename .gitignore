@@ -1,0 +1,15 @@
+# Lake build artifacts and downloaded packages
+/.lake
+
+# macOS
+.DS_Store
+
+# Obsidian workspace settings
+.obsidian/
+
+# Editor
+.vscode/
+.idea/
+
+# Scratch / temp files
+QLean/Scratch.lean
