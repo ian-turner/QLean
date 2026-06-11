@@ -6,7 +6,9 @@ open scoped Matrix
 -- Close a concrete `IsUnitary M` goal after `unfold IsUnitary M`.
 -- Including both sum_univ_two and sum_univ_four is harmless: the wrong one won't fire.
 macro "prove_unitary" : tactic =>
-  `(tactic| ext i j <;> fin_cases i <;> fin_cases j <;> simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two, Fin.sum_univ_four, Matrix.cons_val_zero, Matrix.cons_val_one])
+  `(tactic| ext i j <;> fin_cases i <;> fin_cases j
+        <;> simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
+                Fin.sum_univ_four, Matrix.cons_val_zero, Matrix.cons_val_one])
 
 noncomputable section
 
