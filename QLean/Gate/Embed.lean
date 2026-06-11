@@ -19,19 +19,23 @@ def gateAt {n k : ℕ} (qs : Fin k ↪ Fin n) (U : QMatrix k) : QMatrix n :=
     if ∀ l : Fin n, (∀ m : Fin k, qs m ≠ l) → finFunctionFinEquiv.symm i l = finFunctionFinEquiv.symm j l
     then 1 else 0
 
+/-- Project a row/column index onto the selected qubits. -/
 private abbrev π {n k : ℕ} (qs : Fin k ↪ Fin n) (x : Fin (2^n)) : Fin (2^k) :=
   finFunctionFinEquiv (finFunctionFinEquiv.symm x ∘ qs)
 
+/-- "Complement condition": indices `a` and `b` agree on every qubit outside `range qs`. -/
 private abbrev cc {n k : ℕ} (qs : Fin k ↪ Fin n) (a b : Fin (2^n)) : Prop :=
   ∀ l : Fin n, (∀ m : Fin k, qs m ≠ l) → finFunctionFinEquiv.symm a l = finFunctionFinEquiv.symm b l
 
 @[simp] private lemma gateAt_eq {n k : ℕ} (qs : Fin k ↪ Fin n) (U : QMatrix k) (i j : Fin (2^n)) :
     gateAt qs U i j = U (π qs i) (π qs j) * if cc qs i j then 1 else 0 := rfl
 
+/-- Complement condition is symmetric. -/
 private lemma cc_symm {n k : ℕ} (qs : Fin k ↪ Fin n) (a b : Fin (2^n)) :
     cc qs a b ↔ cc qs b a :=
   ⟨fun h l hl => (h l hl).symm, fun h l hl => (h l hl).symm⟩
 
+/-- Complement condition is transitive. -/
 private lemma cc_trans {n k : ℕ} (qs : Fin k ↪ Fin n) {a b c : Fin (2^n)} :
     cc qs a b → cc qs b c → cc qs a c :=
   fun hab hbc l hl => (hab l hl).trans (hbc l hl)
@@ -43,6 +47,7 @@ private lemma cc_iff_of_ab {n k : ℕ} (qs : Fin k ↪ Fin n) {a b : Fin (2^n)} 
 
 -- ── mergeBits helper ──────────────────────────────────────────────────────────
 
+/-- Build a row index from complement bits `c` (outside `qs`) and selected bits `s` (inside `qs`). -/
 private def mergeBits {n k : ℕ} (qs : Fin k ↪ Fin n)
     (c : Fin n → Fin 2) (s : Fin k → Fin 2) : Fin (2^n) :=
   finFunctionFinEquiv (fun l =>
@@ -92,6 +97,7 @@ private lemma mb_π {n k : ℕ} (qs : Fin k ↪ Fin n) (i l : Fin (2^n)) (hcl : 
 
 -- ── gateAt_conjTranspose ──────────────────────────────────────────────────────
 
+/-- Adjoint of `gateAt qs U` is `gateAt qs Uᴴ`. -/
 theorem gateAt_conjTranspose {n k : ℕ} (qs : Fin k ↪ Fin n) (U : QMatrix k) :
     (gateAt qs U)ᴴ = gateAt qs Uᴴ := by
   ext i j
@@ -103,6 +109,7 @@ theorem gateAt_conjTranspose {n k : ℕ} (qs : Fin k ↪ Fin n) (U : QMatrix k) 
 
 -- ── gateAt_one ───────────────────────────────────────────────────────────────
 
+/-- `gateAt` of the identity matrix is the identity. -/
 theorem gateAt_one {n k : ℕ} (qs : Fin k ↪ Fin n) : gateAt qs (1 : QMatrix k) = 1 := by
   ext i j
   simp only [gateAt_eq, Matrix.one_apply]
@@ -127,6 +134,7 @@ theorem gateAt_one {n k : ℕ} (qs : Fin k ↪ Fin n) : gateAt qs (1 : QMatrix k
 
 -- ── gateAt_mul ───────────────────────────────────────────────────────────────
 
+/-- `gateAt` is a ring homomorphism on the embedded qubits (used for unitarity and commutativity). -/
 theorem gateAt_mul {n k : ℕ} (qs : Fin k ↪ Fin n) (A B : QMatrix k) :
     gateAt qs (A * B) = gateAt qs A * gateAt qs B := by
   ext i j
@@ -170,6 +178,7 @@ theorem gateAt_mul {n k : ℕ} (qs : Fin k ↪ Fin n) (A B : QMatrix k) :
 
 -- ── gateAt_unitary ───────────────────────────────────────────────────────────
 
+/-- A unitary gate embedded via `gateAt` remains unitary on the larger system. -/
 theorem gateAt_unitary {n k : ℕ} (qs : Fin k ↪ Fin n) {U : QMatrix k}
     (hu : IsUnitary U) : IsUnitary (gateAt qs U) := by
   unfold IsUnitary
@@ -177,9 +186,11 @@ theorem gateAt_unitary {n k : ℕ} (qs : Fin k ↪ Fin n) {U : QMatrix k}
 
 -- ── Embedding helpers ─────────────────────────────────────────────────────────
 
+/-- Embed qubit `i` as the unique element of `Fin 1`. -/
 private def singletonEmbed {n : ℕ} (i : Fin n) : Fin 1 ↪ Fin n :=
   ⟨Fin.cases i Fin.elim0, by intro a b _; fin_cases a <;> fin_cases b <;> simp⟩
 
+/-- Embed `ctrl` and `tgt` as the two elements of `Fin 2` (ctrl=0, tgt=1). -/
 private def pairEmbed {n : ℕ} (ctrl tgt : Fin n) (h : ctrl ≠ tgt) : Fin 2 ↪ Fin n :=
   ⟨![ctrl, tgt], by
     intro a b hab
@@ -188,9 +199,12 @@ private def pairEmbed {n : ℕ} (ctrl tgt : Fin n) (h : ctrl ≠ tgt) : Fin 2 �
 
 -- ── Convenience wrappers ──────────────────────────────────────────────────────
 
+/-- Hadamard gate acting on qubit `i` of an `n`-qubit system. -/
 def hadamardAt {n : ℕ} (i : Fin n) : QMatrix n := gateAt (singletonEmbed i) H
+/-- CNOT gate with control qubit `ctrl` and target qubit `tgt`. -/
 def cnotAt {n : ℕ} (ctrl tgt : Fin n) (h : ctrl ≠ tgt) : QMatrix n :=
   gateAt (pairEmbed ctrl tgt h) CNOT
+/-- Controlled-U gate with control qubit `ctrl` and target qubit `tgt`. -/
 def controlledAt {n : ℕ} (ctrl tgt : Fin n) (h : ctrl ≠ tgt) (U : QMatrix 1) : QMatrix n :=
   gateAt (pairEmbed ctrl tgt h) (controlled U)
 
@@ -207,12 +221,14 @@ theorem isUnitary_controlledAt {n : ℕ} (ctrl tgt : Fin n) (h : ctrl ≠ tgt) {
 
 -- ── gateAt_comm_disjoint ──────────────────────────────────────────────────────
 
+/-- Intermediate index agreeing with `l` on `qs₁` bits and with `i` on `qs₂` bits. -/
 private noncomputable def commMid {n j k : ℕ}
     (qs₁ : Fin j ↪ Fin n) (qs₂ : Fin k ↪ Fin n) (i l : Fin (2^n)) : Fin (2^n) :=
   finFunctionFinEquiv (fun pos =>
     if ∃ a : Fin j, qs₁ a = pos then finFunctionFinEquiv.symm l pos
     else finFunctionFinEquiv.symm i pos)
 
+/-- Gates on disjoint qubit sets commute. -/
 theorem gateAt_comm_disjoint {n j k : ℕ} (qs₁ : Fin j ↪ Fin n) (qs₂ : Fin k ↪ Fin n)
     (hdisj : Disjoint (Set.range qs₁) (Set.range qs₂))
     (A : QMatrix j) (B : QMatrix k) :

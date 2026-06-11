@@ -17,29 +17,38 @@ private lemma sqrt2_ne_zero : (Real.sqrt 2 : ℂ) ≠ 0 :=
 
 -- ── Single-qubit gates ────────────────────────────────────────────────────────
 
+/-- Hadamard gate: maps |0⟩ to (|0⟩+|1⟩)/√2, creating uniform superposition. -/
 def H : QMatrix 1 :=
   !![(Real.sqrt 2 : ℂ)⁻¹,  (Real.sqrt 2 : ℂ)⁻¹;
      (Real.sqrt 2 : ℂ)⁻¹, -(Real.sqrt 2 : ℂ)⁻¹]
 
+/-- Pauli-X (bit flip): swaps |0⟩ and |1⟩. -/
 def X : QMatrix 1 := !![0, 1; 1, 0]
 
+/-- Pauli-Y. -/
 def Y : QMatrix 1 := !![0, -Complex.I; Complex.I, 0]
 
+/-- Pauli-Z (phase flip): |1⟩ ↦ -|1⟩. -/
 def Z : QMatrix 1 := !![1, 0; 0, -1]
 
+/-- S gate: diagonal phase gate, π/2 rotation around Z. -/
 def S : QMatrix 1 := !![1, 0; 0, Complex.I]
 
+/-- T gate: diagonal phase gate, π/4 rotation around Z. -/
 def T : QMatrix 1 := !![1, 0; 0, Complex.exp (Complex.I * Real.pi / 4)]
 
+/-- Z-rotation by angle `θ`: diagonal with eigenphases ∓θ/2 on |0⟩, |1⟩. -/
 noncomputable def Rz (θ : ℝ) : QMatrix 1 :=
   !![Complex.exp (-Complex.I * θ / 2), 0;
      0, Complex.exp (Complex.I * θ / 2)]
 
+/-- X-rotation by angle `θ`. -/
 noncomputable def Rx (θ : ℝ) : QMatrix 1 :=
   let c : ℂ := Real.cos (θ / 2)
   let s : ℂ := Real.sin (θ / 2)
   !![c, -Complex.I * s; -Complex.I * s, c]
 
+/-- Y-rotation by angle `θ`. -/
 noncomputable def Ry (θ : ℝ) : QMatrix 1 :=
   let c : ℂ := Real.cos (θ / 2)
   let s : ℂ := Real.sin (θ / 2)
@@ -134,6 +143,7 @@ theorem isUnitary_SWAP : IsUnitary SWAP := by
     simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_four,
           Matrix.cons_val_zero, Matrix.cons_val_one]
 
+/-- Unitarity of `controlled U` lifted from unitarity of `U`. -/
 set_option maxHeartbeats 800000 in
 theorem isUnitary_controlled {U : QMatrix 1} (hu : IsUnitary U) :
     IsUnitary (controlled U) := by

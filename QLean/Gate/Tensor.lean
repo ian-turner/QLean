@@ -55,6 +55,7 @@ def kronQMatrix {j k : ℕ} (A : QMatrix j) (B : QMatrix k) : QMatrix (j + k) :=
 
 -- ── Key lemmas ────────────────────────────────────────────────────────────────
 
+/-- Mixed-product property: `(A⊗B)(C⊗D) = (AC)⊗(BD)`. -/
 theorem kronQMatrix_mul {j k : ℕ} (A C : QMatrix j) (B D : QMatrix k) :
     kronQMatrix (A * C) (B * D) = kronQMatrix A B * kronQMatrix C D := by
   unfold kronQMatrix
@@ -65,10 +66,12 @@ theorem kronQMatrix_mul {j k : ℕ} (A C : QMatrix j) (B D : QMatrix k) :
   intro l
   simp [Equiv.symm_apply_apply]
 
+/-- Adjoint distributes over `kronQMatrix`. -/
 theorem kronQMatrix_conjTranspose {j k : ℕ} (A : QMatrix j) (B : QMatrix k) :
     (kronQMatrix A B)ᴴ = kronQMatrix Aᴴ Bᴴ := by
   simp [kronQMatrix, Matrix.conjTranspose_kronecker]
 
+/-- Tensor product of identity matrices is the identity. -/
 theorem kronQMatrix_one_one {j k : ℕ} :
     kronQMatrix (1 : QMatrix j) (1 : QMatrix k) = 1 := by
   unfold kronQMatrix
