@@ -91,11 +91,36 @@ Maps `(a, b) ↦ a.val * n + b.val` (a is the high component, MSB-first).
 
 ---
 
-## fin_unitary tactic (from autoquantum)
+## prove_unitary macro
 
-A custom macro that proves unitarity of explicit small matrices by `fin_cases i <;> fin_cases j` reduction + `field_simp`. This approach works well for 2×2 (single-qubit) and 4×4 (two-qubit) gates. For larger gates, `decide` on index lemmas + ring arithmetic is faster.
+`Standard.lean` defines a `prove_unitary` tactic macro that closes concrete `IsUnitary M` goals after the gate and `IsUnitary` are unfolded:
 
-We will likely want to adopt or adapt this pattern, or replace it with a `native_decide` strategy for small concrete cases.
+```lean
+macro "prove_unitary" : tactic =>
+  `(tactic| ext i j <;> fin_cases i <;> fin_cases j <;>
+    simp [Matrix.mul_apply, Matrix.conjTranspose_apply,
+          Fin.sum_univ_two, Fin.sum_univ_four,
+          Matrix.cons_val_zero, Matrix.cons_val_one])
+```
+
+**Lean 4.30 macro pitfalls discovered during implementation:**
+- `macro` cannot take a `private` modifier.
+- `macro "X" : tactic => \`(tactic| t1; t2)` fails with *Application type mismatch* because `;` creates a `Lean.Parser.Tactic.seq1` node, which is not coercible to `TSyntax \`tactic`. Use `<;>` exclusively (produces `tactic_<;>_` nodes, which are properly registered).
+- `macro` cannot appear inside a `noncomputable section`; place it before the section.
+- Hadamard still requires its own proof (needs `ring_nf` + `sqrt2_sq_cast`).
+
+---
+
+## set_option … in + docstrings (Lean 4.30)
+
+In Lean 4.30, placing a docstring `/-- … -/` *before* `set_option X Y in theorem …` is a parse error ("unexpected token 'set_option'; expected 'lemma'"). The docstring must immediately precede the declaration keyword.
+
+**Fix:** put `set_option X Y in` *before* the docstring:
+```lean
+set_option maxHeartbeats 800000 in
+/-- My theorem doc. -/
+theorem foo := …
+```
 
 ---
 

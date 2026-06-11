@@ -3,6 +3,11 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
 open scoped Matrix
 
+-- Close a concrete `IsUnitary M` goal after `unfold IsUnitary M`.
+-- Including both sum_univ_two and sum_univ_four is harmless: the wrong one won't fire.
+macro "prove_unitary" : tactic =>
+  `(tactic| ext i j <;> fin_cases i <;> fin_cases j <;> simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two, Fin.sum_univ_four, Matrix.cons_val_zero, Matrix.cons_val_one])
+
 noncomputable section
 
 namespace QLean
@@ -107,44 +112,15 @@ theorem isUnitary_H : IsUnitary H := by
     simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two] <;>
     (ring_nf; rw [inv_pow, sqrt2_sq_cast]; norm_num)
 
-theorem isUnitary_X : IsUnitary X := by
-  unfold IsUnitary X
-  ext i j; fin_cases i <;> fin_cases j <;>
-    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
-          Matrix.cons_val_zero, Matrix.cons_val_one]
+theorem isUnitary_X    : IsUnitary X    := by unfold IsUnitary X;    prove_unitary
+theorem isUnitary_Y    : IsUnitary Y    := by unfold IsUnitary Y;    prove_unitary
+theorem isUnitary_Z    : IsUnitary Z    := by unfold IsUnitary Z;    prove_unitary
+theorem isUnitary_CNOT : IsUnitary CNOT := by unfold IsUnitary CNOT; prove_unitary
+theorem isUnitary_CZ   : IsUnitary CZ   := by unfold IsUnitary CZ;   prove_unitary
+theorem isUnitary_SWAP : IsUnitary SWAP := by unfold IsUnitary SWAP; prove_unitary
 
-theorem isUnitary_Y : IsUnitary Y := by
-  unfold IsUnitary Y
-  ext i j; fin_cases i <;> fin_cases j <;>
-    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
-          Matrix.cons_val_zero, Matrix.cons_val_one]
-
-theorem isUnitary_Z : IsUnitary Z := by
-  unfold IsUnitary Z
-  ext i j; fin_cases i <;> fin_cases j <;>
-    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
-          Matrix.cons_val_zero, Matrix.cons_val_one]
-
-theorem isUnitary_CNOT : IsUnitary CNOT := by
-  unfold IsUnitary CNOT
-  ext i j; fin_cases i <;> fin_cases j <;>
-    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_four,
-          Matrix.cons_val_zero, Matrix.cons_val_one]
-
-theorem isUnitary_CZ : IsUnitary CZ := by
-  unfold IsUnitary CZ
-  ext i j; fin_cases i <;> fin_cases j <;>
-    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_four,
-          Matrix.cons_val_zero, Matrix.cons_val_one]
-
-theorem isUnitary_SWAP : IsUnitary SWAP := by
-  unfold IsUnitary SWAP
-  ext i j; fin_cases i <;> fin_cases j <;>
-    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_four,
-          Matrix.cons_val_zero, Matrix.cons_val_one]
-
-/-- Unitarity of `controlled U` lifted from unitarity of `U`. -/
 set_option maxHeartbeats 800000 in
+/-- Unitarity of `controlled U` lifted from unitarity of `U`. -/
 theorem isUnitary_controlled {U : QMatrix 1} (hu : IsUnitary U) :
     IsUnitary (controlled U) := by
   -- simp converts star to (starRingEnd ℂ) via Complex.star_def; declare h-lemmas to match
