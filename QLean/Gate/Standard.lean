@@ -22,6 +22,13 @@ private lemma sqrt2_sq_cast : (Real.sqrt 2 : ℂ) ^ 2 = 2 := by
 private lemma sqrt2_ne_zero : (Real.sqrt 2 : ℂ) ≠ 0 :=
   Complex.ofReal_ne_zero.mpr (Real.sqrt_ne_zero'.mpr (by norm_num))
 
+-- exp(z) * conj(exp(z)) = 1 when z + conj(z) = 0 (z purely imaginary)
+private lemma exp_mul_conj_eq_one {z : ℂ} (h : z + starRingEnd ℂ z = 0) :
+    Complex.exp z * starRingEnd ℂ (Complex.exp z) = 1 := by
+  rw [← Complex.exp_conj, ← Complex.exp_add, h, Complex.exp_zero]
+
+private lemma two_coe_complex : (2 : ℂ) = ((2 : ℝ) : ℂ) := by norm_cast
+
 -- ── Single-qubit gates ────────────────────────────────────────────────────────
 
 /-- Hadamard gate: maps |0⟩ to (|0⟩+|1⟩)/√2, creating uniform superposition. -/
@@ -146,6 +153,53 @@ theorem isUnitary_controlled {U : QMatrix 1} (hu : IsUnitary U) :
   ext i j; fin_cases i <;> fin_cases j <;>
     simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_four,
           h00, h01, h10, h11]
+
+theorem isUnitary_S : IsUnitary S := by unfold IsUnitary S; prove_unitary
+
+theorem isUnitary_T : IsUnitary T := by
+  unfold IsUnitary T
+  ext i j; fin_cases i <;> fin_cases j <;>
+    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
+          Matrix.cons_val_zero, Matrix.cons_val_one]
+  apply exp_mul_conj_eq_one
+  have : Complex.I * ↑Real.pi / 4 = Complex.I * ↑(Real.pi / 4) := by push_cast; ring
+  rw [this, map_mul, Complex.conj_I, Complex.conj_ofReal]; ring
+
+theorem isUnitary_Rz (θ : ℝ) : IsUnitary (Rz θ) := by
+  unfold IsUnitary Rz
+  ext i j; fin_cases i <;> fin_cases j <;>
+    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
+          Matrix.cons_val_zero, Matrix.cons_val_one]
+  · apply exp_mul_conj_eq_one
+    have : -(Complex.I * ↑θ) / 2 = Complex.I * ↑(-θ / 2) := by push_cast; ring
+    rw [this, map_mul, Complex.conj_I, Complex.conj_ofReal]; ring
+  · apply exp_mul_conj_eq_one
+    have : Complex.I * ↑θ / 2 = Complex.I * ↑(θ / 2) := by push_cast; ring
+    rw [this, map_mul, Complex.conj_I, Complex.conj_ofReal]; ring
+
+theorem isUnitary_Rx (θ : ℝ) : IsUnitary (Rx θ) := by
+  unfold IsUnitary Rx
+  ext i j; fin_cases i <;> fin_cases j
+  all_goals simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
+    Matrix.cons_val_zero, Matrix.cons_val_one, Complex.conj_I, map_neg, map_mul]
+  all_goals simp only [← Complex.cos_conj, ← Complex.sin_conj, Complex.conj_ofReal,
+    map_div₀, two_coe_complex]
+  · ring_nf; simp [Complex.I_sq]
+  · ring
+  · ring
+  · ring_nf; simp [Complex.I_sq]
+
+theorem isUnitary_Ry (θ : ℝ) : IsUnitary (Ry θ) := by
+  unfold IsUnitary Ry
+  ext i j; fin_cases i <;> fin_cases j
+  all_goals simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
+    Matrix.cons_val_zero, Matrix.cons_val_one]
+  all_goals simp only [← Complex.cos_conj, ← Complex.sin_conj, Complex.conj_ofReal,
+    map_div₀, two_coe_complex]
+  · ring_nf; simp
+  · ring
+  · ring
+  · ring_nf; simp
 
 end QLean
 
