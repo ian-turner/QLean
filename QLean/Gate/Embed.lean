@@ -188,14 +188,14 @@ theorem gateAt_unitary {n k : ℕ} (qs : Fin k ↪ Fin n) {U : QMatrix k}
 
 /-- Embed qubit `i` as the unique element of `Fin 1`. -/
 private def singletonEmbed {n : ℕ} (i : Fin n) : Fin 1 ↪ Fin n :=
-  ⟨Fin.cases i Fin.elim0, by intro a b _; fin_cases a <;> fin_cases b <;> simp⟩
+  ⟨Fin.cases i Fin.elim0, by intro a b _; fin_cases a; fin_cases b; simp⟩
 
 /-- Embed `ctrl` and `tgt` as the two elements of `Fin 2` (ctrl=0, tgt=1). -/
 private def pairEmbed {n : ℕ} (ctrl tgt : Fin n) (h : ctrl ≠ tgt) : Fin 2 ↪ Fin n :=
   ⟨![ctrl, tgt], by
     intro a b hab
     fin_cases a <;> fin_cases b <;>
-      simp_all [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]⟩
+      simp_all [Matrix.cons_val_zero, Matrix.cons_val_one]⟩
 
 -- ── Convenience wrappers ──────────────────────────────────────────────────────
 
@@ -223,7 +223,7 @@ theorem isUnitary_controlledAt {n : ℕ} (ctrl tgt : Fin n) (h : ctrl ≠ tgt) {
 
 /-- Intermediate index agreeing with `l` on `qs₁` bits and with `i` on `qs₂` bits. -/
 private noncomputable def commMid {n j k : ℕ}
-    (qs₁ : Fin j ↪ Fin n) (qs₂ : Fin k ↪ Fin n) (i l : Fin (2^n)) : Fin (2^n) :=
+    (qs₁ : Fin j ↪ Fin n) (_ : Fin k ↪ Fin n) (i l : Fin (2^n)) : Fin (2^n) :=
   finFunctionFinEquiv (fun pos =>
     if ∃ a : Fin j, qs₁ a = pos then finFunctionFinEquiv.symm l pos
     else finFunctionFinEquiv.symm i pos)
@@ -256,7 +256,7 @@ theorem gateAt_comm_disjoint {n j k : ℕ} (qs₁ : Fin j ↪ Fin n) (qs₂ : Fi
       · rw [if_neg hq1]; exact houter pos (not_exists.mp hq1) hpos
     have hπ₁_l : π qs₁ mid₁₂ = π qs₁ l := by
       simp only [π, mid₁₂, commMid, Equiv.symm_apply_apply]
-      congr 1; funext m; simp [show ∃ a : Fin j, qs₁ a = qs₁ m from ⟨m, rfl⟩]
+      congr 1; funext m; simp
     have hπ₂_i : π qs₂ mid₁₂ = π qs₂ i := by
       simp only [π, mid₁₂, commMid, Equiv.symm_apply_apply]
       congr 1; funext m
@@ -276,7 +276,7 @@ theorem gateAt_comm_disjoint {n j k : ℕ} (qs₁ : Fin j ↪ Fin n) (qs₂ : Fi
       · rw [if_neg hq2]; exact houter pos hpos (not_exists.mp hq2)
     have hπ₂_l' : π qs₂ mid₂₁ = π qs₂ l := by
       simp only [π, mid₂₁, commMid, Equiv.symm_apply_apply]
-      congr 1; funext m; simp [show ∃ b : Fin k, qs₂ b = qs₂ m from ⟨m, rfl⟩]
+      congr 1; funext m; simp
     have hπ₁_i' : π qs₁ mid₂₁ = π qs₁ i := by
       simp only [π, mid₂₁, commMid, Equiv.symm_apply_apply]
       congr 1; funext m
