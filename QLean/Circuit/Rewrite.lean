@@ -1,4 +1,5 @@
 import QLean.Circuit.Semantics
+import QLean.Basic.Hilbert
 
 namespace QLean
 
@@ -58,6 +59,22 @@ theorem par_assoc (c₁ : Circuit j) (c₂ : Circuit k) (c₃ : Circuit l) :
       (.par c₁ (.par c₂ c₃)) := by
   simp only [Circuit.Equiv, eval_castN, eval_par]
   exact kronQMatrix_assoc (eval c₁) (eval c₂) (eval c₃)
+
+-- ── Basis characterization ───────────────────────────────────────────────────
+
+private lemma mul_ket_apply {n : ℕ} (M : QMatrix n) (i r : Fin (2^n)) :
+    (M * ket i) r 0 = M r i := by
+  simp [Matrix.mul_apply, ket_apply, mul_ite, Finset.sum_ite_eq', Finset.mem_univ]
+
+/-- Two circuits are equivalent iff they act identically on every computational basis state. -/
+theorem Circuit.Equiv.basis_iff {n : ℕ} (c₁ c₂ : Circuit n) :
+    Circuit.Equiv c₁ c₂ ↔ ∀ i : Fin (2^n), eval c₁ * ket i = eval c₂ * ket i := by
+  unfold Circuit.Equiv
+  constructor
+  · intro h i; rw [h]
+  · intro h
+    ext r c
+    simpa [mul_ket_apply] using congr_fun (congr_fun (h c) r) 0
 
 -- ── Interchange law ──────────────────────────────────────────────────────────
 
