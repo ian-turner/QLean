@@ -8,22 +8,7 @@ noncomputable section
 
 namespace QLean
 
--- A in the LOW j bits, B in the HIGH k bits (LSB qubit convention).
--- finProdFinEquiv maps (a, b) ↦ a.val * n + b.val (MSB-first), so prodComm swaps to get
--- (b, a) ↦ b.val * 2^j + a.val = a.val + b.val * 2^j (A low, B high).
-private def tensorIndexEquiv (j k : ℕ) :
-    Fin (2 ^ j) × Fin (2 ^ k) ≃ Fin (2 ^ (j + k)) :=
-  (Equiv.prodComm _ _).trans
-    (finProdFinEquiv.trans (finCongr (by rw [Nat.mul_comm, ← Nat.pow_add])))
-
--- .symm decomposes i as (i % 2^j, i / 2^j)
-private lemma tensorIndexEquiv_symm_fst_val (j k : ℕ) (i : Fin (2^(j+k))) :
-    ((tensorIndexEquiv j k).symm i).1.val = i.val % 2^j := by
-  simp [tensorIndexEquiv, finProdFinEquiv, Fin.divNat, Fin.modNat, finCongr]
-
-private lemma tensorIndexEquiv_symm_snd_val (j k : ℕ) (i : Fin (2^(j+k))) :
-    ((tensorIndexEquiv j k).symm i).2.val = i.val / 2^j := by
-  simp [tensorIndexEquiv, finProdFinEquiv, Fin.divNat, Fin.modNat, finCongr]
+-- tensorIndexEquiv and its symm lemmas live in Basic/Matrix (imported via QLean.Basic.Matrix).
 
 -- Any finCongr cast preserves the underlying ℕ value.
 private lemma assoc_fst_val' (j k l : ℕ) (i : Fin (2^(j+(k+l)))) (i' : Fin (2^(j+k+l)))
