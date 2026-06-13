@@ -1,5 +1,5 @@
 import QLean.Circuit.Type
-import QLean.Gate.Tensor
+import QLean.Basic.Tensor
 
 namespace QLean
 
