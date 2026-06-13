@@ -1,4 +1,4 @@
-import QLean.Basic.Matrix
+import QLean.Basic.Tensor
 import Mathlib.Analysis.InnerProductSpace.Basic
 
 open scoped Matrix
@@ -7,7 +7,7 @@ noncomputable section
 
 namespace QLean
 
--- ── QState and action (formerly Basic/PiLp) ──────────────────────────────────
+-- ── QState and action ─────────────────────────────────────────────────────────
 
 /-- `n`-qubit quantum state: a column vector in `ℂ^(2^n)`. -/
 abbrev QState (n : ℕ) := Matrix (Fin (2^n)) (Fin 1) ℂ

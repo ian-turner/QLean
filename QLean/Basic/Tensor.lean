@@ -8,7 +8,23 @@ noncomputable section
 
 namespace QLean
 
--- tensorIndexEquiv and its symm lemmas live in Basic/Matrix (imported via QLean.Basic.Matrix).
+-- ── Tensor index machinery ────────────────────────────────────────────────────
+
+/-- Index equivalence for tensor products: `A` in the low `j` bits, `B` in the high `k` bits.
+    LSB convention matches `finFunctionFinEquiv`: `(a, b) ↦ a.val + b.val * 2^j`. -/
+def tensorIndexEquiv (j k : ℕ) : Fin (2^j) × Fin (2^k) ≃ Fin (2^(j+k)) :=
+  (Equiv.prodComm _ _).trans
+    (finProdFinEquiv.trans (finCongr (by rw [Nat.mul_comm, ← Nat.pow_add])))
+
+lemma tensorIndexEquiv_symm_fst_val (j k : ℕ) (i : Fin (2^(j+k))) :
+    ((tensorIndexEquiv j k).symm i).1.val = i.val % 2^j := by
+  simp [tensorIndexEquiv, finProdFinEquiv, Fin.divNat, Fin.modNat, finCongr]
+
+lemma tensorIndexEquiv_symm_snd_val (j k : ℕ) (i : Fin (2^(j+k))) :
+    ((tensorIndexEquiv j k).symm i).2.val = i.val / 2^j := by
+  simp [tensorIndexEquiv, finProdFinEquiv, Fin.divNat, Fin.modNat, finCongr]
+
+-- ── Kronecker product machinery ───────────────────────────────────────────────
 
 -- Any finCongr cast preserves the underlying ℕ value.
 private lemma assoc_fst_val' (j k l : ℕ) (i : Fin (2^(j+(k+l)))) (i' : Fin (2^(j+k+l)))
