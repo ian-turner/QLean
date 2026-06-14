@@ -9,6 +9,7 @@ notes/.obsidian
 
 # Scratch / temp files
 QLean/Scratch.lean
+tmp
 
 # Vim swap files
 /**/*.swp
