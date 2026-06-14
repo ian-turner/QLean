@@ -6,3 +6,4 @@ import QLean.Gate.Embed
 import QLean.Circuit.Type
 import QLean.Circuit.Semantics
 import QLean.Circuit.Rewrite
+import QLean.Circuit.Gates

@@ -12,7 +12,7 @@ noncomputable section
     `hadamardTransform n : Circuit n` applies H to qubit n-1 (high) and recurses on 0..n-2 (low). -/
 def hadamardTransform : (n : ℕ) → Circuit n
   | 0     => 1
-  | n + 1 => hadamardTransform n + Circuit.gate H
+  | n + 1 => hadamardTransform n + HGate
 
 -- ── Well-formedness ───────────────────────────────────────────────────────────
 

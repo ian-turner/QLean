@@ -11,8 +11,8 @@ noncomputable section
 /-- Chain GHZ circuit on n+1 qubits: H on qubit 0, then CNOT(k, k+1) for k = 0..n−1.
     Each step entangles one more qubit by applying CNOT to the last pair. -/
 def ghzCircuit : (n : ℕ) → Circuit (n + 1)
-  | 0     => Circuit.gate H
-  | n + 1 => (ghzCircuit n + (1 : Circuit 1)) * ((1 : Circuit n) + Circuit.gate CNOT)
+  | 0     => HGate
+  | n + 1 => (ghzCircuit n + (1 : Circuit 1)) * ((1 : Circuit n) + CNOTGate)
 
 -- ── Well-formedness ────────────────────────────────────────────────────────────
 
