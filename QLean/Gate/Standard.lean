@@ -1,4 +1,4 @@
-import QLean.Basic.Matrix
+import QLean.Basic.Hilbert
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
 open scoped Matrix
@@ -200,6 +200,115 @@ theorem isUnitary_Ry (θ : ℝ) : IsUnitary (Ry θ) := by
   · ring
   · ring
   · ring_nf; simp
+
+-- ── Gate actions on computational basis states ────────────────────────────────
+
+theorem Rz_ket_zero (θ : ℝ) : Rz θ * ket 0 = Complex.exp (-Complex.I * θ / 2) • ket 0 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Rz, ket_apply, Matrix.mul_apply, Matrix.smul_apply]
+
+theorem Rz_ket_one (θ : ℝ) : Rz θ * ket 1 = Complex.exp (Complex.I * θ / 2) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Rz, ket_apply, Matrix.mul_apply, Matrix.smul_apply]
+
+-- Compute tensorIndexEquiv 1 1 ⟨a, b⟩ using the known symm lemmas.
+-- In the (1,1) case, the index is a.val + b.val * 2 (a occupies the low bit).
+private lemma te11_of_symm (a b : Fin 2) (n : Fin 4)
+    (h1 : n.val % 2 = a.val) (h2 : n.val / 2 = b.val) :
+    tensorIndexEquiv 1 1 ⟨a, b⟩ = n := by
+  have hsymm : (tensorIndexEquiv 1 1).symm n = ⟨a, b⟩ := Prod.ext
+    (Fin.ext (by rw [tensorIndexEquiv_symm_fst_val]; simp [pow_one, h1]))
+    (Fin.ext (by rw [tensorIndexEquiv_symm_snd_val]; simp [pow_one, h2]))
+  calc tensorIndexEquiv 1 1 ⟨a, b⟩
+      = tensorIndexEquiv 1 1 ((tensorIndexEquiv 1 1).symm n) := by rw [hsymm]
+    _ = n := (tensorIndexEquiv 1 1).apply_symm_apply n
+
+private lemma te11_00 : tensorIndexEquiv 1 1 ⟨(0:Fin 2), (0:Fin 2)⟩ = (0:Fin 4) :=
+  te11_of_symm _ _ _ (by norm_num) (by norm_num)
+private lemma te11_10 : tensorIndexEquiv 1 1 ⟨(1:Fin 2), (0:Fin 2)⟩ = (1:Fin 4) :=
+  te11_of_symm _ _ _ (by norm_num) (by norm_num)
+private lemma te11_01 : tensorIndexEquiv 1 1 ⟨(0:Fin 2), (1:Fin 2)⟩ = (2:Fin 4) :=
+  te11_of_symm _ _ _ (by norm_num) (by norm_num)
+private lemma te11_11 : tensorIndexEquiv 1 1 ⟨(1:Fin 2), (1:Fin 2)⟩ = (3:Fin 4) :=
+  te11_of_symm _ _ _ (by norm_num) (by norm_num)
+
+-- Four concrete actions of CNOT on computational basis states (in Fin 4 index form).
+-- Uses the same simp set as prove_unitary: Matrix.cons_val_zero/one handle !![...] indexing.
+private lemma CNOT_ket_0_eq_0 : CNOT * ket (0:Fin 4) = ket 0 := by
+  ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+  fin_cases r <;>
+  simp [Matrix.mul_apply, CNOT, ket_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+private lemma CNOT_ket_1_eq_3 : CNOT * ket (1:Fin 4) = ket 3 := by
+  ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+  fin_cases r <;>
+  simp [Matrix.mul_apply, CNOT, ket_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+private lemma CNOT_ket_2_eq_2 : CNOT * ket (2:Fin 4) = ket 2 := by
+  ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+  fin_cases r <;>
+  simp [Matrix.mul_apply, CNOT, ket_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+private lemma CNOT_ket_3_eq_1 : CNOT * ket (3:Fin 4) = ket 1 := by
+  ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+  fin_cases r <;>
+  simp [Matrix.mul_apply, CNOT, ket_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+-- Prove each of the 4 cases with explicit numerals so that rw/simp matches without issues.
+-- fin_cases substitutes values as `(fun i ↦ i) ⟨n, ⋯⟩`, which `exact` can match
+-- against these numeral-stated lemmas via definitional equality.
+private lemma CNOT_ket_pair_00 :
+    CNOT * ket (tensorIndexEquiv 1 1 ⟨(0:Fin 2), (0:Fin 2)⟩) =
+    ket (tensorIndexEquiv 1 1 ⟨(0:Fin 2), (0:Fin 2) + (0:Fin 2)⟩) := by
+  rw [te11_00, show (0:Fin 2) + 0 = 0 from by decide, te11_00]
+  exact CNOT_ket_0_eq_0
+
+private lemma CNOT_ket_pair_01 :
+    CNOT * ket (tensorIndexEquiv 1 1 ⟨(0:Fin 2), (1:Fin 2)⟩) =
+    ket (tensorIndexEquiv 1 1 ⟨(0:Fin 2), (0:Fin 2) + (1:Fin 2)⟩) := by
+  rw [te11_01, show (0:Fin 2) + 1 = 1 from by decide, te11_01]
+  exact CNOT_ket_2_eq_2
+
+private lemma CNOT_ket_pair_10 :
+    CNOT * ket (tensorIndexEquiv 1 1 ⟨(1:Fin 2), (0:Fin 2)⟩) =
+    ket (tensorIndexEquiv 1 1 ⟨(1:Fin 2), (1:Fin 2) + (0:Fin 2)⟩) := by
+  rw [te11_10, show (1:Fin 2) + 0 = 1 from by decide, te11_11]
+  exact CNOT_ket_1_eq_3
+
+private lemma CNOT_ket_pair_11 :
+    CNOT * ket (tensorIndexEquiv 1 1 ⟨(1:Fin 2), (1:Fin 2)⟩) =
+    ket (tensorIndexEquiv 1 1 ⟨(1:Fin 2), (1:Fin 2) + (1:Fin 2)⟩) := by
+  rw [te11_11, show (1:Fin 2) + 1 = 0 from by decide, te11_10]
+  exact CNOT_ket_3_eq_1
+
+/-- CNOT maps `|a, b⟩` to `|a, a+b⟩` (control preserved, target XORed with control). -/
+theorem CNOT_ket_pair (a b : Fin 2) :
+    CNOT * ket (tensorIndexEquiv 1 1 ⟨a, b⟩) = ket (tensorIndexEquiv 1 1 ⟨a, a + b⟩) := by
+  fin_cases a <;> fin_cases b
+  · exact CNOT_ket_pair_00
+  · exact CNOT_ket_pair_01
+  · exact CNOT_ket_pair_10
+  · exact CNOT_ket_pair_11
+
+/-- Rz(θ) is diagonal: it acts as a phase on any computational basis state `|a⟩`.
+    Uses `omega` to split `a : Fin 2` with proper numerals so `Rz_ket_zero/one` can fire.
+    `rw` is applied before `simp [Rz, ...]` so that simp does not unfold `Rz` before the
+    rewrite fires. -/
+theorem Rz_ket_diag (θ : ℝ) (a : Fin 2) : Rz θ * ket a = Rz θ a a • ket a := by
+  have ha : a.val = 0 ∨ a.val = 1 := by have := a.isLt; omega
+  rcases ha with ha | ha
+  · have ha : a = 0 := by apply Fin.ext; exact ha
+    subst ha; rw [Rz_ket_zero]; simp [Rz, Matrix.cons_val_zero]
+  · have ha : a = 1 := by apply Fin.ext; exact ha
+    subst ha; rw [Rz_ket_one]; simp [Rz, Matrix.cons_val_one]
+
+/-- When the control qubit is in state `c • |a⟩`, CNOT acts on `|a,b⟩` by XORing the target.
+    Uses `Fin (2^1)` explicitly so that `ket_tensorState` can infer `j = k = 1` without having
+    to solve the non-linear equation `2 = 2^?j` from a compound expression type `Fin 2`. -/
+theorem CNOT_tensorState_smul_ket (c : ℂ) (a b : Fin (2^1)) :
+    CNOT * tensorState (c • ket a) (ket b) = tensorState (c • ket a) (ket (a + b)) := by
+  rw [tensorState_smul_left, Matrix.mul_smul, ket_tensorState, CNOT_ket_pair]
+  conv_rhs => rw [tensorState_smul_left, ket_tensorState]
 
 end QLean
 

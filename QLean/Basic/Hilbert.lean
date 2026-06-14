@@ -96,6 +96,41 @@ theorem ket_tensorState {j k : ℕ} (a : Fin (2^j)) (b : Fin (2^k)) :
     · rw [if_pos h1, one_mul, if_neg (hprod h1)]
     · rw [if_neg h1, zero_mul]
 
+theorem tensorState_smul_left {j k : ℕ} (c : ℂ) (ψ : QState j) (φ : QState k) :
+    tensorState (c • ψ) φ = c • tensorState ψ φ := by
+  funext r s
+  simp only [tensorState, Matrix.smul_apply, smul_eq_mul]
+  ring
+
+-- ── Kronecker product on states ───────────────────────────────────────────────
+
+/-- `(A⊗B)(ψ⊗φ) = (Aψ)⊗(Bφ)`: the Kronecker product of gates acts componentwise on product states. -/
+theorem kronQMatrix_tensorState {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
+    (ψ : QState j) (φ : QState k) :
+    kronQMatrix A B * tensorState ψ φ = tensorState (A * ψ) (B * φ) := by
+  funext r s
+  obtain rfl : s = 0 := Subsingleton.elim s 0
+  simp only [Matrix.mul_apply, tensorState_apply, kronQMatrix, Matrix.reindex_apply,
+             Matrix.submatrix_apply, Matrix.kroneckerMap_apply]
+  -- Change sum variable: Fin (2^(j+k)) → Fin (2^j) × Fin (2^k)
+  rw [Fintype.sum_equiv (tensorIndexEquiv j k).symm
+      (fun x => A ((tensorIndexEquiv j k).symm r).1 ((tensorIndexEquiv j k).symm x).1 *
+                B ((tensorIndexEquiv j k).symm r).2 ((tensorIndexEquiv j k).symm x).2 *
+                (ψ ((tensorIndexEquiv j k).symm x).1 0 *
+                 φ ((tensorIndexEquiv j k).symm x).2 0))
+      (fun p => A ((tensorIndexEquiv j k).symm r).1 p.1 *
+                B ((tensorIndexEquiv j k).symm r).2 p.2 * (ψ p.1 0 * φ p.2 0))
+      (fun _ => rfl)]
+  -- Factor: ∑ (a,b), fa*ga*(fb*gb) = (∑ a, fa*ga) * (∑ b, fb*gb)
+  -- mul_mul_mul_comm: a*b*(c*d) = a*c*(b*d) rearranges to separate the two components
+  simp_rw [Fintype.sum_prod_type, mul_mul_mul_comm, ← Finset.mul_sum, ← Finset.sum_mul]
+
+/-- `(A⊗B)|a,b⟩ = (A|a⟩)⊗(B|b⟩)`: Kronecker product distributes over basis kets. -/
+theorem kronQMatrix_mul_ket {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
+    (a : Fin (2^j)) (b : Fin (2^k)) :
+    kronQMatrix A B * ket (tensorIndexEquiv j k ⟨a, b⟩) = tensorState (A * ket a) (B * ket b) := by
+  rw [← ket_tensorState]; exact kronQMatrix_tensorState A B (ket a) (ket b)
+
 -- ── Normalization of tensor products ─────────────────────────────────────────
 
 private theorem tensorState_norm_sq {j k : ℕ} (ψ : QState j) (φ : QState k) :
