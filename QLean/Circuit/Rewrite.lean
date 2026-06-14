@@ -26,28 +26,28 @@ instance : Trans (@Circuit.Equiv n) (@Circuit.Equiv n) (@Circuit.Equiv n) :=
 /-- Equivalent components yield equivalent sequential circuits. -/
 theorem Circuit.Equiv.seq_congr {c₁ c₁' c₂ c₂' : Circuit n}
     (h₁ : Circuit.Equiv c₁ c₁') (h₂ : Circuit.Equiv c₂ c₂') :
-    Circuit.Equiv (.seq c₁ c₂) (.seq c₁' c₂') := by
+    Circuit.Equiv (c₁ * c₂) (c₁' * c₂') := by
   unfold Circuit.Equiv at *; simp only [eval_seq]; rw [h₁, h₂]
 
 /-- Equivalent components yield equivalent parallel circuits. -/
 theorem Circuit.Equiv.par_congr {c₁ c₁' : Circuit j} {c₂ c₂' : Circuit k}
     (h₁ : Circuit.Equiv c₁ c₁') (h₂ : Circuit.Equiv c₂ c₂') :
-    Circuit.Equiv (.par c₁ c₂) (.par c₁' c₂') := by
+    Circuit.Equiv (c₁ + c₂) (c₁' + c₂') := by
   unfold Circuit.Equiv at *; simp only [eval_par]; rw [h₁, h₂]
 
 -- ── Basic rewrite rules ───────────────────────────────────────────────────────
 
 /-- `id` is a left identity for sequential composition. -/
-theorem seq_id_left (c : Circuit n) : Circuit.Equiv (.seq .id c) c := by
+theorem seq_id_left (c : Circuit n) : Circuit.Equiv ((1 : Circuit n) * c) c := by
   simp [Circuit.Equiv]
 
 /-- `id` is a right identity for sequential composition. -/
-theorem seq_id_right (c : Circuit n) : Circuit.Equiv (.seq c .id) c := by
+theorem seq_id_right (c : Circuit n) : Circuit.Equiv (c * (1 : Circuit n)) c := by
   simp [Circuit.Equiv]
 
 /-- Sequential composition is associative. -/
 theorem seq_assoc (c₁ c₂ c₃ : Circuit n) :
-    Circuit.Equiv (.seq (.seq c₁ c₂) c₃) (.seq c₁ (.seq c₂ c₃)) := by
+    Circuit.Equiv ((c₁ * c₂) * c₃) (c₁ * (c₂ * c₃)) := by
   simp [Circuit.Equiv, mul_assoc]
 
 -- ── par_assoc ─────────────────────────────────────────────────────────────────
@@ -55,8 +55,8 @@ theorem seq_assoc (c₁ c₂ c₃ : Circuit n) :
 /-- Parallel composition is associative up to `castN` and `Circuit.Equiv`. -/
 theorem par_assoc (c₁ : Circuit j) (c₂ : Circuit k) (c₃ : Circuit l) :
     Circuit.Equiv
-      (Circuit.castN (Nat.add_assoc j k l) (.par (.par c₁ c₂) c₃))
-      (.par c₁ (.par c₂ c₃)) := by
+      (Circuit.castN (Nat.add_assoc j k l) ((c₁ + c₂) + c₃))
+      (c₁ + (c₂ + c₃)) := by
   simp only [Circuit.Equiv, eval_castN, eval_par]
   exact kronQMatrix_assoc (eval c₁) (eval c₂) (eval c₃)
 
@@ -81,7 +81,7 @@ theorem Circuit.Equiv.basis_iff {n : ℕ} (c₁ c₂ : Circuit n) :
 /-- Parallel composition distributes over sequential composition:
     running two sequences in parallel equals sequencing two parallel steps. -/
 theorem interchange_law {j k : ℕ} (a b : Circuit j) (c d : Circuit k) :
-    Circuit.Equiv (.par (.seq a b) (.seq c d)) (.seq (.par a c) (.par b d)) := by
+    Circuit.Equiv ((a * b) + (c * d)) ((a + c) * (b + d)) := by
   simp [Circuit.Equiv, ← kronQMatrix_mul]
 
 end

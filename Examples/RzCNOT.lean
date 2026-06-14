@@ -10,8 +10,8 @@ noncomputable section
     Rz is diagonal: it applies a phase depending only on the control bit's value.
     CNOT preserves the control bit, so the phase is identical in both orderings. -/
 theorem rz_commutes_cnot (θ : ℝ) : Circuit.Equiv
-    (.seq (.par (.gate (Rz θ)) (.id : Circuit 1)) (.gate CNOT))
-    (.seq (.gate CNOT) (.par (.gate (Rz θ)) (.id : Circuit 1))) := by
+    ((Circuit.gate (Rz θ) + (1 : Circuit 1)) * Circuit.gate CNOT)
+    (Circuit.gate CNOT * (Circuit.gate (Rz θ) + (1 : Circuit 1))) := by
   rw [Circuit.Equiv.basis_iff]
   intro i
   obtain ⟨⟨a, b⟩, rfl⟩ := (tensorIndexEquiv 1 1).surjective i
