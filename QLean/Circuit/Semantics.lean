@@ -56,15 +56,10 @@ theorem Circuit.eval_unitary (c : Circuit n) (h : c.WF) : IsUnitary (eval c) := 
   | gate U => exact h
   | seq c₁ c₂ ih₁ ih₂ =>
     obtain ⟨h₁, h₂⟩ := h
-    show IsUnitary (eval c₂ * eval c₁)
-    unfold IsUnitary
-    rw [Matrix.conjTranspose_mul, ← Matrix.mul_assoc,
-        Matrix.mul_assoc (eval _), ih₁ h₁, Matrix.mul_one, ih₂ h₂]
+    exact IsUnitary.mul (ih₂ h₂) (ih₁ h₁)
   | par c₁ c₂ ih₁ ih₂ =>
     obtain ⟨h₁, h₂⟩ := h
-    show IsUnitary (kronQMatrix (eval c₁) (eval c₂))
-    unfold IsUnitary
-    rw [kronQMatrix_conjTranspose, ← kronQMatrix_mul, ih₁ h₁, ih₂ h₂, kronQMatrix_one_one]
+    exact IsUnitary.kron (ih₁ h₁) (ih₂ h₂)
 
 -- ── State transformation and preparation ──────────────────────────────────────
 

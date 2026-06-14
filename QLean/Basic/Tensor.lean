@@ -80,6 +80,12 @@ theorem kronQMatrix_one_one {j k : ℕ} :
   ext i p
   simp [Matrix.reindex_apply, Matrix.one_apply]
 
+/-- Kronecker product of unitaries is unitary. -/
+theorem IsUnitary.kron {j k : ℕ} {A : QMatrix j} {B : QMatrix k}
+    (ha : IsUnitary A) (hb : IsUnitary B) : IsUnitary (kronQMatrix A B) := by
+  unfold IsUnitary
+  rw [kronQMatrix_conjTranspose, ← kronQMatrix_mul, ha, hb, kronQMatrix_one_one]
+
 -- Associativity: the two ways to flatten three parallel gates agree.
 -- The reindex by finCongr (2^·) (add_assoc) bridges the type-level
 -- j+k+l = j+(k+l) isomorphism.  The proof reduces to three Nat arithmetic
