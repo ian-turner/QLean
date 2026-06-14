@@ -132,28 +132,28 @@ theorem ghzCircuit_prepares (n : ℕ) : (ghzCircuit n).prepares (ghzState n) := 
     conv_lhs =>
       rw [show (0 : Fin (2 ^ (n + 2))) = tensorIndexEquiv (n + 1) 1 ⟨0, 0⟩ from
             (tensorIndexEquiv_zero_zero' (n + 1) 1).symm]
-      rw [kronQMatrix_mul_ket, Matrix.one_mul, ih]
-    -- Goal: kronQMatrix 1 CNOT * tensorState (ghzState n) (ket 0) = ghzState (n+1)
+      rw [kron_mul_ket, Matrix.one_mul, ih]
+    -- Goal: kron 1 CNOT * tensorState (ghzState n) (ket 0) = ghzState (n+1)
     -- Step 2: unfold ghzState n and use bilinearity to get a sum of tensor states.
     simp only [ghzState]
     rw [tensorState_smul_left, matrix_mul_smul, tensorState_add_left, Matrix.mul_add]
     -- Step 3: express each tensorState as a ket at the (n+1, 1) split index.
     rw [ket_tensorState, ket_tensorState]
-    -- Step 4: reindex from (n+1, 1) to (n, 2) split for kronQMatrix_mul_ket.
+    -- Step 4: reindex from (n+1, 1) to (n, 2) split for kron_mul_ket.
     conv_lhs =>
       rw [show tensorIndexEquiv (n + 1) 1 ⟨(0 : Fin (2 ^ (n + 1))), (0 : Fin 2)⟩ =
               tensorIndexEquiv n 2 ⟨(0 : Fin (2 ^ n)), (0 : Fin (2 ^ 2))⟩ from by
             apply Fin.ext; rw [tensorIndexEquiv_val, tensorIndexEquiv_val]; simp]
       rw [allOnes_low_reindex]
-    -- Step 5: apply CNOT to each ket via kronQMatrix_mul_ket.
-    have hk0 : kronQMatrix (1 : QMatrix n) CNOT *
+    -- Step 5: apply CNOT to each ket via kron_mul_ket.
+    have hk0 : kron (1 : QMatrix n) CNOT *
         ket (tensorIndexEquiv n 2 ⟨(0 : Fin (2 ^ n)), (0 : Fin (2 ^ 2))⟩) =
         tensorState ((1 : QMatrix n) * ket 0) (CNOT * ket 0) :=
-      kronQMatrix_mul_ket _ _ _ _
-    have hk1 : kronQMatrix (1 : QMatrix n) CNOT *
+      kron_mul_ket _ _ _ _
+    have hk1 : kron (1 : QMatrix n) CNOT *
         ket (tensorIndexEquiv n 2 ⟨allOnesPred n, (1 : Fin (2 ^ 2))⟩) =
         tensorState ((1 : QMatrix n) * ket (allOnesPred n)) (CNOT * ket 1) :=
-      kronQMatrix_mul_ket _ _ _ _
+      kron_mul_ket _ _ _ _
     rw [hk0, hk1, Matrix.one_mul, Matrix.one_mul, CNOT_ket_zero', CNOT_ket_one']
     -- Step 6: collapse tensor states back to kets and identify the all-ones index.
     rw [ket_tensorState, ket_tensorState, tensorIndexEquiv_zero_zero', cnot_result_eq_allOnes]

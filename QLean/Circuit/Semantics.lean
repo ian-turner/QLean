@@ -16,13 +16,13 @@ def eval : Circuit n → QMatrix n
   | .id        => 1
   | .gate U    => U
   | .seq c₁ c₂ => eval c₂ * eval c₁
-  | .par c₁ c₂ => kronQMatrix (eval c₁) (eval c₂)
+  | .par c₁ c₂ => kron (eval c₁) (eval c₂)
 
 @[simp] theorem eval_id  : eval (1 : Circuit n) = 1 := rfl
 @[simp] theorem eval_gate (U : QMatrix n) : eval (.gate U) = U := rfl
 @[simp] theorem eval_seq (c₁ c₂ : Circuit n) : eval (c₁ * c₂) = eval c₂ * eval c₁ := rfl
 @[simp] theorem eval_par {j k : ℕ} (c₁ : Circuit j) (c₂ : Circuit k) :
-    eval (c₁ + c₂) = kronQMatrix (eval c₁) (eval c₂) := rfl
+    eval (c₁ + c₂) = kron (eval c₁) (eval c₂) := rfl
 
 /-- `eval_castN`: transporting across a qubit-count equality is a `reindex` at matrix level. -/
 @[simp] theorem eval_castN (h : m = n) (c : Circuit m) :

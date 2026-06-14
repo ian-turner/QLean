@@ -84,7 +84,7 @@ theorem hadamardTransform_prepares (n : ℕ) : (hadamardTransform n).prepares (u
     rw [show (0 : Fin (2 ^ (n + 1))) = tensorIndexEquiv n 1 ⟨0, 0⟩ from
           (tensorIndexEquiv_zero_zero n 1).symm]
     -- Split the kronecker product action across the tensor-product index
-    rw [kronQMatrix_mul_ket]
+    rw [kron_mul_ket]
     -- Apply the inductive hypothesis and the single-qubit H action
     rw [ih, H_ket_zero]
     exact tensorState_uniformSuper n

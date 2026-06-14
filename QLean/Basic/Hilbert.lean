@@ -105,12 +105,12 @@ theorem tensorState_smul_left {j k : ℕ} (c : ℂ) (ψ : QState j) (φ : QState
 -- ── Kronecker product on states ───────────────────────────────────────────────
 
 /-- `(A⊗B)(ψ⊗φ) = (Aψ)⊗(Bφ)`: the Kronecker product of gates acts componentwise on product states. -/
-theorem kronQMatrix_tensorState {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
+theorem kron_tensorState {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
     (ψ : QState j) (φ : QState k) :
-    kronQMatrix A B * tensorState ψ φ = tensorState (A * ψ) (B * φ) := by
+    kron A B * tensorState ψ φ = tensorState (A * ψ) (B * φ) := by
   funext r s
   obtain rfl : s = 0 := Subsingleton.elim s 0
-  simp only [Matrix.mul_apply, tensorState_apply, kronQMatrix, Matrix.reindex_apply,
+  simp only [Matrix.mul_apply, tensorState_apply, kron, Matrix.reindex_apply,
              Matrix.submatrix_apply, Matrix.kroneckerMap_apply]
   -- Change sum variable: Fin (2^(j+k)) → Fin (2^j) × Fin (2^k)
   rw [Fintype.sum_equiv (tensorIndexEquiv j k).symm
@@ -126,10 +126,10 @@ theorem kronQMatrix_tensorState {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
   simp_rw [Fintype.sum_prod_type, mul_mul_mul_comm, ← Finset.mul_sum, ← Finset.sum_mul]
 
 /-- `(A⊗B)|a,b⟩ = (A|a⟩)⊗(B|b⟩)`: Kronecker product distributes over basis kets. -/
-theorem kronQMatrix_mul_ket {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
+theorem kron_mul_ket {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
     (a : Fin (2^j)) (b : Fin (2^k)) :
-    kronQMatrix A B * ket (tensorIndexEquiv j k ⟨a, b⟩) = tensorState (A * ket a) (B * ket b) := by
-  rw [← ket_tensorState]; exact kronQMatrix_tensorState A B (ket a) (ket b)
+    kron A B * ket (tensorIndexEquiv j k ⟨a, b⟩) = tensorState (A * ket a) (B * ket b) := by
+  rw [← ket_tensorState]; exact kron_tensorState A B (ket a) (ket b)
 
 -- ── Normalization of tensor products ─────────────────────────────────────────
 

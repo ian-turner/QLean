@@ -59,7 +59,7 @@ theorem seq_assoc (c₁ c₂ c₃ : Circuit n) :
 theorem par_assoc (c₁ : Circuit j) (c₂ : Circuit k) (c₃ : Circuit l) :
     Circuit.castN (Nat.add_assoc j k l) ((c₁ + c₂) + c₃) ≈ c₁ + (c₂ + c₃) := by
   simp only [Circuit.Equiv, eval_castN, eval_par]
-  exact kronQMatrix_assoc (eval c₁) (eval c₂) (eval c₃)
+  exact kron_assoc (eval c₁) (eval c₂) (eval c₃)
 
 -- ── Basis characterization ───────────────────────────────────────────────────
 
@@ -83,7 +83,7 @@ theorem Circuit.Equiv.basis_iff {n : ℕ} (c₁ c₂ : Circuit n) :
     running two sequences in parallel equals sequencing two parallel steps. -/
 theorem interchange_law {j k : ℕ} (a b : Circuit j) (c d : Circuit k) :
     (a * b) + (c * d) ≈ (a + c) * (b + d) := by
-  simp [Circuit.Equiv, ← kronQMatrix_mul]
+  simp [Circuit.Equiv, ← kron_mul]
 
 end
 

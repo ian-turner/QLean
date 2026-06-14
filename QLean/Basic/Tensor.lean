@@ -51,15 +51,15 @@ private lemma assoc_snd_val' (j k l : ℕ) (i : Fin (2^(j+(k+l)))) (i' : Fin (2^
 /-- Reindexed Kronecker product: parallel composition of an `j`-qubit gate with a `k`-qubit gate,
     producing a `(j+k)`-qubit gate. Index `i : Fin (2^(j+k))` is split with `A` occupying
     the low `j` bits and `B` occupying the high `k` bits. -/
-def kronQMatrix {j k : ℕ} (A : QMatrix j) (B : QMatrix k) : QMatrix (j + k) :=
+def kron {j k : ℕ} (A : QMatrix j) (B : QMatrix k) : QMatrix (j + k) :=
   (A ⊗ₖ B).reindex (tensorIndexEquiv j k) (tensorIndexEquiv j k)
 
 -- ── Key lemmas ────────────────────────────────────────────────────────────────
 
 /-- Mixed-product property: `(A⊗B)(C⊗D) = (AC)⊗(BD)`. -/
-theorem kronQMatrix_mul {j k : ℕ} (A C : QMatrix j) (B D : QMatrix k) :
-    kronQMatrix (A * C) (B * D) = kronQMatrix A B * kronQMatrix C D := by
-  unfold kronQMatrix
+theorem kron_mul {j k : ℕ} (A C : QMatrix j) (B D : QMatrix k) :
+    kron (A * C) (B * D) = kron A B * kron C D := by
+  unfold kron
   rw [Matrix.mul_kronecker_mul]
   ext i p
   simp only [Matrix.mul_apply, Matrix.reindex_apply]
@@ -67,36 +67,36 @@ theorem kronQMatrix_mul {j k : ℕ} (A C : QMatrix j) (B D : QMatrix k) :
   intro l
   simp [Equiv.symm_apply_apply]
 
-/-- Adjoint distributes over `kronQMatrix`. -/
-theorem kronQMatrix_conjTranspose {j k : ℕ} (A : QMatrix j) (B : QMatrix k) :
-    (kronQMatrix A B)ᴴ = kronQMatrix Aᴴ Bᴴ := by
-  simp [kronQMatrix, Matrix.conjTranspose_kronecker]
+/-- Adjoint distributes over `kron`. -/
+theorem kron_conjTranspose {j k : ℕ} (A : QMatrix j) (B : QMatrix k) :
+    (kron A B)ᴴ = kron Aᴴ Bᴴ := by
+  simp [kron, Matrix.conjTranspose_kronecker]
 
 /-- Tensor product of identity matrices is the identity. -/
-theorem kronQMatrix_one_one {j k : ℕ} :
-    kronQMatrix (1 : QMatrix j) (1 : QMatrix k) = 1 := by
-  unfold kronQMatrix
+theorem kron_one_one {j k : ℕ} :
+    kron (1 : QMatrix j) (1 : QMatrix k) = 1 := by
+  unfold kron
   rw [Matrix.one_kronecker_one]
   ext i p
   simp [Matrix.reindex_apply, Matrix.one_apply]
 
 /-- Kronecker product of unitaries is unitary. -/
 theorem IsUnitary.kron {j k : ℕ} {A : QMatrix j} {B : QMatrix k}
-    (ha : IsUnitary A) (hb : IsUnitary B) : IsUnitary (kronQMatrix A B) := by
+    (ha : IsUnitary A) (hb : IsUnitary B) : IsUnitary (kron A B) := by
   unfold IsUnitary
-  rw [kronQMatrix_conjTranspose, ← kronQMatrix_mul, ha, hb, kronQMatrix_one_one]
+  rw [kron_conjTranspose, ← kron_mul, ha, hb, kron_one_one]
 
 -- Associativity: the two ways to flatten three parallel gates agree.
 -- The reindex by finCongr (2^·) (add_assoc) bridges the type-level
 -- j+k+l = j+(k+l) isomorphism.  The proof reduces to three Nat arithmetic
 -- identities about % and / with powers of 2.
-theorem kronQMatrix_assoc {j k l : ℕ} (A : QMatrix j) (B : QMatrix k) (C : QMatrix l) :
-    (kronQMatrix (kronQMatrix A B) C).reindex
+theorem kron_assoc {j k l : ℕ} (A : QMatrix j) (B : QMatrix k) (C : QMatrix l) :
+    (kron (kron A B) C).reindex
         (finCongr (congr_arg (2 ^ ·) (Nat.add_assoc j k l)))
         (finCongr (congr_arg (2 ^ ·) (Nat.add_assoc j k l))) =
-    kronQMatrix A (kronQMatrix B C) := by
+    kron A (kron B C) := by
   ext i p
-  simp only [kronQMatrix, Matrix.reindex_apply, Matrix.submatrix_apply,
+  simp only [kron, Matrix.reindex_apply, Matrix.submatrix_apply,
              Matrix.kroneckerMap_apply]
   have hiv : ((finCongr (congr_arg (2^·) (Nat.add_assoc j k l))).symm i).val = i.val := by
     simp [finCongr]
