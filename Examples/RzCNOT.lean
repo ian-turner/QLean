@@ -9,9 +9,9 @@ noncomputable section
 /-- Rz(θ) on qubit 0 (the CNOT control) commutes with CNOT.
     Rz is diagonal: it applies a phase depending only on the control bit's value.
     CNOT preserves the control bit, so the phase is identical in both orderings. -/
-theorem rz_commutes_cnot (θ : ℝ) : Circuit.Equiv
-    ((Circuit.gate (Rz θ) + (1 : Circuit 1)) * Circuit.gate CNOT)
-    (Circuit.gate CNOT * (Circuit.gate (Rz θ) + (1 : Circuit 1))) := by
+theorem rz_commutes_cnot (θ : ℝ) :
+    (Circuit.gate (Rz θ) + (1 : Circuit 1)) * Circuit.gate CNOT ≈
+    Circuit.gate CNOT * (Circuit.gate (Rz θ) + (1 : Circuit 1)) := by
   rw [Circuit.Equiv.basis_iff]
   intro i
   obtain ⟨⟨a, b⟩, rfl⟩ := (tensorIndexEquiv 1 1).surjective i

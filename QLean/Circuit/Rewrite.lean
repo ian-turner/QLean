@@ -12,11 +12,14 @@ noncomputable section
 /-- Two circuits are equivalent if they evaluate to the same unitary. -/
 def Circuit.Equiv (c₁ c₂ : Circuit n) : Prop := eval c₁ = eval c₂
 
-@[refl]  theorem Circuit.Equiv.refl  (c : Circuit n) : Circuit.Equiv c c := rfl
-@[symm]  theorem Circuit.Equiv.symm  {c₁ c₂ : Circuit n} : Circuit.Equiv c₁ c₂ → Circuit.Equiv c₂ c₁ :=
+-- `c₁ ≈ c₂` is notation for `Circuit.Equiv c₁ c₂`.
+@[reducible] instance : HasEquiv (Circuit n) := ⟨Circuit.Equiv⟩
+
+@[refl]  theorem Circuit.Equiv.refl  (c : Circuit n) : c ≈ c := rfl
+@[symm]  theorem Circuit.Equiv.symm  {c₁ c₂ : Circuit n} : c₁ ≈ c₂ → c₂ ≈ c₁ :=
   Eq.symm
 @[trans] theorem Circuit.Equiv.trans {c₁ c₂ c₃ : Circuit n} :
-    Circuit.Equiv c₁ c₂ → Circuit.Equiv c₂ c₃ → Circuit.Equiv c₁ c₃ := Eq.trans
+    c₁ ≈ c₂ → c₂ ≈ c₃ → c₁ ≈ c₃ := Eq.trans
 
 instance : Trans (@Circuit.Equiv n) (@Circuit.Equiv n) (@Circuit.Equiv n) :=
   ⟨Circuit.Equiv.trans⟩
@@ -25,38 +28,36 @@ instance : Trans (@Circuit.Equiv n) (@Circuit.Equiv n) (@Circuit.Equiv n) :=
 
 /-- Equivalent components yield equivalent sequential circuits. -/
 theorem Circuit.Equiv.seq_congr {c₁ c₁' c₂ c₂' : Circuit n}
-    (h₁ : Circuit.Equiv c₁ c₁') (h₂ : Circuit.Equiv c₂ c₂') :
-    Circuit.Equiv (c₁ * c₂) (c₁' * c₂') := by
-  unfold Circuit.Equiv at *; simp only [eval_seq]; rw [h₁, h₂]
+    (h₁ : c₁ ≈ c₁') (h₂ : c₂ ≈ c₂') :
+    c₁ * c₂ ≈ c₁' * c₂' := by
+  simp only [Circuit.Equiv, eval_seq]; rw [h₁, h₂]
 
 /-- Equivalent components yield equivalent parallel circuits. -/
 theorem Circuit.Equiv.par_congr {c₁ c₁' : Circuit j} {c₂ c₂' : Circuit k}
-    (h₁ : Circuit.Equiv c₁ c₁') (h₂ : Circuit.Equiv c₂ c₂') :
-    Circuit.Equiv (c₁ + c₂) (c₁' + c₂') := by
-  unfold Circuit.Equiv at *; simp only [eval_par]; rw [h₁, h₂]
+    (h₁ : c₁ ≈ c₁') (h₂ : c₂ ≈ c₂') :
+    c₁ + c₂ ≈ c₁' + c₂' := by
+  simp only [Circuit.Equiv, eval_par]; rw [h₁, h₂]
 
 -- ── Basic rewrite rules ───────────────────────────────────────────────────────
 
 /-- `id` is a left identity for sequential composition. -/
-theorem seq_id_left (c : Circuit n) : Circuit.Equiv ((1 : Circuit n) * c) c := by
+theorem seq_id_left (c : Circuit n) : (1 : Circuit n) * c ≈ c := by
   simp [Circuit.Equiv]
 
 /-- `id` is a right identity for sequential composition. -/
-theorem seq_id_right (c : Circuit n) : Circuit.Equiv (c * (1 : Circuit n)) c := by
+theorem seq_id_right (c : Circuit n) : c * (1 : Circuit n) ≈ c := by
   simp [Circuit.Equiv]
 
 /-- Sequential composition is associative. -/
 theorem seq_assoc (c₁ c₂ c₃ : Circuit n) :
-    Circuit.Equiv ((c₁ * c₂) * c₃) (c₁ * (c₂ * c₃)) := by
+    (c₁ * c₂) * c₃ ≈ c₁ * (c₂ * c₃) := by
   simp [Circuit.Equiv, mul_assoc]
 
 -- ── par_assoc ─────────────────────────────────────────────────────────────────
 
-/-- Parallel composition is associative up to `castN` and `Circuit.Equiv`. -/
+/-- Parallel composition is associative up to `castN` and `≈`. -/
 theorem par_assoc (c₁ : Circuit j) (c₂ : Circuit k) (c₃ : Circuit l) :
-    Circuit.Equiv
-      (Circuit.castN (Nat.add_assoc j k l) ((c₁ + c₂) + c₃))
-      (c₁ + (c₂ + c₃)) := by
+    Circuit.castN (Nat.add_assoc j k l) ((c₁ + c₂) + c₃) ≈ c₁ + (c₂ + c₃) := by
   simp only [Circuit.Equiv, eval_castN, eval_par]
   exact kronQMatrix_assoc (eval c₁) (eval c₂) (eval c₃)
 
@@ -68,8 +69,8 @@ private lemma mul_ket_apply {n : ℕ} (M : QMatrix n) (i r : Fin (2^n)) :
 
 /-- Two circuits are equivalent iff they act identically on every computational basis state. -/
 theorem Circuit.Equiv.basis_iff {n : ℕ} (c₁ c₂ : Circuit n) :
-    Circuit.Equiv c₁ c₂ ↔ ∀ i : Fin (2^n), eval c₁ * ket i = eval c₂ * ket i := by
-  unfold Circuit.Equiv
+    c₁ ≈ c₂ ↔ ∀ i : Fin (2^n), eval c₁ * ket i = eval c₂ * ket i := by
+  simp only [Circuit.Equiv]
   constructor
   · intro h i; rw [h]
   · intro h
@@ -81,7 +82,7 @@ theorem Circuit.Equiv.basis_iff {n : ℕ} (c₁ c₂ : Circuit n) :
 /-- Parallel composition distributes over sequential composition:
     running two sequences in parallel equals sequencing two parallel steps. -/
 theorem interchange_law {j k : ℕ} (a b : Circuit j) (c d : Circuit k) :
-    Circuit.Equiv ((a * b) + (c * d)) ((a + c) * (b + d)) := by
+    (a * b) + (c * d) ≈ (a + c) * (b + d) := by
   simp [Circuit.Equiv, ← kronQMatrix_mul]
 
 end
