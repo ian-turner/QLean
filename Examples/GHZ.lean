@@ -114,11 +114,10 @@ private lemma CNOT_ket_one' : CNOT * ket (1 : Fin 4) = ket 3 := by
 
 -- ── Main theorem ───────────────────────────────────────────────────────────────
 
-/-- Applying the (n+1)-qubit chain GHZ circuit to |0...0⟩ produces
-    the GHZ state (|0...0⟩ + |1...1⟩)/√2.  Proof by induction: at each step
-    CNOT propagates the superposition to one more qubit. -/
-theorem ghzCircuit_ket_zero (n : ℕ) :
-    eval (ghzCircuit n) * ket (0 : Fin (2 ^ (n + 1))) = ghzState n := by
+/-- The (n+1)-qubit chain GHZ circuit prepares the GHZ state (|0...0⟩ + |1...1⟩)/√2.
+    Proof by induction: at each step CNOT propagates the superposition to one more qubit. -/
+theorem ghzCircuit_prepares (n : ℕ) : (ghzCircuit n).prepares (ghzState n) := by
+  simp only [Circuit.maps_iff]
   induction n with
   | zero =>
     simp only [ghzCircuit, eval_gate]

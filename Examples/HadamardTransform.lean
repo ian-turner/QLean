@@ -67,10 +67,10 @@ private lemma tensorState_uniformSuper (n : ℕ) :
 
 -- ── Main theorem ──────────────────────────────────────────────────────────────
 
-/-- Applying the n-qubit Hadamard transform to |0...0⟩ produces the uniform superposition:
+/-- The n-qubit Hadamard transform prepares the uniform superposition:
     each of the 2^n basis states gets amplitude 1/√(2^n). -/
-theorem hadamardTransform_ket_zero (n : ℕ) :
-    eval (hadamardTransform n) * ket (0 : Fin (2 ^ n)) = uniformSuper n := by
+theorem hadamardTransform_prepares (n : ℕ) : (hadamardTransform n).prepares (uniformSuper n) := by
+  simp only [Circuit.maps_iff]
   induction n with
   | zero =>
     simp only [hadamardTransform, eval_id, Matrix.one_mul]
