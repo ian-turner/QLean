@@ -144,10 +144,11 @@ The `QState` inductive type and supporting infrastructure.
 
 **Key definitions:**
 - `QState n` — inductive syntax tree for `n`-qubit states; constructors:
-  - `.basis i : QState n` — computational basis state for `i : Fin (2^n)`; notation `|i⟩ₛ`
+  - `.basis i : QState n` — computational basis state for `i : Fin (2^n)`; notation `|i⟩` (opt-in via `open scoped QLean.Notation`)
   - `.smul α s` — scalar multiple; `α • s` notation via `SMul ℂ` instance
   - `.add s t`  — superposition; `s + t` notation via `Add` instance
   - `.tensor s t` — tensor product; `s ⊗ₛ t` notation (qubit count sums)
+  - `.apply C s` — circuit `C` acting on state expression `s`; `C * s` notation via `HMul (Circuit n) (QState n) (QState n)` instance
 - `QState.castN (h : m = n) : QState m → QState n` — transport along a qubit-count equality
 - `QState.bit0 : QState 1`, `QState.bit1 : QState 1` — single-qubit `|0⟩` and `|1⟩` shorthands
 
@@ -158,9 +159,9 @@ The `QState` inductive type and supporting infrastructure.
 Denotational semantics and the circuit–state bridge.
 
 **Key definitions:**
-- `QState.eval : QState n → QVector n` — denotational semantics; `@[simp]` lemmas `eval_basis`, `eval_smul`, `eval_add`, `eval_tensor`, `eval_castN`
+- `QState.eval : QState n → QVector n` — denotational semantics; `@[simp]` lemmas `eval_basis`, `eval_smul`, `eval_add`, `eval_tensor`, `eval_castN`, `eval_apply`
 - `QState.IsNormalized s` — `QLean.IsNormalized (eval s)`; predicate lifted from `QVector`
-- `Circuit.mapsExpr C s t` — `C.maps (eval s) (eval t)`; lifts `Circuit.maps` to state expressions
+- `Circuit.mapsExpr C s t` — `C.maps (eval s) (eval t)`; lifts `Circuit.maps` to state expressions; prefer `C * s ≈ t` in new code (see `mapsExpr_iff` in `State/Rewrite.lean`)
 
 **Key theorems:**
 - `QState.IsNormalized.tensor` — tensor product of normalized expressions is normalized
@@ -178,9 +179,13 @@ State expression equivalence and equational rewrite rules.
 `QState.Equiv` is an equivalence relation with `@[refl]`/`@[symm]`/`@[trans]` instances and a `Trans` instance for `calc` blocks.
 
 **Congruence lemmas:**
+- `QState.Equiv.apply_congr` — `≈` is a congruence for `apply`: if `s ≈ t` then `C * s ≈ C * t`
 - `QState.Equiv.add_congr` — `≈` is a congruence for `add`
 - `QState.Equiv.smul_congr` — `≈` is a congruence for `smul`
 - `QState.Equiv.tensor_congr` — `≈` is a congruence for `tensor`
+
+**Bridge:**
+- `Circuit.mapsExpr_iff` — `C.mapsExpr s t ↔ C * s ≈ t`
 
 **Distributivity rules:**
 - `QState.add_tensor_left` — `(s + t) ⊗ₛ u ≈ s ⊗ₛ u + t ⊗ₛ u`

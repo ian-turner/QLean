@@ -20,6 +20,13 @@ instance : Trans (@QState.Equiv n) (@QState.Equiv n) (@QState.Equiv n) :=
 
 -- ── Congruence lemmas ─────────────────────────────────────────────────────────
 
+theorem QState.Equiv.apply_congr {C : Circuit n} {s t : QState n}
+    (h : s ≈ t) : C * s ≈ C * t := by
+  simp only [QState.Equiv, QState.eval_apply]; rw [h]
+
+theorem Circuit.mapsExpr_iff {C : Circuit n} {s t : QState n} :
+    C.mapsExpr s t ↔ C * s ≈ t := Iff.rfl
+
 theorem QState.Equiv.add_congr {s s' t t' : QState n}
     (hs : s ≈ s') (ht : t ≈ t') : s + t ≈ s' + t' := by
   simp only [QState.Equiv, QState.eval_add]; rw [hs, ht]

@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-15] (2)
+
+### Added
+- `State/Type.lean`: `QState.apply` constructor; `HMul (Circuit n) (QState n) (QState n)` instance giving `C * s` notation
+- `State/Semantics.lean`: `eval_apply` simp lemma (`eval (C * s) = Circuit.eval C * eval s`)
+- `State/Rewrite.lean`: `QState.Equiv.apply_congr`; `Circuit.mapsExpr_iff` bridge (`C.mapsExpr s t ↔ C * s ≈ t`)
+
 ## [2026-06-15]
 
 ### Added
