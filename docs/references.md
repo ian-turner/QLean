@@ -18,4 +18,3 @@ Related work and Mathlib modules of interest.
 - `Mathlib.Algebra.BigOperators.Fin` — `finFunctionFinEquiv`, `Fin.sum_univ_two`, etc.
 - `Mathlib.Logic.Equiv.Fin` — `finProdFinEquiv`, `finCongr`
 - `Mathlib.Analysis.SpecialFunctions.Complex.Circle` — `Complex.exp` on the unit circle; used by rotation gates
-- `Mathlib.Algebra.Ring.GeomSum` — geometric sum formula; used in `QFT.lean`'s unitarity proof

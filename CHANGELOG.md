@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16] (4)
+
+### Removed
+- `Examples/QFT.lean`: dropped the QFT example (`qftMatrix`, `isUnitary_qftMatrix`, `QFTGate_maps_ket`, `qftMatrix_one_eq_H`) and its `docs`/`references.md` entries; to be reinstated later
+
+---
+
 ## [2026-06-16] (3)
 
 ### Added

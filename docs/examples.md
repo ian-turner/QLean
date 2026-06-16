@@ -42,21 +42,3 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 **Technique:** The main proof is by induction on `n`. The inductive step uses `kron_mul_ket` to split the CNOT layer, then `tensorState_add_left` and linearity to distribute over the superposition, identifies the all-ones index via `allOnes_low_reindex` and `cnot_result_eq_allOnes`, and closes with `CNOT_ket_zero'` / `CNOT_ket_one'`.
 
 **Key lemmas used:** `kron_mul_ket`, `ket_tensorState`, `tensorState_add_left`, `CNOT_ket_pair`, index arithmetic on `tensorIndexEquiv`
-
----
-
-## `Examples/QFT.lean` — Quantum Fourier Transform
-
-**Definitions:**
-- `qftState n j : QVector n` — the DFT of the delta function at `j`: amplitude at `k` is `e^{2πijk/2^n} / √(2^n)`
-- `qftMatrix n : QMatrix n` — the DFT unitary; entry `(k, j)` is `e^{2πijk/N} / √N` where `N = 2^n`
-- `QFTGate n : Circuit n` — the QFT as a single circuit gate
-
-**Theorems:**
-- `isUnitary_qftMatrix n` — the DFT matrix is unitary; proved via the discrete orthogonality of roots of unity (`qft_phase_sum`)
-- `QFTGate_maps_ket n j` — QFT applied to `ket j` produces `qftState n j`
-- `qftMatrix_one_eq_H` — `qftMatrix 1 = H`; the 1-qubit QFT is the Hadamard gate
-
-**Technique:** Unitarity uses `qft_phase_sum`, which evaluates `∑ k, exp(2πi(i-j)k/N)` to `N` on the diagonal and `0` off-diagonal via the geometric series formula (`geom_sum_mul`) and a non-vanishing lemma for roots of unity. The `qftMatrix_one_eq_H` identity is checked by `fin_cases` on the 2×2 matrix.
-
-**Key lemmas used:** `qft_phase_sum`, `exp_frac_pow`, `exp_frac_ne_one`, `geom_sum_mul`

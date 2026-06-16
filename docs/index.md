@@ -43,7 +43,6 @@ Examples/
   RzCNOT.lean         — Rz(θ) commutes with CNOT on the control qubit
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition
   GHZ.lean            — chain GHZ circuit prepares (|0…0⟩ + |1…1⟩)/√2
-  QFT.lean            — QFT matrix, unitarity proof, QFT₁ = H
 ```
 
 See [api.md](api.md) for per-module detail.
