@@ -1,4 +1,7 @@
 import QLean.State.Semantics
+import QLean.Circuit.Rewrite
+
+open scoped QLean.Notation
 
 namespace QLean
 
@@ -55,16 +58,35 @@ theorem QState.tensor_add_right (s : QState j) (t u : QState k) :
 
 theorem QState.smul_tensor_left (α : ℂ) (s : QState j) (t : QState k) :
     (α • s) ⊗ₛ t ≈ α • (s ⊗ₛ t) := by
-  unfold QState.Equiv
-  simp only [QState.eval_tensor, QState.eval_smul, tensorState_smul_left]
+  simp only [QState.Equiv, QState.eval_tensor, QState.eval_smul, tensorState_smul_left]
 
 theorem QState.tensor_smul_right (α : ℂ) (s : QState j) (t : QState k) :
     s ⊗ₛ (α • t) ≈ α • (s ⊗ₛ t) := by
-  unfold QState.Equiv
-  simp only [QState.eval_tensor, QState.eval_smul]
-  funext i c; fin_cases c
-  simp only [tensorState_apply, Matrix.smul_apply, smul_eq_mul]
+  simp only [QState.Equiv, QState.eval_tensor, QState.eval_smul]
+  funext r c
+  simp only [tensorState, Matrix.smul_apply, smul_eq_mul]
   ring
+
+-- ── Circuit.Equiv via symbolic states ─────────────────────────────────────────
+
+/-- Equivalent circuits act identically on every symbolic state expression. -/
+theorem Circuit.Equiv.apply_state {n : ℕ} {c₁ c₂ : Circuit n}
+    (h : c₁ ≈ c₂) (s : QState n) : c₁ * s ≈ c₂ * s := by
+  simp only [QState.Equiv, QState.eval_apply]; rw [h]
+
+/-- Two circuits are equivalent iff they act identically on every symbolic basis ket. -/
+theorem Circuit.Equiv.basis_iff_state {n : ℕ} (c₁ c₂ : Circuit n) :
+    c₁ ≈ c₂ ↔ ∀ i : Fin (2^n), c₁ * |i⟩ ≈ c₂ * |i⟩ := by
+  rw [Circuit.Equiv.basis_iff]
+  simp [QState.Equiv, QState.eval_apply, QState.eval_basis]
+
+/-- Two circuits are equivalent iff they act identically on every symbolic state expression.
+    The basis-indexed form is usually more convenient; this stronger form avoids index-chasing
+    when the input state is already in symbolic normal form. -/
+theorem Circuit.Equiv.equiv_iff_all_states {n : ℕ} (c₁ c₂ : Circuit n) :
+    c₁ ≈ c₂ ↔ ∀ s : QState n, c₁ * s ≈ c₂ * s :=
+  ⟨fun h s => h.apply_state s,
+   fun h => (basis_iff_state c₁ c₂).mpr (fun i => h |i⟩)⟩
 
 end  -- noncomputable
 

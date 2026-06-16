@@ -10,6 +10,8 @@ noncomputable section
 
 -- ── Denotational semantics ────────────────────────────────────────────────────
 
+namespace Circuit
+
 /-- Map a circuit to the unitary it denotes. `seq` applies left-to-right, so
     `c₁` acts first and `eval (seq c₁ c₂) = eval c₂ * eval c₁`. -/
 def eval : Circuit n → QMatrix n
@@ -26,9 +28,11 @@ def eval : Circuit n → QMatrix n
 
 /-- `eval_castN`: transporting across a qubit-count equality is a `reindex` at matrix level. -/
 @[simp] theorem eval_castN (h : m = n) (c : Circuit m) :
-    eval (Circuit.castN h c) =
+    eval (castN h c) =
     (eval c).reindex (finCongr (congr_arg (2^·) h)) (finCongr (congr_arg (2^·) h)) := by
   cases h; simp [castN]
+
+end Circuit
 
 -- ── Well-formedness ───────────────────────────────────────────────────────────
 

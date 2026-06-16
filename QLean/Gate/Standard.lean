@@ -280,6 +280,54 @@ theorem CNOT_tensorState_smul_ket (c : ℂ) (a b : Fin (2^1)) :
   rw [tensorState_smul_left, Matrix.mul_smul, ket_tensorState, CNOT_ket_pair]
   conv_rhs => rw [tensorState_smul_left, ket_tensorState]
 
+-- ── Single-qubit basis-state actions ──────────────────────────────────────────
+
+theorem X_ket_zero : X * ket (0 : Fin 2) = ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [X, ket_apply, Matrix.mul_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem X_ket_one : X * ket (1 : Fin 2) = ket 0 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [X, ket_apply, Matrix.mul_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem Y_ket_zero : Y * ket (0 : Fin 2) = Complex.I • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Y, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+
+theorem Y_ket_one : Y * ket (1 : Fin 2) = (-Complex.I) • ket 0 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Y, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+
+theorem Z_ket_zero : Z * ket (0 : Fin 2) = ket 0 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Z, ket_apply, Matrix.mul_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem Z_ket_one : Z * ket (1 : Fin 2) = (-1 : ℂ) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Z, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+
+theorem S_ket_zero : S * ket (0 : Fin 2) = ket 0 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [S, ket_apply, Matrix.mul_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem S_ket_one : S * ket (1 : Fin 2) = Complex.I • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [S, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+
+theorem H_ket_zero : H * ket (0 : Fin 2) = (Real.sqrt 2)⁻¹ • (ket 0 + ket 1) := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [H, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+
+theorem H_ket_one : H * ket (1 : Fin 2) = (Real.sqrt 2)⁻¹ • (ket 0 + (-1 : ℂ) • ket 1) := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [H, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+
 -- ── Single-qubit circuit gates ────────────────────────────────────────────────
 
 abbrev HGate : Circuit 1 := .gate H

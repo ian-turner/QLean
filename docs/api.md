@@ -72,7 +72,7 @@ All gate matrices follow the LSB-first qubit convention (see [conventions.md](co
 
 **Unitarity theorems:** `isUnitary_H`, `isUnitary_X`, `isUnitary_Y`, `isUnitary_Z`, `isUnitary_S`, `isUnitary_T`, `isUnitary_CNOT`, `isUnitary_CZ`, `isUnitary_SWAP`, `isUnitary_controlled`, `isUnitary_Rz`, `isUnitary_Rx`, `isUnitary_Ry`
 
-**State-action lemmas:** `Rz_ket_zero`, `Rz_ket_one`, `Rz_ket_diag`, `CNOT_ket_pair`, `CNOT_tensorState_smul_ket`
+**State-action lemmas:** `Rz_ket_zero`, `Rz_ket_one`, `Rz_ket_diag`, `CNOT_ket_pair`, `CNOT_tensorState_smul_ket`; single-qubit actions `X_ket_zero`, `X_ket_one`, `Y_ket_zero`, `Y_ket_one`, `Z_ket_zero`, `Z_ket_one`, `S_ket_zero`, `S_ket_one`, `H_ket_zero`, `H_ket_one`
 
 **Circuit abbreviations** — `abbrev` wrappers that lift gate matrices into `Circuit`:
 
@@ -103,6 +103,32 @@ Embed a k-qubit gate into an n-qubit system at chosen qubit positions.
 - `gateAt_unitary` — `IsUnitary U → IsUnitary (gateAt qs U)`
 - `gateAt_comm_disjoint` — disjoint embeddings commute: `Disjoint (range qs₁) (range qs₂) → gateAt qs₁ A * gateAt qs₂ B = gateAt qs₂ B * gateAt qs₁ A`
 - `isUnitary_hadamardAt`, `isUnitary_cnotAt`, `isUnitary_controlledAt`
+
+---
+
+## `Gate/StateActions.lean`
+
+Symbolic gate actions: `QState.Equiv` theorems for standard gates acting on `QState.bit0`/`bit1` and tensor products. These are the building blocks for correctness proofs that use `Circuit.Equiv.basis_iff_state` to reduce a circuit equivalence to per-basis-state obligations.
+
+Imports `Gate/Standard.lean` and `State/Rewrite.lean`; no circular dependency.
+
+**Single-qubit actions** (all proved by unfolding `QState.Equiv` and applying the QVector lemmas from `Gate/Standard.lean`):
+
+| Theorem | Statement |
+|---|---|
+| `XGate_bit0` | `XGate * bit0 ≈ bit1` |
+| `XGate_bit1` | `XGate * bit1 ≈ bit0` |
+| `YGate_bit0` | `YGate * bit0 ≈ I • bit1` |
+| `YGate_bit1` | `YGate * bit1 ≈ (-I) • bit0` |
+| `ZGate_bit0` | `ZGate * bit0 ≈ bit0` |
+| `ZGate_bit1` | `ZGate * bit1 ≈ (-1) • bit1` |
+| `SGate_bit0` | `SGate * bit0 ≈ bit0` |
+| `SGate_bit1` | `SGate * bit1 ≈ I • bit1` |
+| `HGate_bit0` | `HGate * bit0 ≈ (√2)⁻¹ • (bit0 + bit1)` |
+| `HGate_bit1` | `HGate * bit1 ≈ (√2)⁻¹ • (bit0 + (-1) • bit1)` |
+
+**Two-qubit actions:**
+- `CNOTGate_basis_tensor (a b : Fin 2)` — `CNOTGate * (basis a ⊗ₛ basis b) ≈ basis a ⊗ₛ basis (a + b)`
 
 ---
 

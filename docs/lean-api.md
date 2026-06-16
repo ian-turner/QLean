@@ -103,6 +103,45 @@ Prove this first in `Gate/Standard.lean`. The `H` unitarity proof uses `simp [Ma
 
 ---
 
+## `Circuit.eval` namespace placement
+
+Defining `def eval` inside `namespace QLean` (but outside `namespace Circuit`) does not create `Circuit.eval` as a true name — it only creates `QLean.eval`. Dot notation `c.eval` resolves to the wrong function, and `open Circuit` does not expose it.
+
+**Fix:** Move `def eval` (and its `@[simp]` lemmas) into an explicit `namespace Circuit ... end Circuit` block inside `namespace QLean`. This makes `QLean.Circuit.eval` the canonical qualified name.
+
+**Side effect of the wrong approach:** Using an `abbrev Circuit.eval := eval` alias inside `namespace QLean` with `open Circuit` in scope causes a termination-check failure because the body's `eval` resolves to the `abbrev` itself.
+
+---
+
+## ℝ → ℂ scalar coercions in `SMul` proofs
+
+`((r : ℝ)⁻¹ : ℂ)` elaborates as `(Complex.ofReal r)⁻¹` (ℂ-inverse after coercion), NOT as `Complex.ofReal (r⁻¹)` (ofReal of ℝ-inverse). These are equal by `Complex.ofReal_inv` but are NOT definitionally equal — `rfl` fails.
+
+When a QVector lemma uses `SMul ℝ (QVector n)` (e.g. `H_ket_zero`) but the goal has a ℂ-smul scalar of the form `(↑r)⁻¹`, the proof pattern is:
+
+```lean
+simp only [..., ← Complex.ofReal_inv]
+-- (↑r)⁻¹ → ↑(r⁻¹); now ↑(r⁻¹) • v = r⁻¹ • v is definitional
+exact H_ket_zero
+```
+
+`algebraMap_smul` is not needed because after `← Complex.ofReal_inv`, the remaining `↑(r⁻¹) • v = r⁻¹ • v` is definitionally true.
+
+---
+
+## `tensorState (ket a) (ket b)` vs `ket (tensorIndexEquiv ⟨a, b⟩)` form
+
+Lemmas like `CNOT_ket_pair` are stated in `ket (tensorIndexEquiv ...)` form, but `QState.eval_tensor` + `eval_basis` produce `tensorState (ket a) (ket b)`. Bridge with `ket_tensorState` in the simp set:
+
+```lean
+simp only [..., ket_tensorState]
+exact CNOT_ket_pair a b
+```
+
+`ket_tensorState` fires on both the LHS and RHS tensor expressions, converting both to `ket (tensorIndexEquiv ...)` form.
+
+---
+
 ## Fin arithmetic
 
 - `2^n` expressions in `Fin` indices often need `Nat.mod_eq_of_lt` to simplify

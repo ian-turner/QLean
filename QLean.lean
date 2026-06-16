@@ -3,6 +3,10 @@ import QLean.Basic.Tensor
 import QLean.Basic.Hilbert
 import QLean.Gate.Standard
 import QLean.Gate.Embed
+import QLean.Gate.StateActions
 import QLean.Circuit.Type
 import QLean.Circuit.Semantics
 import QLean.Circuit.Rewrite
+import QLean.State.Type
+import QLean.State.Semantics
+import QLean.State.Rewrite
