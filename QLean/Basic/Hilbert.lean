@@ -7,35 +7,35 @@ noncomputable section
 
 namespace QLean
 
--- ── QState and action ─────────────────────────────────────────────────────────
+-- ── QVector and action ─────────────────────────────────────────────────────────
 
 /-- `n`-qubit quantum state: a column vector in `ℂ^(2^n)`. -/
-abbrev QState (n : ℕ) := Matrix (Fin (2^n)) (Fin 1) ℂ
+abbrev QVector (n : ℕ) := Matrix (Fin (2^n)) (Fin 1) ℂ
 
 namespace QMatrix
 
 /-- Act on a quantum state: matrix-vector multiplication as matrix multiplication. -/
-def act {n : ℕ} (U : QMatrix n) (ψ : QState n) : QState n := U * ψ
+def act {n : ℕ} (U : QMatrix n) (ψ : QVector n) : QVector n := U * ψ
 
-@[simp] theorem act_def {n : ℕ} (U : QMatrix n) (ψ : QState n) : U.act ψ = U * ψ := rfl
+@[simp] theorem act_def {n : ℕ} (U : QMatrix n) (ψ : QVector n) : U.act ψ = U * ψ := rfl
 
-theorem act_mul {n : ℕ} (U V : QMatrix n) (ψ : QState n) :
+theorem act_mul {n : ℕ} (U V : QMatrix n) (ψ : QVector n) :
     QMatrix.act (U * V) ψ = U.act (V.act ψ) := by
   simp only [act_def, Matrix.mul_assoc]
 
-theorem act_one {n : ℕ} (ψ : QState n) : (1 : QMatrix n).act ψ = ψ := by simp
+theorem act_one {n : ℕ} (ψ : QVector n) : (1 : QMatrix n).act ψ = ψ := by simp
 
 end QMatrix
 
 -- ── Normalization predicate ───────────────────────────────────────────────────
 
 /-- A quantum state is normalized if the squared norms of its amplitudes sum to 1. -/
-def IsNormalized {n : ℕ} (ψ : QState n) : Prop := ∑ i, ‖ψ i 0‖^2 = 1
+def IsNormalized {n : ℕ} (ψ : QVector n) : Prop := ∑ i, ‖ψ i 0‖^2 = 1
 
 -- ── Computational basis ───────────────────────────────────────────────────────
 
 /-- The `i`-th computational basis state: amplitude 1 at row `i`, 0 elsewhere. -/
-def ket {n : ℕ} (i : Fin (2^n)) : QState n := fun j _ => if j = i then 1 else 0
+def ket {n : ℕ} (i : Fin (2^n)) : QVector n := fun j _ => if j = i then 1 else 0
 
 @[simp] theorem ket_apply {n : ℕ} (i j : Fin (2^n)) :
     ket i j 0 = if j = i then 1 else 0 := rfl
@@ -67,10 +67,10 @@ theorem ket_inner {n : ℕ} (i j : Fin (2^n)) :
 
 /-- Tensor product of a `j`-qubit state and a `k`-qubit state.
     Index `i : Fin (2^(j+k))` decomposes via `tensorIndexEquiv` as `(low j bits, high k bits)`. -/
-def tensorState {j k : ℕ} (ψ : QState j) (φ : QState k) : QState (j+k) :=
+def tensorState {j k : ℕ} (ψ : QVector j) (φ : QVector k) : QVector (j+k) :=
   fun i _ => ψ ((tensorIndexEquiv j k).symm i).1 0 * φ ((tensorIndexEquiv j k).symm i).2 0
 
-@[simp] theorem tensorState_apply {j k : ℕ} (ψ : QState j) (φ : QState k) (i : Fin (2^(j+k))) :
+@[simp] theorem tensorState_apply {j k : ℕ} (ψ : QVector j) (φ : QVector k) (i : Fin (2^(j+k))) :
     tensorState ψ φ i 0 =
     ψ ((tensorIndexEquiv j k).symm i).1 0 * φ ((tensorIndexEquiv j k).symm i).2 0 := rfl
 
@@ -96,7 +96,7 @@ theorem ket_tensorState {j k : ℕ} (a : Fin (2^j)) (b : Fin (2^k)) :
     · rw [if_pos h1, one_mul, if_neg (hprod h1)]
     · rw [if_neg h1, zero_mul]
 
-theorem tensorState_smul_left {j k : ℕ} (c : ℂ) (ψ : QState j) (φ : QState k) :
+theorem tensorState_smul_left {j k : ℕ} (c : ℂ) (ψ : QVector j) (φ : QVector k) :
     tensorState (c • ψ) φ = c • tensorState ψ φ := by
   funext r s
   simp only [tensorState, Matrix.smul_apply, smul_eq_mul]
@@ -106,7 +106,7 @@ theorem tensorState_smul_left {j k : ℕ} (c : ℂ) (ψ : QState j) (φ : QState
 
 /-- `(A⊗B)(ψ⊗φ) = (Aψ)⊗(Bφ)`: the Kronecker product of gates acts componentwise on product states. -/
 theorem kron_tensorState {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
-    (ψ : QState j) (φ : QState k) :
+    (ψ : QVector j) (φ : QVector k) :
     kron A B * tensorState ψ φ = tensorState (A * ψ) (B * φ) := by
   funext r s
   obtain rfl : s = 0 := Subsingleton.elim s 0
@@ -133,7 +133,7 @@ theorem kron_mul_ket {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
 
 -- ── Normalization of tensor products ─────────────────────────────────────────
 
-private theorem tensorState_norm_sq {j k : ℕ} (ψ : QState j) (φ : QState k) :
+private theorem tensorState_norm_sq {j k : ℕ} (ψ : QVector j) (φ : QVector k) :
     ∑ i : Fin (2^(j+k)), ‖tensorState ψ φ i 0‖^2 =
     (∑ a : Fin (2^j), ‖ψ a 0‖^2) * (∑ b : Fin (2^k), ‖φ b 0‖^2) := by
   simp_rw [tensorState_apply, norm_mul, mul_pow]
@@ -142,7 +142,7 @@ private theorem tensorState_norm_sq {j k : ℕ} (ψ : QState j) (φ : QState k) 
   simp_rw [Fintype.sum_prod_type, ← Finset.mul_sum, ← Finset.sum_mul]
 
 /-- Tensor product of normalized states is normalized. -/
-theorem IsNormalized.tensorState {j k : ℕ} {ψ : QState j} {φ : QState k}
+theorem IsNormalized.tensorState {j k : ℕ} {ψ : QVector j} {φ : QVector k}
     (hψ : IsNormalized ψ) (hφ : IsNormalized φ) : IsNormalized (tensorState ψ φ) := by
   unfold IsNormalized
   rw [tensorState_norm_sq, hψ, hφ, mul_one]

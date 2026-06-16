@@ -25,7 +25,7 @@ theorem wf_hadamardTransform (n : ℕ) : Circuit.WF (hadamardTransform n) := by
 -- ── Uniform superposition state ───────────────────────────────────────────────
 
 /-- The uniform superposition over all n-qubit basis states: amplitude 1/√(2^n) everywhere. -/
-def uniformSuper (n : ℕ) : QState n := fun _ _ => (Real.sqrt (2 ^ n : ℝ) : ℂ)⁻¹
+def uniformSuper (n : ℕ) : QVector n := fun _ _ => (Real.sqrt (2 ^ n : ℝ) : ℂ)⁻¹
 
 -- ── Helper lemmas ──────────────────────────────────────────────────────────────
 

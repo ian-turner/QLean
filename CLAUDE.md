@@ -58,4 +58,4 @@ See `docs/architecture.md` for the full rationale. Short version:
 - Gates are raw `Matrix (Fin (2^n)) (Fin (2^n)) ℂ`; unitarity is a separate predicate
 - Circuits are a structured inductive type (`id / gate / seq / par`) with denotational semantics `eval : Circuit n → QMatrix n`
 - Tensor product uses `kron` (reindexed `Matrix.kronecker`); the bridge is one equivalence in `Basic/Tensor.lean`
-- `QState n` is `Matrix (Fin (2^n)) (Fin 1) ℂ`; no `PiLp` coercions anywhere
+- `QVector n` is `Matrix (Fin (2^n)) (Fin 1) ℂ`; no `PiLp` coercions anywhere

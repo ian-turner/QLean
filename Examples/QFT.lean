@@ -11,7 +11,7 @@ noncomputable section
 
 /-- The n-qubit QFT output for input |j⟩: amplitude at basis state |k⟩ is
     e^{2πijk/2^n} / √(2^n), implementing the discrete Fourier transform. -/
-def qftState (n : ℕ) (j : Fin (2^n)) : QState n :=
+def qftState (n : ℕ) (j : Fin (2^n)) : QVector n :=
   fun k _ => (Real.sqrt (2^n : ℝ) : ℂ)⁻¹ *
              Complex.exp (2 * Real.pi * Complex.I * j.val * k.val / 2^n)
 

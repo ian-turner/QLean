@@ -18,7 +18,7 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 
 **Definitions:**
 - `hadamardTransform n : Circuit n` — H applied in parallel to every qubit; defined recursively as `hadamardTransform n + HGate`
-- `uniformSuper n : QState n` — uniform superposition with amplitude `1/√(2^n)` at every basis state
+- `uniformSuper n : QVector n` — uniform superposition with amplitude `1/√(2^n)` at every basis state
 
 **Theorem:** `hadamardTransform_prepares (n : ℕ)` — the circuit prepares `uniformSuper n` from `ket 0`.
 
@@ -32,7 +32,7 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 
 **Definitions:**
 - `ghzCircuit n : Circuit (n+1)` — H on qubit 0, then `CNOT(k, k+1)` for `k = 0..n−1`; each step entangles one more qubit
-- `ghzState n : QState (n+1)` — `(ket 0 + ket (allOnes n)) / √2`; equal superposition of all-zeros and all-ones
+- `ghzState n : QVector (n+1)` — `(ket 0 + ket (allOnes n)) / √2`; equal superposition of all-zeros and all-ones
 
 **Theorems:**
 - `wf_ghzCircuit n` — the GHZ circuit is well-formed (all leaves unitary); proved by induction using `simp` and `isUnitary_H` / `isUnitary_CNOT`
@@ -47,7 +47,7 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 ## `Examples/QFT.lean` — Quantum Fourier Transform
 
 **Definitions:**
-- `qftState n j : QState n` — the DFT of the delta function at `j`: amplitude at `k` is `e^{2πijk/2^n} / √(2^n)`
+- `qftState n j : QVector n` — the DFT of the delta function at `j`: amplitude at `k` is `e^{2πijk/2^n} / √(2^n)`
 - `qftMatrix n : QMatrix n` — the DFT unitary; entry `(k, j)` is `e^{2πijk/N} / √N` where `N = 2^n`
 - `QFTGate n : Circuit n` — the QFT as a single circuit gate
 

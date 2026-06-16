@@ -31,7 +31,7 @@ private def allOnes (n : ℕ) : Fin (2 ^ (n + 1)) :=
     omega⟩
 
 /-- GHZ state: equal superposition of |0...0⟩ and |1...1⟩ on n+1 qubits. -/
-def ghzState (n : ℕ) : QState (n + 1) :=
+def ghzState (n : ℕ) : QVector (n + 1) :=
   (Real.sqrt 2 : ℂ)⁻¹ • (ket 0 + ket (allOnes n))
 
 -- ── Helper lemmas ──────────────────────────────────────────────────────────────
@@ -49,13 +49,13 @@ private lemma tensorIndexEquiv_val (j k : ℕ) (a : Fin (2 ^ j)) (b : Fin (2 ^ k
     _ = a.val + b.val * 2 ^ j := by ring
 
 -- tensorState distributes over addition in the first argument.
-private lemma tensorState_add_left {j k : ℕ} (ψ₁ ψ₂ : QState j) (φ : QState k) :
+private lemma tensorState_add_left {j k : ℕ} (ψ₁ ψ₂ : QVector j) (φ : QVector k) :
     tensorState (ψ₁ + ψ₂) φ = tensorState ψ₁ φ + tensorState ψ₂ φ := by
   funext i c; fin_cases c
   simp [tensorState_apply, add_mul]
 
 -- Matrix multiplication commutes with complex scalar multiplication.
-private lemma matrix_mul_smul {n : ℕ} (A : QMatrix n) (c : ℂ) (v : QState n) :
+private lemma matrix_mul_smul {n : ℕ} (A : QMatrix n) (c : ℂ) (v : QVector n) :
     A * (c • v) = c • (A * v) := by
   ext i j
   simp only [Matrix.mul_apply, Matrix.smul_apply, smul_eq_mul]

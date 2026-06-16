@@ -52,6 +52,6 @@ ring   -- or norm_num for goals with Real.sqrt entries
 - `WF` decomposition lemmas: `wf_id`, `wf_gate`, `wf_seq`, `wf_par`
 - Circuit rewrite rules: `seq_id_left`, `par_assoc`, `interchange_law`
 
-## `QState` representation
+## `QVector` representation
 
-`QState n := Matrix (Fin (2^n)) (Fin 1) ℂ` — column matrices rather than functions or `EuclideanSpace`. This avoids all `PiLp` coercions; matrix multiplication `U * ψ` works directly.
+`QVector n := Matrix (Fin (2^n)) (Fin 1) ℂ` — column matrices rather than functions or `EuclideanSpace`. This avoids all `PiLp` coercions; matrix multiplication `U * ψ` works directly.

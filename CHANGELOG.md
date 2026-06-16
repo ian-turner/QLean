@@ -4,6 +4,18 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-15]
+
+### Added
+- `State/Type.lean`: `QState` inductive syntax tree, `castN`, `⊗ₛ` notation, `bit0`/`bit1`
+- `State/Semantics.lean`: `QState.eval`, `IsNormalized`, `Circuit.mapsExpr`, `Circuit.maps_tensor`
+- `State/Rewrite.lean`: `QState.Equiv` (`≈`), congruence lemmas, distributivity rules
+
+### Changed
+- Renamed `QState` (column-vector type) → `QVector`; renamed `QStateExpr` (symbolic syntax tree) → `QState`
+
+---
+
 ## [2026-06-14]
 
 ### Added
@@ -29,7 +41,7 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 - `Circuit.Equiv.basis_iff` in `Circuit/Rewrite.lean`
 - `≈` notation for `Circuit.Equiv`; `*` / `+` / `1` notation for circuit composition
 - `Examples/RzCNOT.lean`: `rz_commutes_cnot`
-- `Basic/Hilbert.lean`: `QState`, `ket`, `tensorState`, `act`, normalization and inner-product lemmas
+- `Basic/Hilbert.lean`: `QVector`, `ket`, `tensorState`, `act`, normalization and inner-product lemmas
 - `Gate/Embed.lean`: `gateAt` with full algebra (`gateAt_mul`, `gateAt_one`, `gateAt_conjTranspose`, `gateAt_unitary`, `gateAt_comm_disjoint`)
 - Unitarity proofs for `S`, `T`, `Rz`, `Rx`, `Ry`
 - `prove_unitary` tactic macro in `Gate/Standard.lean`
