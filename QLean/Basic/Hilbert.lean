@@ -131,6 +131,31 @@ theorem kron_mul_ket {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
     kron A B * ket (tensorIndexEquiv j k ⟨a, b⟩) = tensorState (A * ket a) (B * ket b) := by
   rw [← ket_tensorState]; exact kron_tensorState A B (ket a) (ket b)
 
+-- ── Tensor product associativity (right-unit case) ───────────────────────────
+
+/-- Tensor product of states is associative when the third factor is a 1-qubit state.
+    Types agree because `(j+k)+1 = j+(k+1)` definitionally. -/
+theorem tensorState_assoc_one {j k : ℕ} (ψ : QVector j) (φ : QVector k) (χ : QVector 1) :
+    tensorState (tensorState ψ φ) χ = tensorState ψ (tensorState φ χ) := by
+  funext i c; obtain rfl : c = 0 := Subsingleton.elim c 0
+  simp only [tensorState_apply]
+  have hfst : ((tensorIndexEquiv j k).symm ((tensorIndexEquiv (j + k) 1).symm i).1).1 =
+              ((tensorIndexEquiv j (k + 1)).symm i).1 := by
+    apply Fin.ext
+    simp only [tensorIndexEquiv_symm_fst_val]
+    rw [pow_add (2 : ℕ) j k, Nat.mod_mod_of_dvd _ ⟨2 ^ k, rfl⟩]
+  have hmid : ((tensorIndexEquiv j k).symm ((tensorIndexEquiv (j + k) 1).symm i).1).2 =
+              ((tensorIndexEquiv k 1).symm ((tensorIndexEquiv j (k + 1)).symm i).2).1 := by
+    apply Fin.ext
+    simp only [tensorIndexEquiv_symm_fst_val, tensorIndexEquiv_symm_snd_val]
+    rw [pow_add (2 : ℕ) j k, Nat.mod_mul_right_div_self]
+  have hsnd : ((tensorIndexEquiv (j + k) 1).symm i).2 =
+              ((tensorIndexEquiv k 1).symm ((tensorIndexEquiv j (k + 1)).symm i).2).2 := by
+    apply Fin.ext
+    simp only [tensorIndexEquiv_symm_snd_val]
+    rw [pow_add (2 : ℕ) j k, ← Nat.div_div_eq_div_mul]
+  rw [hfst, hmid, hsnd, mul_assoc]
+
 -- ── Normalization of tensor products ─────────────────────────────────────────
 
 private theorem tensorState_norm_sq {j k : ℕ} (ψ : QVector j) (φ : QVector k) :

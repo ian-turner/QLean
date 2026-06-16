@@ -62,6 +62,47 @@ theorem QState.tensor_smul_right (α : ℂ) (s : QState j) (t : QState k) :
   simp only [tensorState, Matrix.smul_apply, smul_eq_mul]
   ring
 
+-- ── Circuit action on symbolic states ────────────────────────────────────────
+
+/-- A circuit distributes over state addition. -/
+theorem Circuit.apply_add (C : Circuit n) (s t : QState n) :
+    C * (s + t) ≈ C * s + C * t := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_add, Matrix.mul_add]
+
+/-- A circuit commutes with scalar multiplication. -/
+theorem Circuit.apply_smul (C : Circuit n) (α : ℂ) (s : QState n) :
+    C * (α • s) ≈ α • (C * s) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_smul, Matrix.mul_smul]
+
+/-- Sequential circuit composition associates with state application:
+    applying `c₁ * c₂` (first c₁, then c₂) to s equals first applying c₁ to s,
+    then applying c₂ to the result. -/
+theorem Circuit.seq_action (c₁ c₂ : Circuit n) (s : QState n) :
+    (c₁ * c₂) * s ≈ c₂ * (c₁ * s) := by
+  simp only [QState.Equiv, QState.eval_apply, eval_seq, Matrix.mul_assoc]
+
+/-- The identity circuit acts trivially. -/
+theorem Circuit.id_action (s : QState n) : (1 : Circuit n) * s ≈ s := by
+  simp only [QState.Equiv, QState.eval_apply, eval_id, Matrix.one_mul]
+
+/-- Parallel circuits act componentwise on tensor-product states. -/
+theorem Circuit.par_action_tensor (c₁ : Circuit j) (c₂ : Circuit k)
+    (s : QState j) (t : QState k) :
+    (c₁ ⊗ c₂) * (s ⊗ₛ t) ≈ (c₁ * s) ⊗ₛ (c₂ * t) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, eval_par, kron_tensorState]
+
+/-- Tensor product of state expressions is associative (right-unit case).
+    Both sides have type `QState (j + k + 1)` since `(j+k)+1 = j+(k+1)` definitionally. -/
+theorem QState.tensor_assoc {j k : ℕ} (s : QState j) (t : QState k) (u : QState 1) :
+    (s ⊗ₛ t) ⊗ₛ u ≈ (s ⊗ₛ (t ⊗ₛ u : QState (k + 1)) : QState (j + (k + 1))) := by
+  simp only [QState.Equiv, QState.eval_tensor, tensorState_assoc_one]
+
+/-- The all-zero basis ket splits as a tensor of all-zero kets. -/
+theorem QState.ket_zero_tensor (j k : ℕ) :
+    (∣0⟩ : QState (j + k)) ≈ (∣0⟩ : QState j) ⊗ₛ (∣0⟩ : QState k) := by
+  simp only [QState.Equiv, QState.eval_basis, QState.eval_tensor, ket_tensorState]
+  congr 1
+
 -- ── Circuit.Equiv via symbolic states ─────────────────────────────────────────
 
 /-- Equivalent circuits act identically on every symbolic state expression. -/

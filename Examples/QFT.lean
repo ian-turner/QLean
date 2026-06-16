@@ -192,7 +192,7 @@ abbrev QFTGate (n : ℕ) : Circuit n := .gate (qftMatrix n)
 /-- QFT applied to |j⟩ produces qftState n j: the DFT of the delta function at j. -/
 theorem QFTGate_maps_ket (n : ℕ) (j : Fin (2^n)) :
     (QFTGate n).maps (ket j) (qftState n j) := by
-  simp only [Circuit.maps_iff, eval_gate]
+  simp only [Circuit.maps_iff, Circuit.eval_gate]
   ext k c; fin_cases c
   simp only [Matrix.mul_apply, qftMatrix, qftState, ket]
   simp_rw [mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, if_true]

@@ -73,13 +73,13 @@ theorem hadamardTransform_prepares (n : ℕ) : (hadamardTransform n).prepares (u
   simp only [Circuit.maps_iff]
   induction n with
   | zero =>
-    simp only [hadamardTransform, eval_id, Matrix.one_mul]
+    simp only [hadamardTransform, Circuit.eval_id, Matrix.one_mul]
     ext r s
     obtain rfl : s = 0 := Subsingleton.elim s 0
     fin_cases r
     simp [ket_apply, uniformSuper, pow_zero, Real.sqrt_one]
   | succ n ih =>
-    simp only [hadamardTransform, eval_par, eval_gate]
+    simp only [hadamardTransform, Circuit.eval_par, Circuit.eval_gate]
     -- Rewrite ket 0 : Fin (2^(n+1)) as ket (tensorIndexEquiv n 1 ⟨0, 0⟩)
     rw [show (0 : Fin (2 ^ (n + 1))) = tensorIndexEquiv n 1 ⟨0, 0⟩ from
           (tensorIndexEquiv_zero_zero n 1).symm]

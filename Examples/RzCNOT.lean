@@ -15,7 +15,7 @@ theorem rz_commutes_cnot (θ : ℝ) :
   rw [Circuit.Equiv.basis_iff]
   intro i
   obtain ⟨⟨a, b⟩, rfl⟩ := (tensorIndexEquiv 1 1).surjective i
-  simp only [eval_seq, eval_par, eval_gate, eval_id, Matrix.mul_assoc]
+  simp only [Circuit.eval_seq, Circuit.eval_par, Circuit.eval_gate, Circuit.eval_id, Matrix.mul_assoc]
   rw [kron_mul_ket, Matrix.one_mul, CNOT_ket_pair, kron_mul_ket, Matrix.one_mul]
   -- Goal: CNOT * tensorState (Rz θ * ket a) (ket b) = tensorState (Rz θ * ket a) (ket (a + b))
   -- Factor out the Rz diagonal phase (Rz_ket_diag), then close with CNOT_tensorState_smul_ket.

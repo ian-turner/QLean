@@ -81,7 +81,7 @@ theorem Circuit.Equiv.basis_iff {n : ℕ} (c₁ c₂ : Circuit n) :
 open scoped QLean.Notation in
 /-- Two circuits are equivalent iff they act identically on every symbolic basis ket. -/
 theorem Circuit.Equiv.basis_iff_state {n : ℕ} (c₁ c₂ : Circuit n) :
-    c₁ ≈ c₂ ↔ ∀ i : Fin (2^n), c₁ * |i⟩ ≈ c₂ * |i⟩ := by
+    c₁ ≈ c₂ ↔ ∀ i : Fin (2^n), c₁ * ∣i⟩ ≈ c₂ * ∣i⟩ := by
   rw [Circuit.Equiv.basis_iff]
   simp [QState.Equiv, QState.eval_apply, QState.eval_basis]
 
@@ -92,7 +92,7 @@ open scoped QLean.Notation in
 theorem Circuit.Equiv.equiv_iff_all_states {n : ℕ} (c₁ c₂ : Circuit n) :
     c₁ ≈ c₂ ↔ ∀ s : QState n, c₁ * s ≈ c₂ * s :=
   ⟨fun h s => by simp only [QState.Equiv, QState.eval_apply]; rw [h],
-   fun h => (basis_iff_state c₁ c₂).mpr (fun i => h |i⟩)⟩
+   fun h => (basis_iff_state c₁ c₂).mpr (fun i => h ∣i⟩)⟩
 
 -- ── Interchange law ──────────────────────────────────────────────────────────
 
