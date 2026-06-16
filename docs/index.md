@@ -9,7 +9,7 @@ QLean provides a typed circuit language with denotational matrix semantics, stan
 - `Circuit n` — structured inductive type with sequential (`*`) and parallel (`+`) composition
 - `eval : Circuit n → QMatrix n` — denotational semantics (matrix product and Kronecker product)
 - `Circuit.Equiv` / `≈` — circuit equality up to matrix equality
-- State-level layer: `QVector n`, `ket`, `tensorState`, `Circuit.maps`, `Circuit.prepares`
+- State-level layer: `QVector n`, `ket`, `tensorState`, `QState` symbolic state expressions
 
 ## What it is not
 
@@ -32,17 +32,16 @@ QLean/
     StateActions.lean — symbolic gate actions: XGate_bit0, HGate_bit0, CNOTGate_basis_tensor, …
   Circuit/
     Type.lean         — Circuit inductive type, castN
-    Semantics.lean    — eval, Circuit.WF, Circuit.maps, Circuit.prepares
+    Semantics.lean    — eval, Circuit.WF, Circuit.eval_unitary
     Rewrite.lean      — Circuit.Equiv, structural rewrite rules, interchange law
   State/
     Type.lean         — QState inductive type, castN, ⊗ₛ notation, bit0/bit1
-    Semantics.lean    — eval, IsNormalized, Circuit.mapsExpr, Circuit.maps_tensor
-    Rewrite.lean      — QState.Equiv, congruence lemmas, distributivity rules;
-                        Circuit.Equiv.basis_iff_state, equiv_iff_all_states
+    Semantics.lean    — QState.eval, QState.IsNormalized
+    Rewrite.lean      — QState.Equiv, congruence/distributivity/circuit-action lemmas;
+                        Circuit.Equiv.basis_iff_state, equiv_iff_all_states, basis_iff_tensor
 Examples/
   RzCNOT.lean         — Rz(θ) commutes with CNOT on the control qubit
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition
-  GHZ.lean            — chain GHZ circuit prepares (|0…0⟩ + |1…1⟩)/√2
 ```
 
 See [api.md](api.md) for per-module detail.

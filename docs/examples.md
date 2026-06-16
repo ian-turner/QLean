@@ -26,19 +26,3 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 **Technique:** Symbolic equational reasoning in the `QState` layer, like `rz_commutes_cnot`. Induction on `n` whose inductive step is a single `grw` chain (`rw` modulo `≈`, descending under the tensor/apply congruences): split the input `❘0⟩ ≈ ❘0⟩ ⊗ₛ ❘0⟩` (`QState.ket_zero_tensor`), act componentwise (`Circuit.par_action_tensor`), apply the inductive hypothesis to the low `n` qubits and `HGate_bit0` to the high qubit, landing on `uniformSuperState n ⊗ₛ plusState = uniformSuperState (n+1)`. This replaces the earlier index-chasing through `tensorIndexEquiv`/`kron_mul_ket` and a concrete `1/√(2^n)` amplitude vector.
 
 **Key lemmas/tactics used:** `QState.ket_zero_tensor`, `Circuit.par_action_tensor`, `HGate_bit0`, `Circuit.id_action`, `grw`
-
----
-
-## `Examples/GHZ.lean` — Chain GHZ circuit
-
-**Definitions:**
-- `ghzCircuit n : Circuit (n+1)` — H on qubit 0, then `CNOT(k, k+1)` for `k = 0..n−1`; each step entangles one more qubit
-- `ghzState n : QVector (n+1)` — `(ket 0 + ket (allOnes n)) / √2`; equal superposition of all-zeros and all-ones
-
-**Theorems:**
-- `wf_ghzCircuit n` — the GHZ circuit is well-formed (all leaves unitary); proved by induction using `simp` and `isUnitary_H` / `isUnitary_CNOT`
-- `ghzCircuit_prepares n` — the circuit prepares `ghzState n` from `ket 0`
-
-**Technique:** The main proof is by induction on `n`. The inductive step uses `kron_mul_ket` to split the CNOT layer, then `tensorState_add_left` and linearity to distribute over the superposition, identifies the all-ones index via `allOnes_low_reindex` and `cnot_result_eq_allOnes`, and closes with `CNOT_ket_zero'` / `CNOT_ket_one'`.
-
-**Key lemmas used:** `kron_mul_ket`, `ket_tensorState`, `tensorState_add_left`, `CNOT_ket_pair`, index arithmetic on `tensorIndexEquiv`

@@ -150,20 +150,15 @@ The `Circuit` inductive type and the type-cast combinator.
 
 ## `Circuit/Semantics.lean`
 
-Denotational semantics, well-formedness, and state-level circuit predicates.
+Denotational semantics and well-formedness.
 
 **Key definitions:**
 - `eval : Circuit n → QMatrix n` — denotational semantics; `@[simp]` lemmas `eval_id`, `eval_gate`, `eval_seq`, `eval_par`, `eval_castN`
 - `Circuit.WF : Circuit n → Prop` — inductive predicate asserting all `gate` leaves are unitary
   - `@[simp]` iff lemmas: `wf_id`, `wf_gate`, `wf_seq`, `wf_par`
-- `Circuit.maps (C : Circuit n) (φ ψ : QVector n) : Prop` — `eval C * ket 0 = ψ` after applying to φ; `eval C * φ = ψ`
-- `Circuit.prepares (C : Circuit n) (ψ : QVector n)` — `C.maps (ket 0) ψ`
 
 **Key theorems:**
 - `Circuit.eval_unitary` — `WF c → IsUnitary (eval c)`
-- `Circuit.maps_id` — identity circuit maps any state to itself
-- `Circuit.maps_comp` — sequential composition chains `maps`
-- `Circuit.maps_iff` — `C.maps φ ψ ↔ eval C * φ = ψ`
 
 ---
 
@@ -185,16 +180,14 @@ The `QState` inductive type and supporting infrastructure.
 
 ## `State/Semantics.lean`
 
-Denotational semantics and the circuit–state bridge.
+Denotational semantics and normalization for state expressions.
 
 **Key definitions:**
-- `QState.eval : QState n → QVector n` — denotational semantics; `@[simp]` lemmas `eval_basis`, `eval_smul`, `eval_add`, `eval_tensor`, `eval_castN`, `eval_apply`
+- `QState.eval : QState n → QVector n` — denotational semantics; `@[simp]` lemmas `eval_basis`, `eval_smul`, `eval_add`, `eval_tensor`, `eval_apply`; plus the non-`simp` `eval_castN`
 - `QState.IsNormalized s` — `QLean.IsNormalized (eval s)`; predicate lifted from `QVector`
-- `Circuit.mapsExpr C s t` — `C.maps (eval s) (eval t)`; lifts `Circuit.maps` to state expressions; prefer `C * s ≈ t` in new code (see `mapsExpr_iff` in `State/Rewrite.lean`)
 
 **Key theorems:**
 - `QState.IsNormalized.tensor` — tensor product of normalized expressions is normalized
-- `Circuit.maps_tensor` — if `c₁.mapsExpr s s'` and `c₂.mapsExpr t t'` then `(c₁ + c₂).mapsExpr (s ⊗ₛ t) (s' ⊗ₛ t')`
 
 ---
 
@@ -213,16 +206,23 @@ State expression equivalence and equational rewrite rules.
 - `QState.Equiv.smul_congr` — `≈` is a congruence for `smul`
 - `QState.Equiv.tensor_congr` — `≈` is a congruence for `tensor`
 
-**Bridge:**
-- `Circuit.mapsExpr_iff` — `C.mapsExpr s t ↔ C * s ≈ t`
-
 **Distributivity rules:**
 - `QState.add_tensor_left` — `(s + t) ⊗ₛ u ≈ s ⊗ₛ u + t ⊗ₛ u`
 - `QState.tensor_add_right` — `s ⊗ₛ (t + u) ≈ s ⊗ₛ t + s ⊗ₛ u`
 - `QState.smul_tensor_left` — `(α • s) ⊗ₛ t ≈ α • (s ⊗ₛ t)`
 - `QState.tensor_smul_right` — `s ⊗ₛ (α • t) ≈ α • (s ⊗ₛ t)`
 
+**Circuit action on symbolic states** (reshape an `apply` expression; used as `calc`/`grw` steps):
+- `Circuit.apply_add` — `C * (s + t) ≈ C * s + C * t`
+- `Circuit.apply_smul` — `C * (α • s) ≈ α • (C * s)`
+- `Circuit.seq_action` — `(c₁ * c₂) * s ≈ c₂ * (c₁ * s)` (`c₁` acts first)
+- `Circuit.id_action` — `(1 : Circuit n) * s ≈ s`
+- `Circuit.par_action_tensor` — `(c₁ ⊗ c₂) * (s ⊗ₛ t) ≈ (c₁ * s) ⊗ₛ (c₂ * t)`
+- `QState.tensor_assoc` — `(s ⊗ₛ t) ⊗ₛ u ≈ s ⊗ₛ (t ⊗ₛ u)` (right-unit case, `u : QState 1`)
+- `QState.ket_zero_tensor` — `(❘0⟩ : QState (j+k)) ≈ (❘0⟩ : QState j) ⊗ₛ (❘0⟩ : QState k)`
+
 **Symbolic-state equivalence criteria:**
+- `Circuit.Equiv.apply_state` — equivalent circuits act identically on a state: if `c₁ ≈ c₂` then `c₁ * s ≈ c₂ * s`
 - `Circuit.Equiv.basis_iff_state` — `c₁ ≈ c₂ ↔ ∀ i, c₁ * ❘i⟩ ≈ c₂ * ❘i⟩` (symbolic-basis form of `basis_iff`)
 - `Circuit.Equiv.equiv_iff_all_states` — `c₁ ≈ c₂ ↔ ∀ s, c₁ * s ≈ c₂ * s`
 - `Circuit.Equiv.basis_iff_tensor` — for `c₁ c₂ : Circuit (j+k)`, `c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)), c₁ * (❘a⟩ ⊗ₛ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ₛ ❘b⟩)`; factored-basis criterion that pairs with the tensor-form gate actions in `Gate/StateActions.lean`

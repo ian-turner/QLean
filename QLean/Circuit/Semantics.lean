@@ -1,6 +1,5 @@
 import QLean.Circuit.Type
 import QLean.Basic.Tensor
-import QLean.Basic.Hilbert
 
 namespace QLean
 
@@ -64,28 +63,6 @@ theorem Circuit.eval_unitary (c : Circuit n) (h : c.WF) : IsUnitary (eval c) := 
   | par c₁ c₂ ih₁ ih₂ =>
     obtain ⟨h₁, h₂⟩ := h
     exact IsUnitary.kron (ih₁ h₁) (ih₂ h₂)
-
--- ── State transformation and preparation ──────────────────────────────────────
-
-/-- `C.maps φ ψ` holds when circuit `C` sends input state `φ` to output state `ψ`. -/
-def Circuit.maps (C : Circuit n) (φ ψ : QVector n) : Prop :=
-  eval C * φ = ψ
-
-@[simp] theorem Circuit.maps_iff (C : Circuit n) (φ ψ : QVector n) :
-    C.maps φ ψ ↔ eval C * φ = ψ := Iff.rfl
-
-/-- `C.prepares ψ` holds when `C` produces state `ψ` from the all-zeros input `|0…0⟩`. -/
-abbrev Circuit.prepares (C : Circuit n) (ψ : QVector n) : Prop :=
-  C.maps (ket 0) ψ
-
-theorem Circuit.maps_id (φ : QVector n) : (1 : Circuit n).maps φ φ := by
-  simp [Circuit.maps]
-
-/-- If `C₁` maps `φ` to `χ` and `C₂` maps `χ` to `ψ`, then `C₁ * C₂` maps `φ` to `ψ`. -/
-theorem Circuit.maps_comp {C₁ C₂ : Circuit n} {φ χ ψ : QVector n}
-    (h₁ : C₁.maps φ χ) (h₂ : C₂.maps χ ψ) : (C₁ * C₂).maps φ ψ := by
-  simp only [Circuit.maps_iff] at *
-  rw [eval_seq, Matrix.mul_assoc, h₁, h₂]
 
 end
 

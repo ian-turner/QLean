@@ -7,7 +7,7 @@ Lean 4 formalization of quantum computing circuits, built as a reusable library 
 | Path | Purpose |
 |------|---------|
 | `QLean/` | Lean 4 source (library root) |
-| `Examples/` | Worked examples (GHZ, QFT, Hadamard transform, Rz–CNOT commutativity) |
+| `Examples/` | Worked examples (Hadamard transform, Rz–CNOT commutativity) |
 | `docs/` | Library documentation — start at `docs/index.md` |
 | `CHANGELOG.md` | Per-commit change log |
 | `lakefile.toml` | Lake build config |

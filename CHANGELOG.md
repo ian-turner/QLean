@@ -4,6 +4,16 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16] (5)
+
+### Removed
+- `Circuit/Semantics.lean`: dropped the unused state transformation/preparation predicates (`Circuit.maps`, `maps_iff`, `prepares`, `maps_id`, `maps_comp`) and the now-unneeded `Basic.Hilbert` import
+
+### Fixed
+- Docs: reconciled `docs/` and `CLAUDE.md` with the source — removed stale references to the deleted `Circuit.mapsExpr`/`maps_tensor`/`mapsExpr_iff` and to the dropped GHZ/QFT examples; documented the previously-undocumented circuit-action lemmas in `State/Rewrite.lean`
+
+---
+
 ## [2026-06-16] (4)
 
 ### Removed
