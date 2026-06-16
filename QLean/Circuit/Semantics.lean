@@ -22,7 +22,7 @@ def eval : Circuit n → QMatrix n
 @[simp] theorem eval_gate (U : QMatrix n) : eval (.gate U) = U := rfl
 @[simp] theorem eval_seq (c₁ c₂ : Circuit n) : eval (c₁ * c₂) = eval c₂ * eval c₁ := rfl
 @[simp] theorem eval_par {j k : ℕ} (c₁ : Circuit j) (c₂ : Circuit k) :
-    eval (c₁ + c₂) = kron (eval c₁) (eval c₂) := rfl
+    eval (c₁ ⊗ c₂) = kron (eval c₁) (eval c₂) := rfl
 
 /-- `eval_castN`: transporting across a qubit-count equality is a `reindex` at matrix level. -/
 @[simp] theorem eval_castN (h : m = n) (c : Circuit m) :
@@ -45,7 +45,7 @@ def Circuit.WF : Circuit n → Prop
 @[simp] theorem wf_seq  {c₁ c₂ : Circuit n} :
     Circuit.WF (c₁ * c₂) ↔ Circuit.WF c₁ ∧ Circuit.WF c₂ := Iff.rfl
 @[simp] theorem wf_par  {c₁ : Circuit j} {c₂ : Circuit k} :
-    Circuit.WF (c₁ + c₂) ↔ Circuit.WF c₁ ∧ Circuit.WF c₂ := Iff.rfl
+    Circuit.WF (c₁ ⊗ c₂) ↔ Circuit.WF c₁ ∧ Circuit.WF c₂ := Iff.rfl
 
 -- ── WF implies unitarity ──────────────────────────────────────────────────────
 

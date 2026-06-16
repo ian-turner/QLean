@@ -12,7 +12,7 @@ noncomputable section
     Each step entangles one more qubit by applying CNOT to the last pair. -/
 def ghzCircuit : (n : ℕ) → Circuit (n + 1)
   | 0     => HGate
-  | n + 1 => (ghzCircuit n + (1 : Circuit 1)) * ((1 : Circuit n) + CNOTGate)
+  | n + 1 => (ghzCircuit n ⊗ (1 : Circuit 1)) * ((1 : Circuit n) ⊗ CNOTGate)
 
 -- ── Well-formedness ────────────────────────────────────────────────────────────
 

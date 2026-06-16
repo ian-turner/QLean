@@ -54,7 +54,7 @@ def Circuit.mapsExpr (C : Circuit n) (s t : QState n) : Prop :=
 theorem Circuit.maps_tensor {j k : ℕ} {c₁ : Circuit j} {c₂ : Circuit k}
     {s s' : QState j} {t t' : QState k}
     (h₁ : c₁.mapsExpr s s') (h₂ : c₂.mapsExpr t t') :
-    (c₁ + c₂).mapsExpr (s ⊗ₛ t) (s' ⊗ₛ t') := by
+    (c₁ ⊗ c₂).mapsExpr (s ⊗ₛ t) (s' ⊗ₛ t') := by
   unfold Circuit.mapsExpr Circuit.maps at *
   simp only [QState.eval_tensor, eval_par]
   rw [kron_tensorState, h₁, h₂]

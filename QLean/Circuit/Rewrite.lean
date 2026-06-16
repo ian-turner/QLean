@@ -35,7 +35,7 @@ theorem Circuit.Equiv.seq_congr {c₁ c₁' c₂ c₂' : Circuit n}
 /-- Equivalent components yield equivalent parallel circuits. -/
 theorem Circuit.Equiv.par_congr {c₁ c₁' : Circuit j} {c₂ c₂' : Circuit k}
     (h₁ : c₁ ≈ c₁') (h₂ : c₂ ≈ c₂') :
-    c₁ + c₂ ≈ c₁' + c₂' := by
+    c₁ ⊗ c₂ ≈ c₁' ⊗ c₂' := by
   simp only [Circuit.Equiv, eval_par]; rw [h₁, h₂]
 
 -- ── Basic rewrite rules ───────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ theorem seq_assoc (c₁ c₂ c₃ : Circuit n) :
 
 /-- Parallel composition is associative up to `castN` and `≈`. -/
 theorem par_assoc (c₁ : Circuit j) (c₂ : Circuit k) (c₃ : Circuit l) :
-    Circuit.castN (Nat.add_assoc j k l) ((c₁ + c₂) + c₃) ≈ c₁ + (c₂ + c₃) := by
+    Circuit.castN (Nat.add_assoc j k l) ((c₁ ⊗ c₂) ⊗ c₃) ≈ c₁ ⊗ (c₂ ⊗ c₃) := by
   simp only [Circuit.Equiv, eval_castN, eval_par]
   exact kron_assoc (eval c₁) (eval c₂) (eval c₃)
 
@@ -82,7 +82,7 @@ theorem Circuit.Equiv.basis_iff {n : ℕ} (c₁ c₂ : Circuit n) :
 /-- Parallel composition distributes over sequential composition:
     running two sequences in parallel equals sequencing two parallel steps. -/
 theorem interchange_law {j k : ℕ} (a b : Circuit j) (c d : Circuit k) :
-    (a * b) + (c * d) ≈ (a + c) * (b + d) := by
+    (a * b) ⊗ (c * d) ≈ (a ⊗ c) * (b ⊗ d) := by
   simp [Circuit.Equiv, ← kron_mul]
 
 end
