@@ -150,3 +150,11 @@ theorem IsNormalized.tensorState {j k : ℕ} {ψ : QVector j} {φ : QVector k}
 end QLean
 
 end
+
+-- Dirac ket notation. Opt in with `open scoped QLean.Notation`.
+-- `|i⟩` expands to `QLean.ket i`.
+namespace QLean.Notation
+
+scoped notation "|" i "⟩" => QLean.ket i
+
+end QLean.Notation

@@ -28,3 +28,10 @@ abbrev bit1 : QState 1 := .basis ⟨1, by norm_num⟩
 end QState
 
 end QLean
+
+namespace QLean.Notation
+
+/-- `|i⟩ₛ` expands to `QState.basis i`. Opt in with `open scoped QLean.Notation`. -/
+scoped notation "|" i "⟩ₛ" => QLean.QState.basis i
+
+end QLean.Notation

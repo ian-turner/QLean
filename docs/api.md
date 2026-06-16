@@ -44,7 +44,7 @@ State-level layer: quantum states, basis kets, tensor product of states.
 **Key definitions:**
 - `QVector n` — `Matrix (Fin (2^n)) (Fin 1) ℂ`; column-vector representation of a quantum state
 - `IsNormalized ψ` — `∑ i, ‖ψ i 0‖^2 = 1`
-- `ket i : QVector n` — basis state at index `i`; `ket i j _ = if j = i then 1 else 0`
+- `ket i : QVector n` — basis state at index `i`; `ket i j _ = if j = i then 1 else 0`; notation `|i⟩`
 - `tensorState ψ φ : QVector (j+k)` — tensor product of two states
 - `act U ψ` — matrix-vector action `U * ψ`
 
@@ -144,7 +144,7 @@ The `QState` inductive type and supporting infrastructure.
 
 **Key definitions:**
 - `QState n` — inductive syntax tree for `n`-qubit states; constructors:
-  - `.basis i : QState n` — computational basis state `|i⟩` for `i : Fin (2^n)`
+  - `.basis i : QState n` — computational basis state for `i : Fin (2^n)`; notation `|i⟩ₛ`
   - `.smul α s` — scalar multiple; `α • s` notation via `SMul ℂ` instance
   - `.add s t`  — superposition; `s + t` notation via `Add` instance
   - `.tensor s t` — tensor product; `s ⊗ₛ t` notation (qubit count sums)
