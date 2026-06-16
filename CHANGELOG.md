@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16]
+
+### Added
+- `Gate/StateActions.lean`: `RzGate_basis` — `Rz θ` acts on `⎸a⟩` (`a : Fin (2^1)`) by phase `exp((2a-1)·iθ/2)`
+
+---
+
 ## [2026-06-15] (2)
 
 ### Added

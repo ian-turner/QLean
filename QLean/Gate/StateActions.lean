@@ -68,6 +68,21 @@ theorem HGate_bit1 :
              QState.eval_add, QState.eval_basis, ← Complex.ofReal_inv]
   exact H_ket_one
 
+/-- `Rz θ` acts on the basis tensor `⎸a⟩` by the complex phase `exp((2a-1)·iθ/2)`:
+    `exp(-iθ/2)` on `⎸0⟩` and `exp(iθ/2)` on `⎸1⟩`.
+    `a : Fin (2^1)` matches the ket index directly. -/
+theorem RzGate_basis (θ : ℝ) (a : Fin (2^1)) :
+    RzGate θ * (⎸a⟩ : QState 1)
+      ≈ Complex.exp ((2 * (a.val : ℂ) - 1) * Complex.I * θ / 2) • (⎸a⟩ : QState 1) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QState.eval_smul,
+             Circuit.eval_gate]
+  -- `omega` can't evaluate the `Fin (2^1)` literals (the `2^1` modulus stays opaque),
+  -- so split with `fin_cases`, which reduces `Fin (2^1)` definitionally to `Fin 2`.
+  have ha : a = 0 ∨ a = 1 := by fin_cases a <;> simp
+  rcases ha with rfl | rfl
+  · rw [Rz_ket_zero]; norm_num
+  · rw [Rz_ket_one]; norm_num
+
 -- ── Two-qubit gate actions ─────────────────────────────────────────────────────
 
 /-- CNOT maps `⎸a⟩ ⊗ₛ ⎸b⟩` to `⎸a⟩ ⊗ₛ |a+b⟩` (XOR on the target qubit).
