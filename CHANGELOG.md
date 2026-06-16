@@ -4,6 +4,19 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16] (3)
+
+### Added
+- `Examples/HadamardTransform.lean`: symbolic `plusState`/`uniformSuperState` (`QState`), a tensor power of `|+⟩`
+
+### Changed
+- `Examples/HadamardTransform.lean`: `hadamardTransform_prepares` now states `hadamardTransform n * ❘0⟩ ≈ uniformSuperState n` and is proved by a single `grw` chain per induction step, like `rz_commutes_cnot`
+
+### Removed
+- `Examples/HadamardTransform.lean`: dropped the concrete `uniformSuper` amplitude vector and the `tensorIndexEquiv`/`kron_mul_ket` index-chasing proof, along with helpers `tensorIndexEquiv_zero_zero`, `tensorState_uniformSuper`, and the local raw `H_ket_zero`
+
+---
+
 ## [2026-06-16] (2)
 
 ### Changed

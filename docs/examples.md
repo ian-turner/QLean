@@ -17,14 +17,15 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 ## `Examples/HadamardTransform.lean` — n-qubit Hadamard transform
 
 **Definitions:**
-- `hadamardTransform n : Circuit n` — H applied in parallel to every qubit; defined recursively as `hadamardTransform n + HGate`
-- `uniformSuper n : QVector n` — uniform superposition with amplitude `1/√(2^n)` at every basis state
+- `hadamardTransform n : Circuit n` — H applied in parallel to every qubit; defined recursively as `hadamardTransform n ⊗ HGate`
+- `plusState : QState 1` — the symbolic single-qubit uniform superposition `|+⟩ = (❘0⟩ + ❘1⟩)/√2` (the RHS of `HGate_bit0`)
+- `uniformSuperState n : QState n` — the symbolic n-qubit uniform superposition; a tensor power of `plusState`, one `|+⟩` per qubit
 
-**Theorem:** `hadamardTransform_prepares (n : ℕ)` — the circuit prepares `uniformSuper n` from `ket 0`.
+**Theorem:** `hadamardTransform_prepares (n : ℕ)` — `hadamardTransform n * ❘0⟩ ≈ uniformSuperState n`.
 
-**Technique:** Induction on `n`. The base case is a direct computation for `H * ket 0`. The inductive step rewrites `ket 0 : Fin (2^(n+1))` as `ket (tensorIndexEquiv n 1 ⟨0, 0⟩)`, applies `kron_mul_ket` to split the Kronecker action, uses the inductive hypothesis on the low qubits and `H_ket_zero` on the high qubit, and closes with `tensorState_uniformSuper`.
+**Technique:** Symbolic equational reasoning in the `QState` layer, like `rz_commutes_cnot`. Induction on `n` whose inductive step is a single `grw` chain (`rw` modulo `≈`, descending under the tensor/apply congruences): split the input `❘0⟩ ≈ ❘0⟩ ⊗ₛ ❘0⟩` (`QState.ket_zero_tensor`), act componentwise (`Circuit.par_action_tensor`), apply the inductive hypothesis to the low `n` qubits and `HGate_bit0` to the high qubit, landing on `uniformSuperState n ⊗ₛ plusState = uniformSuperState (n+1)`. This replaces the earlier index-chasing through `tensorIndexEquiv`/`kron_mul_ket` and a concrete `1/√(2^n)` amplitude vector.
 
-**Key lemmas used:** `kron_mul_ket`, `tensorState_uniformSuper`, `H_ket_zero`
+**Key lemmas/tactics used:** `QState.ket_zero_tensor`, `Circuit.par_action_tensor`, `HGate_bit0`, `Circuit.id_action`, `grw`
 
 ---
 
