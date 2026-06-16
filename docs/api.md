@@ -207,7 +207,7 @@ State expression equivalence and equational rewrite rules.
 
 `QState.Equiv` is an equivalence relation with `@[refl]`/`@[symm]`/`@[trans]` instances and a `Trans` instance for `calc` blocks.
 
-**Congruence lemmas:**
+**Congruence lemmas** (all `@[gcongr]`, so the `gcongr` tactic descends `≈` goals through these constructors to their leaves; see `docs/lean-api.md`):
 - `QState.Equiv.apply_congr` — `≈` is a congruence for `apply`: if `s ≈ t` then `C * s ≈ C * t`
 - `QState.Equiv.add_congr` — `≈` is a congruence for `add`
 - `QState.Equiv.smul_congr` — `≈` is a congruence for `smul`
@@ -222,6 +222,12 @@ State expression equivalence and equational rewrite rules.
 - `QState.smul_tensor_left` — `(α • s) ⊗ₛ t ≈ α • (s ⊗ₛ t)`
 - `QState.tensor_smul_right` — `s ⊗ₛ (α • t) ≈ α • (s ⊗ₛ t)`
 
+**Symbolic-state equivalence criteria:**
+- `Circuit.Equiv.basis_iff_state` — `c₁ ≈ c₂ ↔ ∀ i, c₁ * ❘i⟩ ≈ c₂ * ❘i⟩` (symbolic-basis form of `basis_iff`)
+- `Circuit.Equiv.equiv_iff_all_states` — `c₁ ≈ c₂ ↔ ∀ s, c₁ * s ≈ c₂ * s`
+- `Circuit.Equiv.basis_iff_tensor` — for `c₁ c₂ : Circuit (j+k)`, `c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)), c₁ * (❘a⟩ ⊗ₛ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ₛ ❘b⟩)`; factored-basis criterion that pairs with the tensor-form gate actions in `Gate/StateActions.lean`
+- `QState.basis_tensor_split` — `❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ₛ ❘b⟩`; the basis split underlying `basis_iff_tensor` (generalizes `QState.ket_zero_tensor`)
+
 ---
 
 ## `Circuit/Rewrite.lean`
@@ -233,7 +239,7 @@ Circuit equivalence and equational rewrite rules.
 
 `Circuit.Equiv` is an equivalence relation with `@[refl]`/`@[symm]`/`@[trans]` instances and a `Trans` instance for `calc` blocks.
 
-**Congruence lemmas:**
+**Congruence lemmas** (both `@[gcongr]`, so `gcongr` descends `Circuit.Equiv` goals through `seq`/`par`):
 - `Circuit.Equiv.seq_congr` — `≈` is a congruence for `seq`
 - `Circuit.Equiv.par_congr` — `≈` is a congruence for `par`
 

@@ -8,9 +8,12 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ### Changed
 - `State/Type.lean`: ket notation now uses `❘` (U+2758, LIGHT VERTICAL BAR) instead of `⎸` (U+23B8); avoids Mathlib's `∣` divisibility token
+- `Examples/RzCNOT.lean`: `rz_commutes_cnot` reproved entirely in the symbolic state layer via `Circuit.Equiv.basis_iff_tensor` (was matrix-level `basis_iff`)
 
 ### Added
 - `Gate/StateActions.lean`: `RzGate_basis` — `Rz θ` acts on `❘a⟩` (`a : Fin (2^1)`) by phase `exp((2a-1)·iθ/2)`
+- `State/Rewrite.lean`: `Circuit.Equiv.basis_iff_tensor` — `(j+k)`-qubit circuits are equivalent iff they agree on every factored basis state `❘a⟩ ⊗ₛ ❘b⟩`; `QState.basis_tensor_split` — `❘tensorIndexEquiv j k ⟨a,b⟩⟩ ≈ ❘a⟩ ⊗ₛ ❘b⟩`
+- `State/Rewrite.lean` + `Circuit/Rewrite.lean`: `@[gcongr]` on all congruence lemmas (`QState.Equiv.apply_congr`/`add_congr`/`smul_congr`/`tensor_congr`, `Circuit.Equiv.seq_congr`/`par_congr`), enabling the `gcongr` tactic to descend `≈` goals through constructors to their leaves
 
 ---
 

@@ -1,5 +1,6 @@
 import QLean.State.Semantics
 import QLean.Circuit.Rewrite
+import Mathlib.Tactic.GCongr
 
 open scoped QLean.Notation
 
@@ -23,18 +24,22 @@ instance : Trans (@QState.Equiv n) (@QState.Equiv n) (@QState.Equiv n) :=
 
 -- ── Congruence lemmas ─────────────────────────────────────────────────────────
 
+@[gcongr]
 theorem QState.Equiv.apply_congr {C : Circuit n} {s t : QState n}
     (h : s ≈ t) : C * s ≈ C * t := by
   simp only [QState.Equiv, QState.eval_apply]; rw [h]
 
+@[gcongr]
 theorem QState.Equiv.add_congr {s s' t t' : QState n}
     (hs : s ≈ s') (ht : t ≈ t') : s + t ≈ s' + t' := by
   simp only [QState.Equiv, QState.eval_add]; rw [hs, ht]
 
+@[gcongr]
 theorem QState.Equiv.smul_congr {s s' : QState n} (α : ℂ)
     (hs : s ≈ s') : α • s ≈ α • s' := by
   simp only [QState.Equiv, QState.eval_smul]; rw [hs]
 
+@[gcongr]
 theorem QState.Equiv.tensor_congr {s s' : QState j} {t t' : QState k}
     (hs : s ≈ s') (ht : t ≈ t') : s ⊗ₛ t ≈ s' ⊗ₛ t' := by
   simp only [QState.Equiv, QState.eval_tensor]; rw [hs, ht]
@@ -105,6 +110,12 @@ theorem QState.ket_zero_tensor (j k : ℕ) :
   simp only [QState.Equiv, QState.eval_basis, QState.eval_tensor, ket_tensorState]
   congr 1
 
+/-- A computational basis ket splits as a tensor over the two factors:
+    the combined index `tensorIndexEquiv j k ⟨a, b⟩` denotes `❘a⟩ ⊗ₛ ❘b⟩`. -/
+theorem QState.basis_tensor_split {j k : ℕ} (a : Fin (2^j)) (b : Fin (2^k)) :
+    (❘tensorIndexEquiv j k ⟨a, b⟩⟩ : QState (j + k)) ≈ (❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k) := by
+  simp only [QState.Equiv, QState.eval_basis, QState.eval_tensor, ket_tensorState]
+
 -- ── Circuit.Equiv via symbolic states ─────────────────────────────────────────
 
 /-- Equivalent circuits act identically on every symbolic state expression. -/
@@ -125,6 +136,27 @@ theorem Circuit.Equiv.equiv_iff_all_states {n : ℕ} (c₁ c₂ : Circuit n) :
     c₁ ≈ c₂ ↔ ∀ s : QState n, c₁ * s ≈ c₂ * s :=
   ⟨fun h s => by simp only [QState.Equiv, QState.eval_apply]; rw [h],
    fun h => (basis_iff_state c₁ c₂).mpr (fun i => h ❘i⟩)⟩
+
+/-- Two `(j+k)`-qubit circuits are equivalent iff they act identically on every
+    factored basis state `❘a⟩ ⊗ₛ ❘b⟩`, looping over the basis of each factor.
+    More convenient than `basis_iff_state` when the available gate-action lemmas are
+    phrased on tensor factors (e.g. `CNOTGate_basis_tensor`, `RzGate_basis`). -/
+theorem Circuit.Equiv.basis_iff_tensor {j k : ℕ} (c₁ c₂ : Circuit (j + k)) :
+    c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)),
+      c₁ * ((❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k)) ≈ c₂ * ((❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k)) := by
+  constructor
+  · intro h a b
+    exact Circuit.Equiv.apply_state h _
+  · intro h
+    rw [basis_iff_state]
+    intro i
+    obtain ⟨⟨a, b⟩, rfl⟩ := (tensorIndexEquiv j k).surjective i
+    calc c₁ * ❘tensorIndexEquiv j k ⟨a, b⟩⟩
+        ≈ c₁ * ((❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k)) :=
+          QState.Equiv.apply_congr (QState.basis_tensor_split a b)
+      _ ≈ c₂ * ((❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k)) := h a b
+      _ ≈ c₂ * ❘tensorIndexEquiv j k ⟨a, b⟩⟩ :=
+          QState.Equiv.apply_congr (QState.basis_tensor_split a b).symm
 
 end  -- noncomputable
 

@@ -148,3 +148,17 @@ exact CNOT_ket_pair a b
 - `decide` closes concrete index goals for small `n` (n ≤ 4 is fast)
 - `omega` handles linear `ℕ`/`ℤ` goals about `Fin.val`; it cannot derive `2^j * 2^k = 2^(j+k)` — use `rw [pow_add]` first
 - `ring` in Lean 4 treats variable exponents as opaque atoms; cannot derive `2^(j+k) = 2^j * 2^k`
+
+---
+
+## `simp` cannot chain `QState.Equiv` / `Circuit.Equiv` rewrites
+
+`QState.Equiv s t` is *defined* as `eval s = eval t` (likewise `Circuit.Equiv`). So an action/congruence lemma such as `Circuit.seq_action : (c₁*c₂)*s ≈ c₂*(c₁*s)` is really `eval ((c₁*c₂)*s) = eval (c₂*(c₁*s))` — an `Eq` whose LHS pattern is an `eval (…)` application.
+
+`simp`/`rw` only do congruence rewriting for `=`/`↔`, and they match a lemma's LHS against subterms. Since the only `eval (…)` subterms in a goal `eval s = eval t` are the two **outermost** ones, these lemmas can only rewrite the whole expression — never a nested sub-state (e.g. the `1 * ❘b⟩` inside `CNOT * ((Rz θ * ❘a⟩) ⊗ₛ (1 * ❘b⟩))`). After one top-level rewrite, `simp` reports every further `≈`-lemma as "unused" and stalls.
+
+Consequences:
+- Adding more `≈` lemmas does not help — they all share the `eval (…)` LHS shape.
+- Drive the *directional* `≈` reductions (the action lemmas `seq_action`, `par_action_tensor`, `smul_tensor_left`, … that change an expression's shape) with `calc` and the `Trans` instance.
+- For the *congruence* part — relating `C[s]` and `C[t]` when only a sub-state differs — use `gcongr`. The four congruence lemmas (`QState.Equiv.apply_congr`/`add_congr`/`smul_congr`/`tensor_congr`) are tagged `@[gcongr]`, so `gcongr` descends through the constructors to the differing leaves in one call (auto-closing leaves by `rfl`/`assumption` via the `@[refl]` instance), without naming the specific lemma. This recovers the *congruence* half of `simp`'s ergonomics, but not the *rewriting* half. Typical step: `_ ≈ C[t] := by gcongr; exact <leaf proof>`. See `Examples/RzCNOT.lean`.
+- To finish at the matrix level instead, push `eval` all the way in with the structural simp lemmas (`eval_apply`, `eval_tensor`, `eval_basis`, `Circuit.eval_seq/par/gate/id`) and then chain genuine `Matrix`/`QVector` `Eq` lemmas — that is what `Circuit.Equiv.basis_iff` proofs do.

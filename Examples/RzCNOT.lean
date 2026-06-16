@@ -1,26 +1,59 @@
 import QLean
 
+open scoped QLean.Notation
+
 namespace QLean.Examples
 
 open QLean
 
 noncomputable section
 
-/-- Rz(θ) on qubit 0 (the CNOT control) commutes with CNOT.
-    Rz is diagonal: it applies a phase depending only on the control bit's value.
-    CNOT preserves the control bit, so the phase is identical in both orderings. -/
+/-- The identity circuit on one qubit; a space-saving alias for `(1 : Circuit 1)`. -/
+abbrev id1 : Circuit 1 := 1
+
+/-- `Rz(θ)` on qubit 0 (the CNOT control) commutes with CNOT.
+
+    The argument is equational reasoning in the symbolic state layer. By
+    `Circuit.Equiv.basis_iff_tensor` it suffices to check both circuit orderings on
+    every factored basis state `❘a⟩ ⊗ₛ ❘b⟩`, and we show they land on the *same*
+    phased state `φ • (❘a⟩ ⊗ₛ ❘a+b⟩)`:
+
+    * Rz is diagonal, so on the control ket `❘a⟩` it is just multiplication by some
+      phase `φ` — we keep `φ` abstract, since its value is irrelevant to commutativity.
+    * `Rz ⊗ 1` therefore phases any basis tensor with control `❘a⟩` by `φ`, leaving the
+      target ket untouched (`rz_phase`).
+    * CNOT flips the target and preserves the control (`CNOTGate_basis_tensor`).
+
+    Running the two gates in either order phases by the same `φ` (it depends only on the
+    control, which CNOT never changes) and flips the target once, so the results agree. -/
 theorem rz_commutes_cnot (θ : ℝ) :
-    (RzGate θ ⊗ (1 : Circuit 1)) * CNOTGate ≈
-    CNOTGate * (RzGate θ ⊗ (1 : Circuit 1)) := by
-  rw [Circuit.Equiv.basis_iff]
-  intro i
-  obtain ⟨⟨a, b⟩, rfl⟩ := (tensorIndexEquiv 1 1).surjective i
-  simp only [Circuit.eval_seq, Circuit.eval_par, Circuit.eval_gate, Circuit.eval_id, Matrix.mul_assoc]
-  rw [kron_mul_ket, Matrix.one_mul, CNOT_ket_pair, kron_mul_ket, Matrix.one_mul]
-  -- Goal: CNOT * tensorState (Rz θ * ket a) (ket b) = tensorState (Rz θ * ket a) (ket (a + b))
-  -- Factor out the Rz diagonal phase (Rz_ket_diag), then close with CNOT_tensorState_smul_ket.
-  simp only [Rz_ket_diag]
-  exact CNOT_tensorState_smul_ket _ a b
+    (RzGate θ ⊗ id1) * CNOTGate ≈ CNOTGate * (RzGate θ ⊗ id1) := by
+  refine (Circuit.Equiv.basis_iff_tensor (j := 1) (k := 1) _ _).mpr fun a b => ?_
+  -- Rz acts as a scalar `φ` on the control ket; we never need φ's actual value.
+  obtain ⟨φ, hφ⟩ : ∃ φ : ℂ, RzGate θ * ❘a⟩ ≈ φ • ❘a⟩ := ⟨_, RzGate_basis θ a⟩
+  -- `Rz ⊗ 1` phases any basis tensor with control `❘a⟩` by `φ`, whatever the target ket.
+  have rz_phase : ∀ x : Fin (2 ^ 1),
+      (RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘x⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘x⟩) :=
+    fun x =>
+      calc (RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘x⟩)
+          ≈ (RzGate θ * ❘a⟩) ⊗ₛ (id1 * ❘x⟩) := Circuit.par_action_tensor _ _ _ _
+        _ ≈ (φ • ❘a⟩) ⊗ₛ ❘x⟩ := by gcongr; exact Circuit.id_action _
+        _ ≈ φ • (❘a⟩ ⊗ₛ ❘x⟩) := QState.smul_tensor_left _ _ _
+  -- Ordering 1 — phase the control, then flip the target.
+  have order₁ : ((RzGate θ ⊗ id1) * CNOTGate) * (❘a⟩ ⊗ₛ ❘b⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) :=
+    calc ((RzGate θ ⊗ id1) * CNOTGate) * (❘a⟩ ⊗ₛ ❘b⟩)
+        ≈ CNOTGate * ((RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘b⟩)) := Circuit.seq_action _ _ _
+      _ ≈ CNOTGate * (φ • (❘a⟩ ⊗ₛ ❘b⟩)) := by gcongr; exact rz_phase b
+      _ ≈ φ • (CNOTGate * (❘a⟩ ⊗ₛ ❘b⟩)) := Circuit.apply_smul _ _ _
+      _ ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) := by gcongr; exact CNOTGate_basis_tensor a b
+  -- Ordering 2 — flip the target, then phase the (unchanged) control.
+  have order₂ : (CNOTGate * (RzGate θ ⊗ id1)) * (❘a⟩ ⊗ₛ ❘b⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) :=
+    calc (CNOTGate * (RzGate θ ⊗ id1)) * (❘a⟩ ⊗ₛ ❘b⟩)
+        ≈ (RzGate θ ⊗ id1) * (CNOTGate * (❘a⟩ ⊗ₛ ❘b⟩)) := Circuit.seq_action _ _ _
+      _ ≈ (RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘a + b⟩) := by gcongr; exact CNOTGate_basis_tensor a b
+      _ ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) := rz_phase (a + b)
+  -- Both orderings reach the same phased state.
+  exact order₁.trans order₂.symm
 
 end
 

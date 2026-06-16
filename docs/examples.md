@@ -8,9 +8,9 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 
 **Theorem:** `rz_commutes_cnot (θ : ℝ)` — `Rz(θ)` on qubit 0 (the CNOT control) commutes with CNOT.
 
-**Technique:** Basis-state reasoning via `Circuit.Equiv.basis_iff`. The proof decomposes a 2-qubit index into a tensor-product pair, applies `kron_mul_ket` to split the Kronecker action, and uses `Rz_ket_diag` (Rz is diagonal, so it produces a scalar phase on a basis ket) together with `CNOT_tensorState_smul_ket` (CNOT commutes with a scalar on the control).
+**Technique:** Equational reasoning in the symbolic state layer, optimized for readability over brevity. By `Circuit.Equiv.basis_iff_tensor` it suffices to check both circuit orderings on every factored basis state `❘a⟩ ⊗ₛ ❘b⟩`. The Rz phase `φ` is kept abstract (`RzGate_basis`) — its value is irrelevant to commutativity. A helper `rz_phase` shows `Rz ⊗ 1` phases any basis tensor with control `❘a⟩` by `φ`; then two `calc` blocks reduce each ordering to the same phased state `φ • (❘a⟩ ⊗ₛ ❘a+b⟩)`, joined by transitivity. Each `calc` step is one of two kinds: an *action lemma* that reshapes the expression (`Circuit.seq_action`, `Circuit.par_action_tensor`, `Circuit.apply_smul`, `QState.smul_tensor_left`), or a `gcongr` descent into a context that rewrites a sub-state. (`simp` cannot drive this chain: `≈` is `eval`-equality, not syntactic equality, so rewrites only reach the outermost `eval`, not nested sub-states; the `@[gcongr]`-tagged congruence lemmas recover the congruence half. See `docs/lean-api.md`.)
 
-**Key lemmas used:** `Circuit.Equiv.basis_iff`, `kron_mul_ket`, `Rz_ket_diag`, `CNOT_tensorState_smul_ket`
+**Key lemmas/tactics used:** `Circuit.Equiv.basis_iff_tensor`, `RzGate_basis`, `CNOTGate_basis_tensor`, `Circuit.seq_action`, `Circuit.par_action_tensor`, `Circuit.apply_smul`, `QState.smul_tensor_left`, and `gcongr` (via the `@[gcongr]` congruence lemmas)
 
 ---
 

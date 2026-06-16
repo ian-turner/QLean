@@ -1,5 +1,6 @@
 import QLean.Circuit.Semantics
 import QLean.Basic.Hilbert
+import Mathlib.Tactic.GCongr
 
 namespace QLean
 
@@ -27,12 +28,14 @@ instance : Trans (@Circuit.Equiv n) (@Circuit.Equiv n) (@Circuit.Equiv n) :=
 -- ── Congruence lemmas ─────────────────────────────────────────────────────────
 
 /-- Equivalent components yield equivalent sequential circuits. -/
+@[gcongr]
 theorem Circuit.Equiv.seq_congr {c₁ c₁' c₂ c₂' : Circuit n}
     (h₁ : c₁ ≈ c₁') (h₂ : c₂ ≈ c₂') :
     c₁ * c₂ ≈ c₁' * c₂' := by
   simp only [Circuit.Equiv, eval_seq]; rw [h₁, h₂]
 
 /-- Equivalent components yield equivalent parallel circuits. -/
+@[gcongr]
 theorem Circuit.Equiv.par_congr {c₁ c₁' : Circuit j} {c₂ c₂' : Circuit k}
     (h₁ : c₁ ≈ c₁') (h₂ : c₂ ≈ c₂') :
     c₁ ⊗ c₂ ≈ c₁' ⊗ c₂' := by
