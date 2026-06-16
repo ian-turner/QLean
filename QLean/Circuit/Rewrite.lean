@@ -1,5 +1,6 @@
 import QLean.Circuit.Semantics
 import QLean.Basic.Hilbert
+import QLean.State.Semantics
 
 namespace QLean
 
@@ -76,6 +77,22 @@ theorem Circuit.Equiv.basis_iff {n : ℕ} (c₁ c₂ : Circuit n) :
   · intro h
     ext r c
     simpa [mul_ket_apply] using congr_fun (congr_fun (h c) r) 0
+
+open scoped QLean.Notation in
+/-- Two circuits are equivalent iff they act identically on every symbolic basis ket. -/
+theorem Circuit.Equiv.basis_iff_state {n : ℕ} (c₁ c₂ : Circuit n) :
+    c₁ ≈ c₂ ↔ ∀ i : Fin (2^n), c₁ * |i⟩ ≈ c₂ * |i⟩ := by
+  rw [Circuit.Equiv.basis_iff]
+  simp [QState.Equiv, QState.eval_apply, QState.eval_basis]
+
+open scoped QLean.Notation in
+/-- Two circuits are equivalent iff they act identically on every symbolic state expression.
+    The basis-indexed form is usually more convenient; this stronger form avoids index-chasing
+    when the input state is already in symbolic normal form. -/
+theorem Circuit.Equiv.equiv_iff_all_states {n : ℕ} (c₁ c₂ : Circuit n) :
+    c₁ ≈ c₂ ↔ ∀ s : QState n, c₁ * s ≈ c₂ * s :=
+  ⟨fun h s => by simp only [QState.Equiv, QState.eval_apply]; rw [h],
+   fun h => (basis_iff_state c₁ c₂).mpr (fun i => h |i⟩)⟩
 
 -- ── Interchange law ──────────────────────────────────────────────────────────
 

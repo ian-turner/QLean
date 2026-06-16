@@ -43,6 +43,17 @@ end  -- noncomputable
 
 end QState
 
+-- ── QState.Equiv ──────────────────────────────────────────────────────────────
+
+noncomputable section
+
+/-- Two state expressions are equivalent if they denote the same vector. -/
+def QState.Equiv (s t : QState n) : Prop := QState.eval s = QState.eval t
+
+@[reducible] instance : HasEquiv (QState n) := ⟨QState.Equiv⟩
+
+end  -- noncomputable
+
 -- ── Circuit–QState bridge ─────────────────────────────────────────────────────
 
 open Circuit

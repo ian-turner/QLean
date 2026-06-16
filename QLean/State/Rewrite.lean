@@ -9,11 +9,6 @@ noncomputable section
 
 -- ── QState.Equiv ──────────────────────────────────────────────────────────────
 
-/-- Two state expressions are equivalent if they denote the same vector. -/
-def QState.Equiv (s t : QState n) : Prop := QState.eval s = QState.eval t
-
-@[reducible] instance : HasEquiv (QState n) := ⟨QState.Equiv⟩
-
 @[refl]  theorem QState.Equiv.refl  (s : QState n) : s ≈ s := rfl
 @[symm]  theorem QState.Equiv.symm  {s t : QState n} : s ≈ t → t ≈ s := Eq.symm
 @[trans] theorem QState.Equiv.trans {s t u : QState n} : s ≈ t → t ≈ u → s ≈ u := Eq.trans
@@ -73,20 +68,6 @@ theorem QState.tensor_smul_right (α : ℂ) (s : QState j) (t : QState k) :
 theorem Circuit.Equiv.apply_state {n : ℕ} {c₁ c₂ : Circuit n}
     (h : c₁ ≈ c₂) (s : QState n) : c₁ * s ≈ c₂ * s := by
   simp only [QState.Equiv, QState.eval_apply]; rw [h]
-
-/-- Two circuits are equivalent iff they act identically on every symbolic basis ket. -/
-theorem Circuit.Equiv.basis_iff_state {n : ℕ} (c₁ c₂ : Circuit n) :
-    c₁ ≈ c₂ ↔ ∀ i : Fin (2^n), c₁ * |i⟩ ≈ c₂ * |i⟩ := by
-  rw [Circuit.Equiv.basis_iff]
-  simp [QState.Equiv, QState.eval_apply, QState.eval_basis]
-
-/-- Two circuits are equivalent iff they act identically on every symbolic state expression.
-    The basis-indexed form is usually more convenient; this stronger form avoids index-chasing
-    when the input state is already in symbolic normal form. -/
-theorem Circuit.Equiv.equiv_iff_all_states {n : ℕ} (c₁ c₂ : Circuit n) :
-    c₁ ≈ c₂ ↔ ∀ s : QState n, c₁ * s ≈ c₂ * s :=
-  ⟨fun h s => h.apply_state s,
-   fun h => (basis_iff_state c₁ c₂).mpr (fun i => h |i⟩)⟩
 
 end  -- noncomputable
 
