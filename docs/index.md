@@ -6,7 +6,7 @@ A Lean 4 library for equational reasoning about quantum circuits, built on Mathl
 
 QLean provides a typed circuit language with denotational matrix semantics, standard gates with unitarity proofs, and tools for proving that two circuits compute the same unitary.
 
-- `Circuit n` — structured inductive type with sequential (`*`) and parallel (`+`) composition
+- `Circuit n` — structured inductive type with sequential (`*`) and parallel (`⊗`) composition
 - `eval : Circuit n → QMatrix n` — denotational semantics (matrix product and Kronecker product)
 - `Circuit.Equiv` / `≈` — circuit equality up to matrix equality
 - State-level layer: `QVector n`, `ket`, `tensorState`, `QState` symbolic state expressions
@@ -42,6 +42,7 @@ QLean/
 Examples/
   RzCNOT.lean         — Rz(θ) commutes with CNOT on the control qubit
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition
+  BellState.lean      — H then CNOT prepares the entangled Bell state |Φ⁺⟩
 ```
 
 See [api.md](api.md) for per-module detail.
@@ -61,7 +62,7 @@ import QLean
 open QLean
 
 -- 2-qubit Bell circuit: H on qubit 0, then CNOT
-def bellCircuit : Circuit 2 := (HGate + (1 : Circuit 1)) * CNOTGate
+def bellCircuit : Circuit (1 + 1) := (HGate ⊗ (1 : Circuit 1)) * CNOTGate
 
 theorem wf_bellCircuit : Circuit.WF bellCircuit := by
   simp [bellCircuit, isUnitary_H, isUnitary_CNOT]

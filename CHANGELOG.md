@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16] (6)
+
+### Added
+- `Examples/BellState.lean`: Bell-state preparation example — `bellCircuit` (H on qubit 0 then CNOT), `wf_bellCircuit`, the entangled `bellState` (`|Φ⁺⟩`), and `bellCircuit_prepares` proving `bellCircuit * ❘00⟩ ≈ bellState` by a single `grw` chain
+
+---
+
 ## [2026-06-16] (5)
 
 ### Removed
