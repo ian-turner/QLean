@@ -99,7 +99,7 @@ theorem QState.tensor_assoc {j k : ℕ} (s : QState j) (t : QState k) (u : QStat
 
 /-- The all-zero basis ket splits as a tensor of all-zero kets. -/
 theorem QState.ket_zero_tensor (j k : ℕ) :
-    (∣0⟩ : QState (j + k)) ≈ (∣0⟩ : QState j) ⊗ₛ (∣0⟩ : QState k) := by
+    (⎸0⟩ : QState (j + k)) ≈ (⎸0⟩ : QState j) ⊗ₛ (⎸0⟩ : QState k) := by
   simp only [QState.Equiv, QState.eval_basis, QState.eval_tensor, ket_tensorState]
   congr 1
 

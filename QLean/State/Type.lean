@@ -35,9 +35,9 @@ end QLean
 
 namespace QLean.Notation
 
-/-- `∣i⟩` expands to `QState.basis i`. Opt in with `open scoped QLean.Notation`.
-    Uses `∣` (U+2223, DIVIDES sign) rather than ASCII `|` to avoid conflicts
-    with Lean's pattern-match case separator. -/
-scoped notation "∣" i "⟩" => QLean.QState.basis i
+/-- `⎸i⟩` expands to `QState.basis i`. Opt in with `open scoped QLean.Notation`.
+    Uses `⎸` (U+23B8, LEFT VERTICAL BOX LINE) rather than ASCII `|` to avoid
+    conflicts with Lean's pattern-match case separator. -/
+scoped notation "⎸" i "⟩" => QLean.QState.basis i
 
 end QLean.Notation
