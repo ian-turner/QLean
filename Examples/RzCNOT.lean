@@ -32,26 +32,16 @@ theorem rz_commutes_cnot (θ : ℝ) :
   -- Rz acts as a scalar `φ` on the control ket; we never need φ's actual value.
   obtain ⟨φ, hφ⟩ : ∃ φ : ℂ, RzGate θ * ❘a⟩ ≈ φ • ❘a⟩ := ⟨_, RzGate_basis θ a⟩
   -- `Rz ⊗ 1` phases any basis tensor with control `❘a⟩` by `φ`, whatever the target ket.
+  -- `grw` is `rw` modulo `≈`: it rewrites under the tensor/smul congruences automatically.
   have rz_phase : ∀ x : Fin (2 ^ 1),
-      (RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘x⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘x⟩) :=
-    fun x =>
-      calc (RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘x⟩)
-          ≈ (RzGate θ * ❘a⟩) ⊗ₛ (id1 * ❘x⟩) := Circuit.par_action_tensor _ _ _ _
-        _ ≈ (φ • ❘a⟩) ⊗ₛ ❘x⟩ := by gcongr; exact Circuit.id_action _
-        _ ≈ φ • (❘a⟩ ⊗ₛ ❘x⟩) := QState.smul_tensor_left _ _ _
+      (RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘x⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘x⟩) := fun x => by
+    grw [Circuit.par_action_tensor, hφ, Circuit.id_action, QState.smul_tensor_left]
   -- Ordering 1 — phase the control, then flip the target.
-  have order₁ : ((RzGate θ ⊗ id1) * CNOTGate) * (❘a⟩ ⊗ₛ ❘b⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) :=
-    calc ((RzGate θ ⊗ id1) * CNOTGate) * (❘a⟩ ⊗ₛ ❘b⟩)
-        ≈ CNOTGate * ((RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘b⟩)) := Circuit.seq_action _ _ _
-      _ ≈ CNOTGate * (φ • (❘a⟩ ⊗ₛ ❘b⟩)) := by gcongr; exact rz_phase b
-      _ ≈ φ • (CNOTGate * (❘a⟩ ⊗ₛ ❘b⟩)) := Circuit.apply_smul _ _ _
-      _ ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) := by gcongr; exact CNOTGate_basis_tensor a b
+  have order₁ : ((RzGate θ ⊗ id1) * CNOTGate) * (❘a⟩ ⊗ₛ ❘b⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) := by
+    grw [Circuit.seq_action, rz_phase b, Circuit.apply_smul, CNOTGate_basis_tensor]
   -- Ordering 2 — flip the target, then phase the (unchanged) control.
-  have order₂ : (CNOTGate * (RzGate θ ⊗ id1)) * (❘a⟩ ⊗ₛ ❘b⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) :=
-    calc (CNOTGate * (RzGate θ ⊗ id1)) * (❘a⟩ ⊗ₛ ❘b⟩)
-        ≈ (RzGate θ ⊗ id1) * (CNOTGate * (❘a⟩ ⊗ₛ ❘b⟩)) := Circuit.seq_action _ _ _
-      _ ≈ (RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘a + b⟩) := by gcongr; exact CNOTGate_basis_tensor a b
-      _ ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) := rz_phase (a + b)
+  have order₂ : (CNOTGate * (RzGate θ ⊗ id1)) * (❘a⟩ ⊗ₛ ❘b⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) := by
+    grw [Circuit.seq_action, CNOTGate_basis_tensor, rz_phase (a + b)]
   -- Both orderings reach the same phased state.
   exact order₁.trans order₂.symm
 

@@ -4,6 +4,14 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16] (2)
+
+### Changed
+- `Examples/RzCNOT.lean`: `rz_commutes_cnot` reproved with `grw` (generalized rewrite modulo `≈`), replacing the three `calc`/`gcongr` chains with `grw` lemma lists
+- `docs/lean-api.md`: documented `grw` as the `rw`-modulo-`≈` tactic for `QState.Equiv`/`Circuit.Equiv` goals (descends via the `@[gcongr]` lemmas; `rw`/`simp`/`@[congr]` cannot)
+
+---
+
 ## [2026-06-16]
 
 ### Changed
