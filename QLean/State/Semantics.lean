@@ -43,36 +43,4 @@ end  -- noncomputable
 
 end QState
 
--- ── QState.Equiv ──────────────────────────────────────────────────────────────
-
-noncomputable section
-
-/-- Two state expressions are equivalent if they denote the same vector. -/
-def QState.Equiv (s t : QState n) : Prop := QState.eval s = QState.eval t
-
-@[reducible] instance : HasEquiv (QState n) := ⟨QState.Equiv⟩
-
-end  -- noncomputable
-
--- ── Circuit–QState bridge ─────────────────────────────────────────────────────
-
-open Circuit
-
-noncomputable section
-
-/-- `C.mapsExpr s t` holds when `C` maps the denotation of `s` to the denotation of `t`. -/
-def Circuit.mapsExpr (C : Circuit n) (s t : QState n) : Prop :=
-  C.maps (QState.eval s) (QState.eval t)
-
-/-- A parallel circuit maps a tensor-product state expression componentwise. -/
-theorem Circuit.maps_tensor {j k : ℕ} {c₁ : Circuit j} {c₂ : Circuit k}
-    {s s' : QState j} {t t' : QState k}
-    (h₁ : c₁.mapsExpr s s') (h₂ : c₂.mapsExpr t t') :
-    (c₁ ⊗ c₂).mapsExpr (s ⊗ₛ t) (s' ⊗ₛ t') := by
-  unfold Circuit.mapsExpr Circuit.maps at *
-  simp only [QState.eval_tensor, eval_par]
-  rw [kron_tensorState, h₁, h₂]
-
-end  -- noncomputable
-
 end QLean
