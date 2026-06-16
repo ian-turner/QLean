@@ -101,7 +101,7 @@ theorem QState.tensor_assoc {j k : ℕ} (s : QState j) (t : QState k) (u : QStat
 
 /-- The all-zero basis ket splits as a tensor of all-zero kets. -/
 theorem QState.ket_zero_tensor (j k : ℕ) :
-    (⎸0⟩ : QState (j + k)) ≈ (⎸0⟩ : QState j) ⊗ₛ (⎸0⟩ : QState k) := by
+    (❘0⟩ : QState (j + k)) ≈ (❘0⟩ : QState j) ⊗ₛ (❘0⟩ : QState k) := by
   simp only [QState.Equiv, QState.eval_basis, QState.eval_tensor, ket_tensorState]
   congr 1
 
@@ -114,7 +114,7 @@ theorem Circuit.Equiv.apply_state {n : ℕ} {c₁ c₂ : Circuit n}
 
 /-- Two circuits are equivalent iff they act identically on every symbolic basis ket. -/
 theorem Circuit.Equiv.basis_iff_state {n : ℕ} (c₁ c₂ : Circuit n) :
-    c₁ ≈ c₂ ↔ ∀ i : Fin (2^n), c₁ * ⎸i⟩ ≈ c₂ * ⎸i⟩ := by
+    c₁ ≈ c₂ ↔ ∀ i : Fin (2^n), c₁ * ❘i⟩ ≈ c₂ * ❘i⟩ := by
   rw [Circuit.Equiv.basis_iff]
   simp [QState.Equiv, QState.eval_apply, QState.eval_basis]
 
@@ -124,7 +124,7 @@ theorem Circuit.Equiv.basis_iff_state {n : ℕ} (c₁ c₂ : Circuit n) :
 theorem Circuit.Equiv.equiv_iff_all_states {n : ℕ} (c₁ c₂ : Circuit n) :
     c₁ ≈ c₂ ↔ ∀ s : QState n, c₁ * s ≈ c₂ * s :=
   ⟨fun h s => by simp only [QState.Equiv, QState.eval_apply]; rw [h],
-   fun h => (basis_iff_state c₁ c₂).mpr (fun i => h ⎸i⟩)⟩
+   fun h => (basis_iff_state c₁ c₂).mpr (fun i => h ❘i⟩)⟩
 
 end  -- noncomputable
 

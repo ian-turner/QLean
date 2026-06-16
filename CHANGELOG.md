@@ -6,8 +6,11 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ## [2026-06-16]
 
+### Changed
+- `State/Type.lean`: ket notation now uses `❘` (U+2758, LIGHT VERTICAL BAR) instead of `⎸` (U+23B8); avoids Mathlib's `∣` divisibility token
+
 ### Added
-- `Gate/StateActions.lean`: `RzGate_basis` — `Rz θ` acts on `⎸a⟩` (`a : Fin (2^1)`) by phase `exp((2a-1)·iθ/2)`
+- `Gate/StateActions.lean`: `RzGate_basis` — `Rz θ` acts on `❘a⟩` (`a : Fin (2^1)`) by phase `exp((2a-1)·iθ/2)`
 
 ---
 

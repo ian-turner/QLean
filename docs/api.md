@@ -128,7 +128,7 @@ Imports `Gate/Standard.lean` and `State/Rewrite.lean`; no circular dependency.
 | `HGate_bit1` | `HGate * bit1 ≈ (√2)⁻¹ • (bit0 + (-1) • bit1)` |
 
 Parameterized over the basis index rather than `bit0`/`bit1`:
-- `RzGate_basis (θ : ℝ) (a : Fin (2^1))` — `RzGate θ * ⎸a⟩ ≈ exp((2a-1)·iθ/2) • ⎸a⟩` (phase `exp(-iθ/2)` on `⎸0⟩`, `exp(iθ/2)` on `⎸1⟩`)
+- `RzGate_basis (θ : ℝ) (a : Fin (2^1))` — `RzGate θ * ❘a⟩ ≈ exp((2a-1)·iθ/2) • ❘a⟩` (phase `exp(-iθ/2)` on `❘0⟩`, `exp(iθ/2)` on `❘1⟩`)
 
 **Two-qubit actions:**
 - `CNOTGate_basis_tensor (a b : Fin 2)` — `CNOTGate * (basis a ⊗ₛ basis b) ≈ basis a ⊗ₛ basis (a + b)`
