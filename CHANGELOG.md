@@ -4,6 +4,16 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-17] (11)
+
+### Added
+- `Examples/GHZState.lean`: symbolic preparation of the `(n+1)`-qubit GHZ state — `ghzCircuit n`/`ghzState n`, `wf_ghzCircuit`, and `ghzCircuit_prepares` (`ghzCircuit n * ❘0⟩ ≈ ghzState n`) proved by induction; the first example to need tensor re-association (`QState.tensor_assoc`) for GHZ's straddling CNOT cascade
+- `QState.allOnes_succ` (`State/Rewrite.lean`): the all-ones ket splits off its top qubit, `❘allOnes (n+1)⟩ ≈ ❘allOnes n⟩ ⊗ ❘1⟩` — the all-ones companion of `ket_zero_tensor`
+- `allOnes n : Fin (2^n)` with `@[simp]` `allOnes_val` (`Basic/Hilbert.lean`): the all-ones computational basis index `2^n - 1`
+- `tensorIndexEquiv_apply_val` (`Basic/Tensor.lean`): forward value of the tensor index map, `(tensorIndexEquiv j k p).val = p.1 + p.2 * 2^j`
+
+---
+
 ## [2026-06-16] (10)
 
 ### Changed

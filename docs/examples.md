@@ -40,3 +40,17 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 **Technique:** Symbolic equational reasoning in the `QState` layer, like the other examples, as a single `grw` chain. `QCircuit.seq_action` reorders to "apply `HGate ⊗ 1`, then `CNOTGate`"; the input splits as `❘0⟩ ≈ ❘0⟩ ⊗ ❘0⟩` (`QState.ket_zero_tensor`) and the parallel gate acts componentwise (`QCircuit.par_action_tensor`), with `HGate_bit0` turning the low qubit into `(❘0⟩ + ❘1⟩)/√2` and `QCircuit.id_action` leaving the high qubit. The scalar and sum are then pushed out through the tensor and the remaining `CNOTGate` (`QState.smul_tensor_left`, `QState.add_tensor_left`, `QCircuit.apply_smul`, `QCircuit.apply_add`) so the CNOT lands on each basis tensor, where `CNOTGate_basis_tensor` flips the target to give `(❘00⟩ + ❘11⟩)/√2`. The chain leaves the targets as `❘0 + 0⟩`/`❘1 + 0⟩`, which are `❘0⟩`/`❘1⟩` definitionally, so a final `rfl` (via the `@[refl]` lemma `QState.Equiv.refl`) closes the goal. This is the only example that distributes a circuit over a superposition.
 
 **Key lemmas/tactics used:** `QCircuit.seq_action`, `QState.ket_zero_tensor`, `QCircuit.par_action_tensor`, `HGate_bit0`, `QCircuit.id_action`, `QState.smul_tensor_left`, `QState.add_tensor_left`, `QCircuit.apply_smul`, `QCircuit.apply_add`, `CNOTGate_basis_tensor`, `grw`, `rfl`
+
+---
+
+## `Examples/GHZState.lean` — GHZ state preparation
+
+**Definitions:**
+- `ghzCircuit n : QCircuit (n + 1)` — the GHZ preparation circuit, indexed by the number of CNOTs `n`: `ghzCircuit 0 = HGate`, and `ghzCircuit (n+1) = ((1 : QCircuit n) ⊗ CNOTGate) * (ghzCircuit n ⊗ (1 : QCircuit 1))` — each step adds one qubit and one CNOT entangling the new top qubit with the previous one. `ghzCircuit 1` is exactly the Bell circuit.
+- `ghzState n : QState (n + 1)` — the symbolic GHZ state `(|0…0⟩ + |1…1⟩)/√2`, an equal superposition of the all-zeros ket `❘0⟩` and the all-ones ket `❘allOnes (n+1)⟩`. Maximally entangled; the normalization is always `1/√2` (only ever two terms).
+
+**Theorems:** `wf_ghzCircuit n` — the circuit is well-formed; `ghzCircuit_prepares n` — `ghzCircuit n * ❘0⟩ ≈ ghzState n`.
+
+**Technique:** Symbolic equational reasoning in the `QState` layer, by induction on `n`. The base case is a single Hadamard (`HGate_bit0`, with `allOnes 1 = 1`). The inductive step is the first example to require **tensor re-association**: GHZ's CNOT cascade acts on overlapping pairs of qubits in *different* tensor bracketings, so between the inductive hypothesis (which leaves `ghzState n ⊗ ❘0⟩`) and the final `1 ⊗ CNOTGate`, each superposition term must be re-bracketed via `QState.tensor_assoc` to expose the previous top qubit and the new qubit as an adjacent pair. This is the structural step the Hadamard transform (pure tensor power) and Bell (two qubits, single bracketing) never needed. The all-ones ket is split with the new `QState.allOnes_succ` lemma, mirroring `QState.ket_zero_tensor` for the all-zeros ket. After the CNOT copies the control bit onto the new qubit (`CNOTGate_basis_tensor`, extending the all-zeros and all-ones runs), a final `gcongr` matches the result against `ghzState (n+1)` by re-expanding its two basis kets.
+
+**Key lemmas/tactics used:** `QState.ket_zero_tensor`, `QState.allOnes_succ`, `QState.tensor_assoc`, `QState.smul_tensor_left`, `QState.add_tensor_left`, `QCircuit.seq_action`, `QCircuit.par_action_tensor`, `QCircuit.id_action`, `QCircuit.apply_smul`, `QCircuit.apply_add`, `HGate_bit0`, `CNOTGate_basis_tensor`, `grw`, `gcongr`, `rfl`

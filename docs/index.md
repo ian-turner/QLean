@@ -44,6 +44,7 @@ Examples/
   RzCNOT.lean         — Rz(θ) commutes with CNOT on the control qubit
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition
   BellState.lean      — H then CNOT prepares the entangled Bell state |Φ⁺⟩
+  GHZState.lean       — H then a CNOT cascade prepares the (n+1)-qubit GHZ state
 ```
 
 See [api.md](api.md) for per-module detail.

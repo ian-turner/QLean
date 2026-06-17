@@ -90,6 +90,20 @@ theorem basis_tensor_split {j k : ℕ} (a : Fin (2^j)) (b : Fin (2^k)) :
     ❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ ❘b⟩ := by
   simp only [Equiv, eval_basis, eval_tensor, ket_tensorState]
 
+/-- The all-ones ket on `n+1` qubits splits as the all-ones ket on the low `n` qubits
+    tensored with `❘1⟩` on the top qubit: `|1…1⟩ ≈ |1…1⟩ ⊗ ❘1⟩`. The companion of
+    `ket_zero_tensor` for the all-ones basis state. -/
+theorem allOnes_succ (n : ℕ) :
+    (❘allOnes (n + 1)⟩ : QState (n + 1)) ≈ ❘allOnes n⟩ ⊗ ❘(1 : Fin (2^1))⟩ := by
+  have key : allOnes (n + 1) = tensorIndexEquiv n 1 ⟨allOnes n, (1 : Fin (2^1))⟩ := by
+    apply Fin.ext
+    rw [tensorIndexEquiv_apply_val, allOnes_val, allOnes_val]
+    have h : 0 < 2 ^ n := pow_pos (by norm_num) n
+    have h1 : (1 : Fin (2^1)).val = 1 := rfl
+    rw [h1, pow_succ]; omega
+  rw [key]
+  exact basis_tensor_split (allOnes n) (1 : Fin (2^1))
+
 end  -- noncomputable
 
 end QState

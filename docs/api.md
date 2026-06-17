@@ -34,6 +34,7 @@ The Kronecker product lifted to `QMatrix`.
 - `IsUnitary.kron` — `IsUnitary A → IsUnitary B → IsUnitary (kron A B)`
 - `kron_mul_ket` — `kron A B * ket (tensorIndexEquiv j k ⟨a, b⟩) = tensorState (A * ket a) (B * ket b)`
 - `tensorIndexEquiv_symm_fst_val`, `tensorIndexEquiv_symm_snd_val` — decompose an index into its low and high parts
+- `tensorIndexEquiv_apply_val` — forward value `(tensorIndexEquiv j k p).val = p.1 + p.2 * 2^j` (companion to the symm decomposition)
 
 ---
 
@@ -45,6 +46,7 @@ State-level layer: quantum states, basis kets, tensor product of states.
 - `QVector n` — `Matrix (Fin (2^n)) (Fin 1) ℂ`; column-vector representation of a quantum state
 - `IsNormalized ψ` — `∑ i, ‖ψ i 0‖^2 = 1`
 - `ket i : QVector n` — basis state at index `i`; `ket i j _ = if j = i then 1 else 0`; notation `|i⟩`
+- `allOnes n : Fin (2^n)` — the all-ones index `2^n - 1` (top index of `Fin (2^n)`); `ket (allOnes n)` is `|1…1⟩`. `@[simp]` lemma `allOnes_val : (allOnes n).val = 2^n - 1`
 - `tensorState ψ φ : QVector (j+k)` — tensor product of two states
 - `act U ψ` — matrix-vector action `U * ψ`
 
@@ -216,6 +218,7 @@ State expression equivalence and equational rewrite rules. Holds the `QState.*` 
 - `QState.tensor_assoc` — `(s ⊗ t) ⊗ u ≈ s ⊗ (t ⊗ u)` (right-unit case, `u : QState 1`)
 - `QState.ket_zero_tensor` — `(❘0⟩ : QState (j+k)) ≈ (❘0⟩ : QState j) ⊗ (❘0⟩ : QState k)`
 - `QState.basis_tensor_split` — `❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ ❘b⟩`; the basis split underlying `QCircuit.Equiv.basis_iff_tensor` (generalizes `QState.ket_zero_tensor`)
+- `QState.allOnes_succ` — `(❘allOnes (n+1)⟩ : QState (n+1)) ≈ ❘allOnes n⟩ ⊗ ❘1⟩`; the all-ones companion of `ket_zero_tensor` (splits off the top qubit), used in the GHZ example
 
 ---
 

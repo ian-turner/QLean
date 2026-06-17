@@ -24,6 +24,16 @@ lemma tensorIndexEquiv_symm_snd_val (j k : ℕ) (i : Fin (2^(j+k))) :
     ((tensorIndexEquiv j k).symm i).2.val = i.val / 2^j := by
   simp [tensorIndexEquiv, finProdFinEquiv, Fin.divNat, Fin.modNat, finCongr]
 
+/-- Forward value of the tensor index map: the low factor sits in the low `j` bits and
+    the high factor in the high `k` bits, i.e. `(a, b) ↦ a + b·2^j`. -/
+lemma tensorIndexEquiv_apply_val (j k : ℕ) (p : Fin (2^j) × Fin (2^k)) :
+    (tensorIndexEquiv j k p).val = p.1.val + p.2.val * 2^j := by
+  have hfst := tensorIndexEquiv_symm_fst_val j k (tensorIndexEquiv j k p)
+  have hsnd := tensorIndexEquiv_symm_snd_val j k (tensorIndexEquiv j k p)
+  rw [Equiv.symm_apply_apply] at hfst hsnd
+  rw [hfst, hsnd]
+  exact (Nat.mod_add_div' _ _).symm
+
 -- ── Kronecker product machinery ───────────────────────────────────────────────
 
 -- Any finCongr cast preserves the underlying ℕ value.

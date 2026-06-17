@@ -63,6 +63,13 @@ theorem ket_inner {n : ℕ} (i j : Fin (2^n)) :
     · subst h1; rw [if_pos rfl, star_one, if_neg h, mul_zero]
     · rw [if_neg h1, star_zero, zero_mul]
 
+/-- The all-ones computational basis index on `n` qubits: `2^n - 1`, the top index of
+    `Fin (2^n)`. `ket (allOnes n)` is the all-ones ket `|1…1⟩`. -/
+def allOnes (n : ℕ) : Fin (2^n) :=
+  ⟨2^n - 1, by have : 0 < 2^n := pow_pos (by norm_num) n; omega⟩
+
+@[simp] theorem allOnes_val (n : ℕ) : (allOnes n).val = 2^n - 1 := rfl
+
 -- ── Tensor product of states ──────────────────────────────────────────────────
 
 /-- Tensor product of a `j`-qubit state and a `k`-qubit state.
