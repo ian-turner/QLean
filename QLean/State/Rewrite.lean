@@ -41,29 +41,29 @@ theorem QState.Equiv.smul_congr {s s' : QState n} (α : ℂ)
 
 @[gcongr]
 theorem QState.Equiv.tensor_congr {s s' : QState j} {t t' : QState k}
-    (hs : s ≈ s') (ht : t ≈ t') : s ⊗ₛ t ≈ s' ⊗ₛ t' := by
+    (hs : s ≈ s') (ht : t ≈ t') : s ⊗ t ≈ s' ⊗ t' := by
   simp only [QState.Equiv, QState.eval_tensor]; rw [hs, ht]
 
 -- ── Distributivity rules ──────────────────────────────────────────────────────
 
 theorem QState.add_tensor_left (s t : QState j) (u : QState k) :
-    (s + t) ⊗ₛ u ≈ s ⊗ₛ u + t ⊗ₛ u := by
+    (s + t) ⊗ u ≈ s ⊗ u + t ⊗ u := by
   simp only [QState.Equiv, QState.eval_tensor, QState.eval_add]
   funext i c; fin_cases c
   simp [tensorState_apply, Matrix.add_apply, add_mul]
 
 theorem QState.tensor_add_right (s : QState j) (t u : QState k) :
-    s ⊗ₛ (t + u) ≈ s ⊗ₛ t + s ⊗ₛ u := by
+    s ⊗ (t + u) ≈ s ⊗ t + s ⊗ u := by
   simp only [QState.Equiv, QState.eval_tensor, QState.eval_add]
   funext i c; fin_cases c
   simp [tensorState_apply, Matrix.add_apply, mul_add]
 
 theorem QState.smul_tensor_left (α : ℂ) (s : QState j) (t : QState k) :
-    (α • s) ⊗ₛ t ≈ α • (s ⊗ₛ t) := by
+    (α • s) ⊗ t ≈ α • (s ⊗ t) := by
   simp only [QState.Equiv, QState.eval_tensor, QState.eval_smul, tensorState_smul_left]
 
 theorem QState.tensor_smul_right (α : ℂ) (s : QState j) (t : QState k) :
-    s ⊗ₛ (α • t) ≈ α • (s ⊗ₛ t) := by
+    s ⊗ (α • t) ≈ α • (s ⊗ t) := by
   simp only [QState.Equiv, QState.eval_tensor, QState.eval_smul]
   funext r c
   simp only [tensorState, Matrix.smul_apply, smul_eq_mul]
@@ -82,10 +82,10 @@ theorem Circuit.apply_smul (C : Circuit n) (α : ℂ) (s : QState n) :
   simp only [QState.Equiv, QState.eval_apply, QState.eval_smul, Matrix.mul_smul]
 
 /-- Sequential circuit composition associates with state application:
-    applying `c₁ * c₂` (first c₁, then c₂) to s equals first applying c₁ to s,
-    then applying c₂ to the result. -/
+    applying `c₁ * c₂` (first c₂, then c₁) to s equals first applying c₂ to s,
+    then applying c₁ to the result. -/
 theorem Circuit.seq_action (c₁ c₂ : Circuit n) (s : QState n) :
-    (c₁ * c₂) * s ≈ c₂ * (c₁ * s) := by
+    (c₁ * c₂) * s ≈ c₁ * (c₂ * s) := by
   simp only [QState.Equiv, QState.eval_apply, eval_seq, Matrix.mul_assoc]
 
 /-- The identity circuit acts trivially. -/
@@ -95,25 +95,25 @@ theorem Circuit.id_action (s : QState n) : (1 : Circuit n) * s ≈ s := by
 /-- Parallel circuits act componentwise on tensor-product states. -/
 theorem Circuit.par_action_tensor (c₁ : Circuit j) (c₂ : Circuit k)
     (s : QState j) (t : QState k) :
-    (c₁ ⊗ c₂) * (s ⊗ₛ t) ≈ (c₁ * s) ⊗ₛ (c₂ * t) := by
+    (c₁ ⊗ c₂) * (s ⊗ t) ≈ (c₁ * s) ⊗ (c₂ * t) := by
   simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, eval_par, kron_tensorState]
 
 /-- Tensor product of state expressions is associative (right-unit case).
     Both sides have type `QState (j + k + 1)` since `(j+k)+1 = j+(k+1)` definitionally. -/
 theorem QState.tensor_assoc {j k : ℕ} (s : QState j) (t : QState k) (u : QState 1) :
-    (s ⊗ₛ t) ⊗ₛ u ≈ (s ⊗ₛ (t ⊗ₛ u : QState (k + 1)) : QState (j + (k + 1))) := by
+    (s ⊗ t) ⊗ u ≈ (s ⊗ (t ⊗ u : QState (k + 1)) : QState (j + (k + 1))) := by
   simp only [QState.Equiv, QState.eval_tensor, tensorState_assoc_one]
 
 /-- The all-zero basis ket splits as a tensor of all-zero kets. -/
 theorem QState.ket_zero_tensor (j k : ℕ) :
-    (❘0⟩ : QState (j + k)) ≈ (❘0⟩ : QState j) ⊗ₛ (❘0⟩ : QState k) := by
+    (❘0⟩ : QState (j + k)) ≈ (❘0⟩ : QState j) ⊗ (❘0⟩ : QState k) := by
   simp only [QState.Equiv, QState.eval_basis, QState.eval_tensor, ket_tensorState]
   congr 1
 
 /-- A computational basis ket splits as a tensor over the two factors:
-    the combined index `tensorIndexEquiv j k ⟨a, b⟩` denotes `❘a⟩ ⊗ₛ ❘b⟩`. -/
+    the combined index `tensorIndexEquiv j k ⟨a, b⟩` denotes `❘a⟩ ⊗ ❘b⟩`. -/
 theorem QState.basis_tensor_split {j k : ℕ} (a : Fin (2^j)) (b : Fin (2^k)) :
-    (❘tensorIndexEquiv j k ⟨a, b⟩⟩ : QState (j + k)) ≈ (❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k) := by
+    (❘tensorIndexEquiv j k ⟨a, b⟩⟩ : QState (j + k)) ≈ (❘a⟩ : QState j) ⊗ (❘b⟩ : QState k) := by
   simp only [QState.Equiv, QState.eval_basis, QState.eval_tensor, ket_tensorState]
 
 -- ── Circuit.Equiv via symbolic states ─────────────────────────────────────────
@@ -138,12 +138,12 @@ theorem Circuit.Equiv.equiv_iff_all_states {n : ℕ} (c₁ c₂ : Circuit n) :
    fun h => (basis_iff_state c₁ c₂).mpr (fun i => h ❘i⟩)⟩
 
 /-- Two `(j+k)`-qubit circuits are equivalent iff they act identically on every
-    factored basis state `❘a⟩ ⊗ₛ ❘b⟩`, looping over the basis of each factor.
+    factored basis state `❘a⟩ ⊗ ❘b⟩`, looping over the basis of each factor.
     More convenient than `basis_iff_state` when the available gate-action lemmas are
     phrased on tensor factors (e.g. `CNOTGate_basis_tensor`, `RzGate_basis`). -/
 theorem Circuit.Equiv.basis_iff_tensor {j k : ℕ} (c₁ c₂ : Circuit (j + k)) :
     c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)),
-      c₁ * ((❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k)) ≈ c₂ * ((❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k)) := by
+      c₁ * ((❘a⟩ : QState j) ⊗ (❘b⟩ : QState k)) ≈ c₂ * ((❘a⟩ : QState j) ⊗ (❘b⟩ : QState k)) := by
   constructor
   · intro h a b
     exact Circuit.Equiv.apply_state h _
@@ -152,9 +152,9 @@ theorem Circuit.Equiv.basis_iff_tensor {j k : ℕ} (c₁ c₂ : Circuit (j + k))
     intro i
     obtain ⟨⟨a, b⟩, rfl⟩ := (tensorIndexEquiv j k).surjective i
     calc c₁ * ❘tensorIndexEquiv j k ⟨a, b⟩⟩
-        ≈ c₁ * ((❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k)) :=
+        ≈ c₁ * ((❘a⟩ : QState j) ⊗ (❘b⟩ : QState k)) :=
           QState.Equiv.apply_congr (QState.basis_tensor_split a b)
-      _ ≈ c₂ * ((❘a⟩ : QState j) ⊗ₛ (❘b⟩ : QState k)) := h a b
+      _ ≈ c₂ * ((❘a⟩ : QState j) ⊗ (❘b⟩ : QState k)) := h a b
       _ ≈ c₂ * ❘tensorIndexEquiv j k ⟨a, b⟩⟩ :=
           QState.Equiv.apply_congr (QState.basis_tensor_split a b).symm
 

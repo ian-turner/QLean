@@ -15,8 +15,9 @@ noncomputable section
     and target qubit 1.
 
     `HGate ⊗ (1 : Circuit 1)` runs H on the low qubit and the identity on the high
-    qubit; sequencing (`*`) with `CNOTGate` runs the CNOT afterwards. -/
-def bellCircuit : Circuit (1 + 1) := (HGate ⊗ (1 : Circuit 1)) * CNOTGate
+    qubit; in matrix order the rightmost factor acts first, so `CNOTGate * (HGate ⊗ 1)`
+    runs `H ⊗ 1` first and the CNOT afterwards. -/
+def bellCircuit : Circuit (1 + 1) := CNOTGate * (HGate ⊗ (1 : Circuit 1))
 
 -- ── Well-formedness ───────────────────────────────────────────────────────────
 
@@ -31,7 +32,7 @@ theorem wf_bellCircuit : Circuit.WF bellCircuit := by
     Unlike `uniformSuperState` in the Hadamard-transform example, this state is
     *entangled*: it does not factor as a tensor product of single-qubit states. -/
 def bellState : QState (1 + 1) :=
-  ((Real.sqrt 2)⁻¹ : ℂ) • ((❘0⟩ : QState 1) ⊗ₛ ❘0⟩ + (❘1⟩ : QState 1) ⊗ₛ ❘1⟩)
+  ((Real.sqrt 2)⁻¹ : ℂ) • ((❘0⟩ : QState 1) ⊗ ❘0⟩ + (❘1⟩ : QState 1) ⊗ ❘1⟩)
 
 -- ── Main theorem ──────────────────────────────────────────────────────────────
 
@@ -42,15 +43,15 @@ def bellState : QState (1 + 1) :=
     congruences automatically):
 
     * `Circuit.seq_action` reorders to "apply `HGate ⊗ 1`, then `CNOTGate`".
-    * Split the input `❘0⟩ ≈ ❘0⟩ ⊗ₛ ❘0⟩` (`QState.ket_zero_tensor`) and act
+    * Split the input `❘0⟩ ≈ ❘0⟩ ⊗ ❘0⟩` (`QState.ket_zero_tensor`) and act
       componentwise (`Circuit.par_action_tensor`): `HGate_bit0` turns the low qubit
       into `(❘0⟩ + ❘1⟩)/√2`, while `Circuit.id_action` leaves the high qubit at `❘0⟩`.
     * Push the resulting scalar and sum out through the tensor and the remaining
       `CNOTGate` (`QState.smul_tensor_left`, `QState.add_tensor_left`,
       `Circuit.apply_smul`, `Circuit.apply_add`), so the CNOT lands on each basis
       tensor separately.
-    * `CNOTGate_basis_tensor` flips the target: `❘0⟩ ⊗ₛ ❘0⟩ ↦ ❘0⟩ ⊗ₛ ❘0⟩` and
-      `❘1⟩ ⊗ₛ ❘0⟩ ↦ ❘1⟩ ⊗ₛ ❘1⟩`, giving `(❘00⟩ + ❘11⟩)/√2 = bellState`. -/
+    * `CNOTGate_basis_tensor` flips the target: `❘0⟩ ⊗ ❘0⟩ ↦ ❘0⟩ ⊗ ❘0⟩` and
+      `❘1⟩ ⊗ ❘0⟩ ↦ ❘1⟩ ⊗ ❘1⟩`, giving `(❘00⟩ + ❘11⟩)/√2 = bellState`. -/
 theorem bellCircuit_prepares :
     bellCircuit * (❘0⟩ : QState (1 + 1)) ≈ bellState := by
   simp only [bellCircuit, bellState]

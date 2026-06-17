@@ -23,8 +23,8 @@ instance : Add (QState n)    := ⟨.add⟩
 instance : SMul ℂ (QState n) := ⟨.smul⟩
 instance : HMul (Circuit n) (QState n) (QState n) := ⟨.apply⟩
 
--- `s ⊗ₛ t` is the tensor product of state expressions (qubit counts sum).
-infixl:70 " ⊗ₛ " => QState.tensor
+-- `s ⊗ t` is the tensor product of state expressions (qubit counts sum).
+infixl:70 " ⊗ " => QState.tensor
 
 abbrev bit0 : QState 1 := .basis ⟨0, by norm_num⟩
 abbrev bit1 : QState 1 := .basis ⟨1, by norm_num⟩

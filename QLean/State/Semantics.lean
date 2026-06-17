@@ -22,7 +22,7 @@ def eval : QState n → QVector n
 @[simp] theorem eval_smul (α : ℂ) (s : QState n) : eval (α • s) = α • eval s := rfl
 @[simp] theorem eval_add (s t : QState n) : eval (s + t) = eval s + eval t := rfl
 @[simp] theorem eval_tensor {j k : ℕ} (s : QState j) (t : QState k) :
-    eval (s ⊗ₛ t) = tensorState (eval s) (eval t) := rfl
+    eval (s ⊗ t) = tensorState (eval s) (eval t) := rfl
 @[simp] theorem eval_apply (C : Circuit n) (s : QState n) :
     eval (C * s) = Circuit.eval C * eval s := rfl
 
@@ -35,7 +35,7 @@ theorem eval_castN (h : m = n) (s : QState m) : eval (castN h s) = h ▸ eval s 
 def IsNormalized (s : QState n) : Prop := QLean.IsNormalized (eval s)
 
 theorem IsNormalized.tensor {j k : ℕ} {s : QState j} {t : QState k}
-    (hs : s.IsNormalized) (ht : t.IsNormalized) : (s ⊗ₛ t).IsNormalized := by
+    (hs : s.IsNormalized) (ht : t.IsNormalized) : (s ⊗ t).IsNormalized := by
   unfold IsNormalized; simp only [eval_tensor]
   exact QLean.IsNormalized.tensorState hs ht
 

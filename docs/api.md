@@ -131,7 +131,7 @@ Parameterized over the basis index rather than `bit0`/`bit1`:
 - `RzGate_basis (θ : ℝ) (a : Fin (2^1))` — `RzGate θ * ❘a⟩ ≈ exp((2a-1)·iθ/2) • ❘a⟩` (phase `exp(-iθ/2)` on `❘0⟩`, `exp(iθ/2)` on `❘1⟩`)
 
 **Two-qubit actions:**
-- `CNOTGate_basis_tensor (a b : Fin 2)` — `CNOTGate * (basis a ⊗ₛ basis b) ≈ basis a ⊗ₛ basis (a + b)`
+- `CNOTGate_basis_tensor (a b : Fin 2)` — `CNOTGate * (basis a ⊗ basis b) ≈ basis a ⊗ basis (a + b)`
 
 ---
 
@@ -171,7 +171,7 @@ The `QState` inductive type and supporting infrastructure.
   - `.basis i : QState n` — computational basis state for `i : Fin (2^n)`; notation `|i⟩` (opt-in via `open scoped QLean.Notation`)
   - `.smul α s` — scalar multiple; `α • s` notation via `SMul ℂ` instance
   - `.add s t`  — superposition; `s + t` notation via `Add` instance
-  - `.tensor s t` — tensor product; `s ⊗ₛ t` notation (qubit count sums)
+  - `.tensor s t` — tensor product; `s ⊗ t` notation (qubit count sums)
   - `.apply C s` — circuit `C` acting on state expression `s`; `C * s` notation via `HMul (Circuit n) (QState n) (QState n)` instance
 - `QState.castN (h : m = n) : QState m → QState n` — transport along a qubit-count equality
 - `QState.bit0 : QState 1`, `QState.bit1 : QState 1` — single-qubit `|0⟩` and `|1⟩` shorthands
@@ -207,26 +207,26 @@ State expression equivalence and equational rewrite rules.
 - `QState.Equiv.tensor_congr` — `≈` is a congruence for `tensor`
 
 **Distributivity rules:**
-- `QState.add_tensor_left` — `(s + t) ⊗ₛ u ≈ s ⊗ₛ u + t ⊗ₛ u`
-- `QState.tensor_add_right` — `s ⊗ₛ (t + u) ≈ s ⊗ₛ t + s ⊗ₛ u`
-- `QState.smul_tensor_left` — `(α • s) ⊗ₛ t ≈ α • (s ⊗ₛ t)`
-- `QState.tensor_smul_right` — `s ⊗ₛ (α • t) ≈ α • (s ⊗ₛ t)`
+- `QState.add_tensor_left` — `(s + t) ⊗ u ≈ s ⊗ u + t ⊗ u`
+- `QState.tensor_add_right` — `s ⊗ (t + u) ≈ s ⊗ t + s ⊗ u`
+- `QState.smul_tensor_left` — `(α • s) ⊗ t ≈ α • (s ⊗ t)`
+- `QState.tensor_smul_right` — `s ⊗ (α • t) ≈ α • (s ⊗ t)`
 
 **Circuit action on symbolic states** (reshape an `apply` expression; used as `calc`/`grw` steps):
 - `Circuit.apply_add` — `C * (s + t) ≈ C * s + C * t`
 - `Circuit.apply_smul` — `C * (α • s) ≈ α • (C * s)`
-- `Circuit.seq_action` — `(c₁ * c₂) * s ≈ c₂ * (c₁ * s)` (`c₁` acts first)
+- `Circuit.seq_action` — `(c₁ * c₂) * s ≈ c₁ * (c₂ * s)` (`c₂`, the rightmost factor, acts first)
 - `Circuit.id_action` — `(1 : Circuit n) * s ≈ s`
-- `Circuit.par_action_tensor` — `(c₁ ⊗ c₂) * (s ⊗ₛ t) ≈ (c₁ * s) ⊗ₛ (c₂ * t)`
-- `QState.tensor_assoc` — `(s ⊗ₛ t) ⊗ₛ u ≈ s ⊗ₛ (t ⊗ₛ u)` (right-unit case, `u : QState 1`)
-- `QState.ket_zero_tensor` — `(❘0⟩ : QState (j+k)) ≈ (❘0⟩ : QState j) ⊗ₛ (❘0⟩ : QState k)`
+- `Circuit.par_action_tensor` — `(c₁ ⊗ c₂) * (s ⊗ t) ≈ (c₁ * s) ⊗ (c₂ * t)`
+- `QState.tensor_assoc` — `(s ⊗ t) ⊗ u ≈ s ⊗ (t ⊗ u)` (right-unit case, `u : QState 1`)
+- `QState.ket_zero_tensor` — `(❘0⟩ : QState (j+k)) ≈ (❘0⟩ : QState j) ⊗ (❘0⟩ : QState k)`
 
 **Symbolic-state equivalence criteria:**
 - `Circuit.Equiv.apply_state` — equivalent circuits act identically on a state: if `c₁ ≈ c₂` then `c₁ * s ≈ c₂ * s`
 - `Circuit.Equiv.basis_iff_state` — `c₁ ≈ c₂ ↔ ∀ i, c₁ * ❘i⟩ ≈ c₂ * ❘i⟩` (symbolic-basis form of `basis_iff`)
 - `Circuit.Equiv.equiv_iff_all_states` — `c₁ ≈ c₂ ↔ ∀ s, c₁ * s ≈ c₂ * s`
-- `Circuit.Equiv.basis_iff_tensor` — for `c₁ c₂ : Circuit (j+k)`, `c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)), c₁ * (❘a⟩ ⊗ₛ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ₛ ❘b⟩)`; factored-basis criterion that pairs with the tensor-form gate actions in `Gate/StateActions.lean`
-- `QState.basis_tensor_split` — `❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ₛ ❘b⟩`; the basis split underlying `basis_iff_tensor` (generalizes `QState.ket_zero_tensor`)
+- `Circuit.Equiv.basis_iff_tensor` — for `c₁ c₂ : Circuit (j+k)`, `c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)), c₁ * (❘a⟩ ⊗ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ ❘b⟩)`; factored-basis criterion that pairs with the tensor-form gate actions in `Gate/StateActions.lean`
+- `QState.basis_tensor_split` — `❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ ❘b⟩`; the basis split underlying `basis_iff_tensor` (generalizes `QState.ket_zero_tensor`)
 
 ---
 

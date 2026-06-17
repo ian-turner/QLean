@@ -4,6 +4,17 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16] (7)
+
+### Changed
+- `State/Type.lean`: renamed the state tensor notation `⊗ₛ` to `⊗`, overloading the circuit tensor symbol (disambiguated by operand type); updated all usage sites and docs
+- `Circuit/Semantics.lean`: reversed sequential composition to matrix-multiplication order — `eval (c₁ * c₂) = eval c₁ * eval c₂`, so the rightmost factor acts first; `Circuit.seq_action` now reads `(c₁ * c₂) * s ≈ c₁ * (c₂ * s)`, and `Examples/BellState.lean`'s `bellCircuit` is reordered to `CNOTGate * (HGate ⊗ 1)`
+
+### Fixed
+- `docs/architecture.md`: corrected the `par` notation from `+` to `⊗`
+
+---
+
 ## [2026-06-16] (6)
 
 ### Added

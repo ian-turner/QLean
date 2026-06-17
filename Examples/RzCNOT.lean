@@ -15,8 +15,8 @@ abbrev id1 : Circuit 1 := 1
 
     The argument is equational reasoning in the symbolic state layer. By
     `Circuit.Equiv.basis_iff_tensor` it suffices to check both circuit orderings on
-    every factored basis state `❘a⟩ ⊗ₛ ❘b⟩`, and we show they land on the *same*
-    phased state `φ • (❘a⟩ ⊗ₛ ❘a+b⟩)`:
+    every factored basis state `❘a⟩ ⊗ ❘b⟩`, and we show they land on the *same*
+    phased state `φ • (❘a⟩ ⊗ ❘a+b⟩)`:
 
     * Rz is diagonal, so on the control ket `❘a⟩` it is just multiplication by some
       phase `φ` — we keep `φ` abstract, since its value is irrelevant to commutativity.
@@ -34,14 +34,14 @@ theorem rz_commutes_cnot (θ : ℝ) :
   -- `Rz ⊗ 1` phases any basis tensor with control `❘a⟩` by `φ`, whatever the target ket.
   -- `grw` is `rw` modulo `≈`: it rewrites under the tensor/smul congruences automatically.
   have rz_phase : ∀ x : Fin (2 ^ 1),
-      (RzGate θ ⊗ id1) * (❘a⟩ ⊗ₛ ❘x⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘x⟩) := fun x => by
+      (RzGate θ ⊗ id1) * (❘a⟩ ⊗ ❘x⟩) ≈ φ • (❘a⟩ ⊗ ❘x⟩) := fun x => by
     grw [Circuit.par_action_tensor, hφ, Circuit.id_action, QState.smul_tensor_left]
-  -- Ordering 1 — phase the control, then flip the target.
-  have order₁ : ((RzGate θ ⊗ id1) * CNOTGate) * (❘a⟩ ⊗ₛ ❘b⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) := by
-    grw [Circuit.seq_action, rz_phase b, Circuit.apply_smul, CNOTGate_basis_tensor]
-  -- Ordering 2 — flip the target, then phase the (unchanged) control.
-  have order₂ : (CNOTGate * (RzGate θ ⊗ id1)) * (❘a⟩ ⊗ₛ ❘b⟩) ≈ φ • (❘a⟩ ⊗ₛ ❘a + b⟩) := by
+  -- Ordering 1 — `(Rz ⊗ 1) * CNOT` runs CNOT first: flip the target, then phase the control.
+  have order₁ : ((RzGate θ ⊗ id1) * CNOTGate) * (❘a⟩ ⊗ ❘b⟩) ≈ φ • (❘a⟩ ⊗ ❘a + b⟩) := by
     grw [Circuit.seq_action, CNOTGate_basis_tensor, rz_phase (a + b)]
+  -- Ordering 2 — `CNOT * (Rz ⊗ 1)` runs Rz⊗1 first: phase the control, then flip the target.
+  have order₂ : (CNOTGate * (RzGate θ ⊗ id1)) * (❘a⟩ ⊗ ❘b⟩) ≈ φ • (❘a⟩ ⊗ ❘a + b⟩) := by
+    grw [Circuit.seq_action, rz_phase b, Circuit.apply_smul, CNOTGate_basis_tensor]
   -- Both orderings reach the same phased state.
   exact order₁.trans order₂.symm
 

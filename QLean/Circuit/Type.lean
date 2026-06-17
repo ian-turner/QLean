@@ -13,7 +13,8 @@ inductive Circuit : ℕ → Type where
 /-- Transport a circuit across a propositional equality of qubit counts. -/
 def Circuit.castN (h : m = n) (c : Circuit m) : Circuit n := h ▸ c
 
--- `c₁ * c₂` sequences c₁ then c₂; `c₁ ⊗ c₂` places them in parallel; `1` is the identity.
+-- `c₁ * c₂` sequences c₂ then c₁ (matrix-multiplication order: the rightmost factor
+-- acts first); `c₁ ⊗ c₂` places them in parallel; `1` is the identity.
 -- `*` has precedence 70 and `⊗` has precedence 65, so `*` binds tighter.
 instance : One  (Circuit n)                         := ⟨.id⟩
 instance : HMul (Circuit n) (Circuit n) (Circuit n) := ⟨.seq⟩

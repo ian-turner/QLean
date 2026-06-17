@@ -11,17 +11,18 @@ noncomputable section
 
 namespace Circuit
 
-/-- Map a circuit to the unitary it denotes. `seq` applies left-to-right, so
-    `c₁` acts first and `eval (seq c₁ c₂) = eval c₂ * eval c₁`. -/
+/-- Map a circuit to the unitary it denotes. `seq` is a homomorphism onto matrix
+    multiplication: `eval (seq c₁ c₂) = eval c₁ * eval c₂`, so the rightmost
+    factor `c₂` acts first. -/
 def eval : Circuit n → QMatrix n
   | .id        => 1
   | .gate U    => U
-  | .seq c₁ c₂ => eval c₂ * eval c₁
+  | .seq c₁ c₂ => eval c₁ * eval c₂
   | .par c₁ c₂ => kron (eval c₁) (eval c₂)
 
 @[simp] theorem eval_id  : eval (1 : Circuit n) = 1 := rfl
 @[simp] theorem eval_gate (U : QMatrix n) : eval (.gate U) = U := rfl
-@[simp] theorem eval_seq (c₁ c₂ : Circuit n) : eval (c₁ * c₂) = eval c₂ * eval c₁ := rfl
+@[simp] theorem eval_seq (c₁ c₂ : Circuit n) : eval (c₁ * c₂) = eval c₁ * eval c₂ := rfl
 @[simp] theorem eval_par {j k : ℕ} (c₁ : Circuit j) (c₂ : Circuit k) :
     eval (c₁ ⊗ c₂) = kron (eval c₁) (eval c₂) := rfl
 
@@ -59,7 +60,7 @@ theorem Circuit.eval_unitary (c : Circuit n) (h : c.WF) : IsUnitary (eval c) := 
   | gate U => exact h
   | seq c₁ c₂ ih₁ ih₂ =>
     obtain ⟨h₁, h₂⟩ := h
-    exact IsUnitary.mul (ih₂ h₂) (ih₁ h₁)
+    exact IsUnitary.mul (ih₁ h₁) (ih₂ h₂)
   | par c₁ c₂ ih₁ ih₂ =>
     obtain ⟨h₁, h₂⟩ := h
     exact IsUnitary.kron (ih₁ h₁) (ih₂ h₂)

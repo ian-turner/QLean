@@ -30,11 +30,11 @@ inductive Circuit : ℕ → Type where
   | par  : Circuit j → Circuit k → Circuit (j + k)
 ```
 
-A structured syntax tree. `seq` is sequential composition (left-to-right); `par` is parallel composition on disjoint wire sets. The qubit count is part of the type, so ill-typed tensor products are rejected at elaboration.
+A structured syntax tree. `seq` is sequential composition (matrix-multiplication order: the rightmost factor acts first); `par` is parallel composition on disjoint wire sets. The qubit count is part of the type, so ill-typed tensor products are rejected at elaboration.
 
 **Why not `List (QGate n)`?** A flat list cannot state general rewrite rules about circuit structure. The inductive type with `seq` and `par` makes the interchange law stateable and provable.
 
-Notation: `c₁ * c₂` for `seq`, `c₁ + c₂` for `par`, `1` for `id`.
+Notation: `c₁ * c₂` for `seq`, `c₁ ⊗ c₂` for `par`, `1` for `id`.
 
 ### `eval`
 
@@ -42,7 +42,7 @@ Notation: `c₁ * c₂` for `seq`, `c₁ + c₂` for `par`, `1` for `id`.
 noncomputable def eval : Circuit n → QMatrix n
   | .id        => 1
   | .gate U    => U
-  | .seq c₁ c₂ => eval c₂ * eval c₁   -- matrix product; c₁ applied first
+  | .seq c₁ c₂ => eval c₁ * eval c₂   -- matrix product; c₂ (rightmost) applied first
   | .par c₁ c₂ => kron (eval c₁) (eval c₂)
 ```
 

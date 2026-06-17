@@ -85,11 +85,11 @@ theorem RzGate_basis (θ : ℝ) (a : Fin (2^1)) :
 
 -- ── Two-qubit gate actions ─────────────────────────────────────────────────────
 
-/-- CNOT maps `❘a⟩ ⊗ₛ ❘b⟩` to `❘a⟩ ⊗ₛ |a+b⟩` (XOR on the target qubit).
+/-- CNOT maps `❘a⟩ ⊗ ❘b⟩` to `❘a⟩ ⊗ |a+b⟩` (XOR on the target qubit).
     Variables have type `Fin (2^1)` so they directly match the ket index type. -/
 theorem CNOTGate_basis_tensor (a b : Fin (2^1)) :
-    CNOTGate * ((❘a⟩ : QState 1) ⊗ₛ (❘b⟩ : QState 1)) ≈
-    (❘a⟩ : QState 1) ⊗ₛ (❘a + b⟩ : QState 1) := by
+    CNOTGate * ((❘a⟩ : QState 1) ⊗ (❘b⟩ : QState 1)) ≈
+    (❘a⟩ : QState 1) ⊗ (❘a + b⟩ : QState 1) := by
   simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
              Circuit.eval_gate, ket_tensorState]
   exact CNOT_ket_pair a b

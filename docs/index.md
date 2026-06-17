@@ -35,7 +35,7 @@ QLean/
     Semantics.lean    — eval, Circuit.WF, Circuit.eval_unitary
     Rewrite.lean      — Circuit.Equiv, structural rewrite rules, interchange law
   State/
-    Type.lean         — QState inductive type, castN, ⊗ₛ notation, bit0/bit1
+    Type.lean         — QState inductive type, castN, ⊗ notation, bit0/bit1
     Semantics.lean    — QState.eval, QState.IsNormalized
     Rewrite.lean      — QState.Equiv, congruence/distributivity/circuit-action lemmas;
                         Circuit.Equiv.basis_iff_state, equiv_iff_all_states, basis_iff_tensor

@@ -34,7 +34,7 @@ def plusState : QState 1 := ((Real.sqrt 2)⁻¹ : ℂ) • ((❘0⟩ : QState 1)
     one `|+⟩` factor per qubit. `uniformSuperState 0` is the empty ket `❘0⟩ : QState 0`. -/
 def uniformSuperState : (n : ℕ) → QState n
   | 0     => ❘0⟩
-  | n + 1 => uniformSuperState n ⊗ₛ plusState
+  | n + 1 => uniformSuperState n ⊗ plusState
 
 -- ── Main theorem ──────────────────────────────────────────────────────────────
 
@@ -44,12 +44,12 @@ def uniformSuperState : (n : ℕ) → QState n
     By induction on `n`, with `grw` (`rw` modulo `≈`, descending under the tensor/apply
     congruences automatically) driving the inductive step:
 
-    * Split the all-zeros input as `❘0⟩ ≈ ❘0⟩ ⊗ₛ ❘0⟩` (`QState.ket_zero_tensor`).
+    * Split the all-zeros input as `❘0⟩ ≈ ❘0⟩ ⊗ ❘0⟩` (`QState.ket_zero_tensor`).
     * `hadamardTransform n ⊗ HGate` acts componentwise on the tensor (`Circuit.par_action_tensor`).
     * The inductive hypothesis rewrites the low `n` qubits to `uniformSuperState n`.
     * `HGate_bit0` rewrites the high qubit `HGate * ❘0⟩` to `plusState`.
 
-    The result is `uniformSuperState n ⊗ₛ plusState`, which is `uniformSuperState (n+1)` by definition. -/
+    The result is `uniformSuperState n ⊗ plusState`, which is `uniformSuperState (n+1)` by definition. -/
 theorem hadamardTransform_prepares (n : ℕ) :
     hadamardTransform n * (❘0⟩ : QState n) ≈ uniformSuperState n := by
   induction n with
