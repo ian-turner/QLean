@@ -32,7 +32,7 @@ theorem wf_bellCircuit : QCircuit.WF bellCircuit := by
     Unlike `uniformSuperState` in the Hadamard-transform example, this state is
     *entangled*: it does not factor as a tensor product of single-qubit states. -/
 def bellState : QState (1 + 1) :=
-  ((Real.sqrt 2)⁻¹ : ℂ) • ((❘0⟩ : QState 1) ⊗ ❘0⟩ + (❘1⟩ : QState 1) ⊗ ❘1⟩)
+  ((Real.sqrt 2)⁻¹ : ℂ) • (❘0⟩ ⊗ ❘0⟩ + ❘1⟩ ⊗ ❘1⟩)
 
 -- ── Main theorem ──────────────────────────────────────────────────────────────
 

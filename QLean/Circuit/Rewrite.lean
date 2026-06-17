@@ -152,7 +152,7 @@ theorem Equiv.equiv_iff_all_states {n : ℕ} (c₁ c₂ : QCircuit n) :
     phrased on tensor factors (e.g. `CNOTGate_basis_tensor`, `RzGate_basis`). -/
 theorem Equiv.basis_iff_tensor {j k : ℕ} (c₁ c₂ : QCircuit (j + k)) :
     c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)),
-      c₁ * ((❘a⟩ : QState j) ⊗ (❘b⟩ : QState k)) ≈ c₂ * ((❘a⟩ : QState j) ⊗ (❘b⟩ : QState k)) := by
+      c₁ * (❘a⟩ ⊗ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ ❘b⟩) := by
   constructor
   · intro h a b
     exact Equiv.apply_state h _
@@ -161,9 +161,9 @@ theorem Equiv.basis_iff_tensor {j k : ℕ} (c₁ c₂ : QCircuit (j + k)) :
     intro i
     obtain ⟨⟨a, b⟩, rfl⟩ := (tensorIndexEquiv j k).surjective i
     calc c₁ * ❘tensorIndexEquiv j k ⟨a, b⟩⟩
-        ≈ c₁ * ((❘a⟩ : QState j) ⊗ (❘b⟩ : QState k)) :=
+        ≈ c₁ * (❘a⟩ ⊗ ❘b⟩) :=
           QState.Equiv.apply_congr (QState.basis_tensor_split a b)
-      _ ≈ c₂ * ((❘a⟩ : QState j) ⊗ (❘b⟩ : QState k)) := h a b
+      _ ≈ c₂ * (❘a⟩ ⊗ ❘b⟩) := h a b
       _ ≈ c₂ * ❘tensorIndexEquiv j k ⟨a, b⟩⟩ :=
           QState.Equiv.apply_congr (QState.basis_tensor_split a b).symm
 

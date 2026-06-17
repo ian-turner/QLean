@@ -75,7 +75,7 @@ theorem tensor_smul_right (α : ℂ) (s : QState j) (t : QState k) :
 /-- Tensor product of state expressions is associative (right-unit case).
     Both sides have type `QState (j + k + 1)` since `(j+k)+1 = j+(k+1)` definitionally. -/
 theorem tensor_assoc {j k : ℕ} (s : QState j) (t : QState k) (u : QState 1) :
-    (s ⊗ t) ⊗ u ≈ (s ⊗ (t ⊗ u : QState (k + 1)) : QState (j + (k + 1))) := by
+    (s ⊗ t) ⊗ u ≈ (s ⊗ (t ⊗ u) : QState (j + (k + 1))) := by
   simp only [Equiv, eval_tensor, tensorState_assoc_one]
 
 /-- The all-zero basis ket splits as a tensor of all-zero kets. -/
@@ -87,7 +87,7 @@ theorem ket_zero_tensor (j k : ℕ) :
 /-- A computational basis ket splits as a tensor over the two factors:
     the combined index `tensorIndexEquiv j k ⟨a, b⟩` denotes `❘a⟩ ⊗ ❘b⟩`. -/
 theorem basis_tensor_split {j k : ℕ} (a : Fin (2^j)) (b : Fin (2^k)) :
-    (❘tensorIndexEquiv j k ⟨a, b⟩⟩ : QState (j + k)) ≈ (❘a⟩ : QState j) ⊗ (❘b⟩ : QState k) := by
+    ❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ ❘b⟩ := by
   simp only [Equiv, eval_basis, eval_tensor, ket_tensorState]
 
 end  -- noncomputable

@@ -28,7 +28,7 @@ theorem wf_hadamardTransform (n : ℕ) : QCircuit.WF (hadamardTransform n) := by
 
 /-- The single-qubit uniform superposition `|+⟩ = (❘0⟩ + ❘1⟩)/√2`, as a symbolic state.
     This is exactly the right-hand side of `HGate_bit0`, so `H` applied to `❘0⟩` is `≈ plusState`. -/
-def plusState : QState 1 := ((Real.sqrt 2)⁻¹ : ℂ) • ((❘0⟩ : QState 1) + ❘1⟩)
+def plusState : QState 1 := ((Real.sqrt 2)⁻¹ : ℂ) • (❘0⟩ + ❘1⟩)
 
 /-- The n-qubit uniform superposition as a symbolic state: a tensor power of `plusState`,
     one `|+⟩` factor per qubit. `uniformSuperState 0` is the empty ket `❘0⟩ : QState 0`. -/

@@ -151,6 +151,23 @@ exact CNOT_ket_pair a b
 
 ---
 
+## When a ket `❘i⟩` needs a `: QState n` annotation
+
+`❘i⟩` is `QState.basis (i : Fin (2^n))`. The qubit count `n` must be pinned **before** the index is elaborated, so the rule depends on the index, not the position:
+
+- **Bare-numeral index** (`❘0⟩`, `❘1⟩`): `0`/`1` need `OfNat (Fin (2^n)) _`, which is stuck while `n` is a metavariable. The numeral must get `n` from an explicit annotation or a *propagated expected type*. It is **stuck** — and so needs `(❘0⟩ : QState n)` — exactly at the first position Lean elaborates with `n` still unknown: the gate-applied ket in `C * ❘0⟩ ≈ …` (the `HMul`/`≈` constraints that would fix `n` are postponed past the `OfNat` search), and the LHS of a basis split like `ket_zero_tensor`.
+- **Variable index already typed** (`❘a⟩` with `a : Fin (2^1)`, or `❘tensorIndexEquiv j k ⟨a,b⟩⟩`): `n` unifies from the index's `Fin (2^·)` type, so **no annotation is ever needed** — neither on the LHS, RHS, nor inside a `calc`.
+
+Once the first ket pins `n`, everything downstream infers it for free:
+- The **RHS of `≈`** infers `n` from the LHS (the relation is homogeneous `QState n`), so RHS kets are always bare — even bare numerals.
+- A ket in a **`def` body** infers `n` from the declared return type (`def plusState : QState 1 := … • (❘0⟩ + ❘1⟩)`).
+
+**Two unification caveats** (annotation still required even when a result type is known):
+- A tensor *split* `QState (j+k)` does not solve `?a + ?b =?= j + k` uniquely, so **both** factors of `ket_zero_tensor` need `: QState j` / `: QState k` (and the numeral LHS needs `: QState (j+k)`).
+- `tensor_assoc` needs an outer `(… : QState (j + (k+1)))` to bridge the `(j+k)+1 = j+(k+1)` defeq, because `j + ?b =?= (j+k)+1` is not solvable by unification.
+
+---
+
 ## Rewriting modulo `QState.Equiv` / `QCircuit.Equiv` — use `grw`, not `rw`/`simp`
 
 `QState.Equiv s t` is *defined* as `eval s = eval t` (likewise `QCircuit.Equiv`). So an action/congruence lemma such as `QCircuit.seq_action : (c₁*c₂)*s ≈ c₁*(c₂*s)` is really `eval ((c₁*c₂)*s) = eval (c₁*(c₂*s))` — an `Eq` whose LHS pattern is an `eval (…)` application.

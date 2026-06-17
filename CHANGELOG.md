@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16] (10)
+
+### Changed
+- Removed redundant `: QState n` ket annotations across `Gate/StateActions.lean`, `State/Rewrite.lean`, `Circuit/Rewrite.lean`, and `Examples/`: only a bare-numeral ket whose `n` is still unknown when the index elaborates (the gate-applied LHS ket, the LHS of `ket_zero_tensor`) needs one; RHS kets infer `n` through `≈`, `def`-body kets infer it from the return type, and variable-index kets (`❘a⟩`, `a : Fin (2^1)`) infer it from the index. Documented the rule in `docs/lean-api.md`
+
+---
+
 ## [2026-06-16] (9)
 
 ### Changed
