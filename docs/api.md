@@ -30,7 +30,7 @@ The Kronecker product lifted to `QMatrix`.
 - `kron_mul` — mixed-product: `kron (A*C) (B*D) = kron A B * kron C D`
 - `kron_conjTranspose` — `(kron A B)ᴴ = kron Aᴴ Bᴴ`
 - `kron_one_one` — `kron 1 1 = 1`
-- `kron_assoc` — associativity of `kron` up to `reindex` (used in `Circuit.par_assoc`)
+- `kron_assoc` — associativity of `kron` up to `reindex` (used in `QCircuit.par_assoc`)
 - `IsUnitary.kron` — `IsUnitary A → IsUnitary B → IsUnitary (kron A B)`
 - `kron_mul_ket` — `kron A B * ket (tensorIndexEquiv j k ⟨a, b⟩) = tensorState (A * ket a) (B * ket b)`
 - `tensorIndexEquiv_symm_fst_val`, `tensorIndexEquiv_symm_snd_val` — decompose an index into its low and high parts
@@ -60,7 +60,7 @@ State-level layer: quantum states, basis kets, tensor product of states.
 
 ## `Gate/Standard.lean`
 
-Standard gate matrices, unitarity proofs, and `Circuit` abbreviations.
+Standard gate matrices, unitarity proofs, and `QCircuit` abbreviations.
 
 **Single-qubit gates** (`QMatrix 1`): `H`, `X`, `Y`, `Z`, `S`, `T`, `Rz θ`, `Rx θ`, `Ry θ`
 
@@ -74,15 +74,15 @@ All gate matrices follow the LSB-first qubit convention (see [conventions.md](co
 
 **State-action lemmas:** `Rz_ket_zero`, `Rz_ket_one`, `Rz_ket_diag`, `CNOT_ket_pair`, `CNOT_tensorState_smul_ket`; single-qubit actions `X_ket_zero`, `X_ket_one`, `Y_ket_zero`, `Y_ket_one`, `Z_ket_zero`, `Z_ket_one`, `S_ket_zero`, `S_ket_one`, `H_ket_zero`, `H_ket_one`
 
-**Circuit abbreviations** — `abbrev` wrappers that lift gate matrices into `Circuit`:
+**QCircuit abbreviations** — `abbrev` wrappers that lift gate matrices into `QCircuit`:
 
 | Abbrev | Type |
 |---|---|
-| `HGate`, `XGate`, `YGate`, `ZGate`, `SGate`, `TGate` | `Circuit 1` |
-| `RzGate θ`, `RxGate θ`, `RyGate θ` | `Circuit 1` |
-| `CNOTGate`, `CZGate`, `SWAPGate` | `Circuit 2` |
-| `ToffoliGate` | `Circuit 3` |
-| `ControlledGate U` | `Circuit 2` |
+| `HGate`, `XGate`, `YGate`, `ZGate`, `SGate`, `TGate` | `QCircuit 1` |
+| `RzGate θ`, `RxGate θ`, `RyGate θ` | `QCircuit 1` |
+| `CNOTGate`, `CZGate`, `SWAPGate` | `QCircuit 2` |
+| `ToffoliGate` | `QCircuit 3` |
+| `ControlledGate U` | `QCircuit 2` |
 
 ---
 
@@ -108,7 +108,7 @@ Embed a k-qubit gate into an n-qubit system at chosen qubit positions.
 
 ## `Gate/StateActions.lean`
 
-Symbolic gate actions: `QState.Equiv` theorems for standard gates acting on `QState.bit0`/`bit1` and tensor products. These are the building blocks for correctness proofs that use `Circuit.Equiv.basis_iff_state` to reduce a circuit equivalence to per-basis-state obligations.
+Symbolic gate actions: `QState.Equiv` theorems for standard gates acting on `QState.bit0`/`bit1` and tensor products. These are the building blocks for correctness proofs that use `QCircuit.Equiv.basis_iff_state` to reduce a circuit equivalence to per-basis-state obligations.
 
 Imports `Gate/Standard.lean` and `State/Rewrite.lean`; no circular dependency.
 
@@ -137,14 +137,14 @@ Parameterized over the basis index rather than `bit0`/`bit1`:
 
 ## `Circuit/Type.lean`
 
-The `Circuit` inductive type and the type-cast combinator.
+The `QCircuit` inductive type and the type-cast combinator.
 
 **Key definitions:**
-- `Circuit n` — inductive type with constructors `id`, `gate`, `seq`, `par`
+- `QCircuit n` — inductive type with constructors `id`, `gate`, `seq`, `par`
   - Notation: `1` for `id`, `c₁ * c₂` for `seq`, `c₁ + c₂` for `par`
-- `Circuit.castN (h : m = n) (c : Circuit m) : Circuit n` — transport a circuit along a propositional equality of qubit counts
+- `QCircuit.castN (h : m = n) (c : QCircuit m) : QCircuit n` — transport a circuit along a propositional equality of qubit counts
 
-`castN` is used to state `Circuit.par_assoc`: `par (par c₁ c₂) c₃` and `par c₁ (par c₂ c₃)` live in different types, so associativity is an eval-level statement involving `castN`.
+`castN` is used to state `QCircuit.par_assoc`: `par (par c₁ c₂) c₃` and `par c₁ (par c₂ c₃)` live in different types, so associativity is an eval-level statement involving `castN`.
 
 ---
 
@@ -153,12 +153,12 @@ The `Circuit` inductive type and the type-cast combinator.
 Denotational semantics and well-formedness.
 
 **Key definitions:**
-- `eval : Circuit n → QMatrix n` — denotational semantics; `@[simp]` lemmas `eval_id`, `eval_gate`, `eval_seq`, `eval_par`, `eval_castN`
-- `Circuit.WF : Circuit n → Prop` — inductive predicate asserting all `gate` leaves are unitary
+- `eval : QCircuit n → QMatrix n` — denotational semantics; `@[simp]` lemmas `eval_id`, `eval_gate`, `eval_seq`, `eval_par`, `eval_castN`
+- `QCircuit.WF : QCircuit n → Prop` — inductive predicate asserting all `gate` leaves are unitary
   - `@[simp]` iff lemmas: `wf_id`, `wf_gate`, `wf_seq`, `wf_par`
 
 **Key theorems:**
-- `Circuit.eval_unitary` — `WF c → IsUnitary (eval c)`
+- `QCircuit.eval_unitary` — `WF c → IsUnitary (eval c)`
 
 ---
 
@@ -172,7 +172,7 @@ The `QState` inductive type and supporting infrastructure.
   - `.smul α s` — scalar multiple; `α • s` notation via `SMul ℂ` instance
   - `.add s t`  — superposition; `s + t` notation via `Add` instance
   - `.tensor s t` — tensor product; `s ⊗ t` notation (qubit count sums)
-  - `.apply C s` — circuit `C` acting on state expression `s`; `C * s` notation via `HMul (Circuit n) (QState n) (QState n)` instance
+  - `.apply C s` — circuit `C` acting on state expression `s`; `C * s` notation via `HMul (QCircuit n) (QState n) (QState n)` instance
 - `QState.castN (h : m = n) : QState m → QState n` — transport along a qubit-count equality
 - `QState.bit0 : QState 1`, `QState.bit1 : QState 1` — single-qubit `|0⟩` and `|1⟩` shorthands
 
@@ -193,7 +193,7 @@ Denotational semantics and normalization for state expressions.
 
 ## `State/Rewrite.lean`
 
-State expression equivalence and equational rewrite rules. Holds the `QState.*` rewrite lemmas; the `Circuit.*` lemmas that act on state expressions live in `Circuit/Rewrite.lean`, which imports this module.
+State expression equivalence and equational rewrite rules. Holds the `QState.*` rewrite lemmas; the `QCircuit.*` lemmas that act on state expressions live in `Circuit/Rewrite.lean`, which imports this module.
 
 **Key definitions:**
 - `QState.Equiv (s t : QState n) : Prop` — `eval s = eval t`; notation `s ≈ t`
@@ -215,42 +215,42 @@ State expression equivalence and equational rewrite rules. Holds the `QState.*` 
 **Tensor algebra and basis splits:**
 - `QState.tensor_assoc` — `(s ⊗ t) ⊗ u ≈ s ⊗ (t ⊗ u)` (right-unit case, `u : QState 1`)
 - `QState.ket_zero_tensor` — `(❘0⟩ : QState (j+k)) ≈ (❘0⟩ : QState j) ⊗ (❘0⟩ : QState k)`
-- `QState.basis_tensor_split` — `❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ ❘b⟩`; the basis split underlying `Circuit.Equiv.basis_iff_tensor` (generalizes `QState.ket_zero_tensor`)
+- `QState.basis_tensor_split` — `❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ ❘b⟩`; the basis split underlying `QCircuit.Equiv.basis_iff_tensor` (generalizes `QState.ket_zero_tensor`)
 
 ---
 
 ## `Circuit/Rewrite.lean`
 
-Circuit equivalence and equational rewrite rules.
+QCircuit equivalence and equational rewrite rules.
 
 **Key definitions:**
-- `Circuit.Equiv (c₁ c₂ : Circuit n) : Prop` — `eval c₁ = eval c₂`; notation `c₁ ≈ c₂`
+- `QCircuit.Equiv (c₁ c₂ : QCircuit n) : Prop` — `eval c₁ = eval c₂`; notation `c₁ ≈ c₂`
 
-`Circuit.Equiv` is an equivalence relation with `@[refl]`/`@[symm]`/`@[trans]` instances and a `Trans` instance for `calc` blocks.
+`QCircuit.Equiv` is an equivalence relation with `@[refl]`/`@[symm]`/`@[trans]` instances and a `Trans` instance for `calc` blocks.
 
-**Congruence lemmas** (both `@[gcongr]`, so `gcongr` descends `Circuit.Equiv` goals through `seq`/`par`):
-- `Circuit.Equiv.seq_congr` — `≈` is a congruence for `seq`
-- `Circuit.Equiv.par_congr` — `≈` is a congruence for `par`
+**Congruence lemmas** (both `@[gcongr]`, so `gcongr` descends `QCircuit.Equiv` goals through `seq`/`par`):
+- `QCircuit.Equiv.seq_congr` — `≈` is a congruence for `seq`
+- `QCircuit.Equiv.par_congr` — `≈` is a congruence for `par`
 
 **Structural rewrite rules:**
-- `Circuit.seq_id_left` — `1 * c ≈ c`
-- `Circuit.seq_id_right` — `c * 1 ≈ c`
-- `Circuit.seq_assoc` — `(c₁ * c₂) * c₃ ≈ c₁ * (c₂ * c₃)`
-- `Circuit.par_assoc` — associativity of `⊗` up to `castN` (eval-level equality)
-- `Circuit.interchange_law` — `(a * b) ⊗ (c * d) ≈ (a ⊗ c) * (b ⊗ d)`
+- `QCircuit.seq_id_left` — `1 * c ≈ c`
+- `QCircuit.seq_id_right` — `c * 1 ≈ c`
+- `QCircuit.seq_assoc` — `(c₁ * c₂) * c₃ ≈ c₁ * (c₂ * c₃)`
+- `QCircuit.par_assoc` — associativity of `⊗` up to `castN` (eval-level equality)
+- `QCircuit.interchange_law` — `(a * b) ⊗ (c * d) ≈ (a ⊗ c) * (b ⊗ d)`
 
 **Basis characterization:**
-- `Circuit.Equiv.basis_iff` — `c₁ ≈ c₂ ↔ ∀ i, eval c₁ * ket i = eval c₂ * ket i`; useful for basis-state proofs
+- `QCircuit.Equiv.basis_iff` — `c₁ ≈ c₂ ↔ ∀ i, eval c₁ * ket i = eval c₂ * ket i`; useful for basis-state proofs
 
-**Circuit action on symbolic states** (the `Circuit.*` lemmas that reshape an `apply` expression `C * s`; used as `calc`/`grw` steps, building on `QState.Equiv` from `State/Rewrite.lean`):
-- `Circuit.apply_add` — `C * (s + t) ≈ C * s + C * t`
-- `Circuit.apply_smul` — `C * (α • s) ≈ α • (C * s)`
-- `Circuit.seq_action` — `(c₁ * c₂) * s ≈ c₁ * (c₂ * s)` (`c₂`, the rightmost factor, acts first)
-- `Circuit.id_action` — `(1 : Circuit n) * s ≈ s`
-- `Circuit.par_action_tensor` — `(c₁ ⊗ c₂) * (s ⊗ t) ≈ (c₁ * s) ⊗ (c₂ * t)`
+**QCircuit action on symbolic states** (the `QCircuit.*` lemmas that reshape an `apply` expression `C * s`; used as `calc`/`grw` steps, building on `QState.Equiv` from `State/Rewrite.lean`):
+- `QCircuit.apply_add` — `C * (s + t) ≈ C * s + C * t`
+- `QCircuit.apply_smul` — `C * (α • s) ≈ α • (C * s)`
+- `QCircuit.seq_action` — `(c₁ * c₂) * s ≈ c₁ * (c₂ * s)` (`c₂`, the rightmost factor, acts first)
+- `QCircuit.id_action` — `(1 : QCircuit n) * s ≈ s`
+- `QCircuit.par_action_tensor` — `(c₁ ⊗ c₂) * (s ⊗ t) ≈ (c₁ * s) ⊗ (c₂ * t)`
 
-**Symbolic-state equivalence criteria** (characterize `Circuit.Equiv` through the symbolic `QState` layer; together with the action lemmas above, this is why `Circuit/Rewrite.lean` imports `State/Rewrite.lean`):
-- `Circuit.Equiv.apply_state` — equivalent circuits act identically on a state: if `c₁ ≈ c₂` then `c₁ * s ≈ c₂ * s`
-- `Circuit.Equiv.basis_iff_state` — `c₁ ≈ c₂ ↔ ∀ i, c₁ * ❘i⟩ ≈ c₂ * ❘i⟩` (symbolic-basis form of `basis_iff`)
-- `Circuit.Equiv.equiv_iff_all_states` — `c₁ ≈ c₂ ↔ ∀ s, c₁ * s ≈ c₂ * s`
-- `Circuit.Equiv.basis_iff_tensor` — for `c₁ c₂ : Circuit (j+k)`, `c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)), c₁ * (❘a⟩ ⊗ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ ❘b⟩)`; factored-basis criterion that pairs with the tensor-form gate actions in `Gate/StateActions.lean`
+**Symbolic-state equivalence criteria** (characterize `QCircuit.Equiv` through the symbolic `QState` layer; together with the action lemmas above, this is why `Circuit/Rewrite.lean` imports `State/Rewrite.lean`):
+- `QCircuit.Equiv.apply_state` — equivalent circuits act identically on a state: if `c₁ ≈ c₂` then `c₁ * s ≈ c₂ * s`
+- `QCircuit.Equiv.basis_iff_state` — `c₁ ≈ c₂ ↔ ∀ i, c₁ * ❘i⟩ ≈ c₂ * ❘i⟩` (symbolic-basis form of `basis_iff`)
+- `QCircuit.Equiv.equiv_iff_all_states` — `c₁ ≈ c₂ ↔ ∀ s, c₁ * s ≈ c₂ * s`
+- `QCircuit.Equiv.basis_iff_tensor` — for `c₁ c₂ : QCircuit (j+k)`, `c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)), c₁ * (❘a⟩ ⊗ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ ❘b⟩)`; factored-basis criterion that pairs with the tensor-form gate actions in `Gate/StateActions.lean`

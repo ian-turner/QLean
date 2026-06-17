@@ -26,7 +26,7 @@ instance : Trans (@Equiv n) (@Equiv n) (@Equiv n) :=
 -- ── Congruence lemmas ─────────────────────────────────────────────────────────
 
 @[gcongr]
-theorem Equiv.apply_congr {C : Circuit n} {s t : QState n}
+theorem Equiv.apply_congr {C : QCircuit n} {s t : QState n}
     (h : s ≈ t) : C * s ≈ C * t := by
   simp only [Equiv, eval_apply]; rw [h]
 

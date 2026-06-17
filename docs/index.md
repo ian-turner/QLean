@@ -6,9 +6,9 @@ A Lean 4 library for equational reasoning about quantum circuits, built on Mathl
 
 QLean provides a typed circuit language with denotational matrix semantics, standard gates with unitarity proofs, and tools for proving that two circuits compute the same unitary.
 
-- `Circuit n` — structured inductive type with sequential (`*`) and parallel (`⊗`) composition
-- `eval : Circuit n → QMatrix n` — denotational semantics (matrix product and Kronecker product)
-- `Circuit.Equiv` / `≈` — circuit equality up to matrix equality
+- `QCircuit n` — structured inductive type with sequential (`*`) and parallel (`⊗`) composition
+- `eval : QCircuit n → QMatrix n` — denotational semantics (matrix product and Kronecker product)
+- `QCircuit.Equiv` / `≈` — circuit equality up to matrix equality
 - State-level layer: `QVector n`, `ket`, `tensorState`, `QState` symbolic state expressions
 
 ## What it is not
@@ -26,15 +26,15 @@ QLean/
     Hilbert.lean      — QVector, ket, tensorState, act
   Gate/
     Standard.lean     — H, X, Y, Z, S, T, Rz, Rx, Ry, CNOT, CZ, SWAP, Toffoli, controlled;
-                        unitarity proofs; Circuit abbreviations (HGate, CNOTGate, …);
+                        unitarity proofs; QCircuit abbreviations (HGate, CNOTGate, …);
                         QVector-level gate action lemmas (X_ket_zero, H_ket_zero, CNOT_ket_pair, …)
     Embed.lean        — gateAt: embed any k-qubit gate at chosen positions in an n-qubit system
     StateActions.lean — symbolic gate actions: XGate_bit0, HGate_bit0, CNOTGate_basis_tensor, …
   Circuit/
-    Type.lean         — Circuit inductive type, castN
-    Semantics.lean    — eval, Circuit.WF, Circuit.eval_unitary
-    Rewrite.lean      — Circuit.Equiv, structural rewrite rules, interchange law;
-                        Circuit.* actions on states + symbolic-state criteria
+    Type.lean         — QCircuit inductive type, castN
+    Semantics.lean    — eval, QCircuit.WF, QCircuit.eval_unitary
+    Rewrite.lean      — QCircuit.Equiv, structural rewrite rules, interchange law;
+                        QCircuit.* actions on states + symbolic-state criteria
                         (apply_state, basis_iff_state, equiv_iff_all_states, basis_iff_tensor)
   State/
     Type.lean         — QState inductive type, castN, ⊗ notation, bit0/bit1
@@ -63,9 +63,9 @@ import QLean
 open QLean
 
 -- 2-qubit Bell circuit: H on qubit 0, then CNOT
-def bellCircuit : Circuit (1 + 1) := (HGate ⊗ (1 : Circuit 1)) * CNOTGate
+def bellCircuit : QCircuit (1 + 1) := (HGate ⊗ (1 : QCircuit 1)) * CNOTGate
 
-theorem wf_bellCircuit : Circuit.WF bellCircuit := by
+theorem wf_bellCircuit : QCircuit.WF bellCircuit := by
   simp [bellCircuit, isUnitary_H, isUnitary_CNOT]
 ```
 

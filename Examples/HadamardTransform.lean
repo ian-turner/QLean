@@ -11,15 +11,15 @@ noncomputable section
 -- ── Hadamard transform circuit ────────────────────────────────────────────────
 
 /-- The n-qubit Hadamard transform: H applied in parallel to every qubit.
-    `hadamardTransform n : Circuit n` applies H to qubit n-1 (high) and recurses on 0..n-2 (low). -/
-def hadamardTransform : (n : ℕ) → Circuit n
+    `hadamardTransform n : QCircuit n` applies H to qubit n-1 (high) and recurses on 0..n-2 (low). -/
+def hadamardTransform : (n : ℕ) → QCircuit n
   | 0     => 1
   | n + 1 => hadamardTransform n ⊗ HGate
 
 -- ── Well-formedness ───────────────────────────────────────────────────────────
 
 /-- Every gate in the Hadamard transform is unitary, so the circuit is well-formed. -/
-theorem wf_hadamardTransform (n : ℕ) : Circuit.WF (hadamardTransform n) := by
+theorem wf_hadamardTransform (n : ℕ) : QCircuit.WF (hadamardTransform n) := by
   induction n with
   | zero => simp [hadamardTransform]
   | succ n ih => simp [hadamardTransform, ih, isUnitary_H]
@@ -45,7 +45,7 @@ def uniformSuperState : (n : ℕ) → QState n
     congruences automatically) driving the inductive step:
 
     * Split the all-zeros input as `❘0⟩ ≈ ❘0⟩ ⊗ ❘0⟩` (`QState.ket_zero_tensor`).
-    * `hadamardTransform n ⊗ HGate` acts componentwise on the tensor (`Circuit.par_action_tensor`).
+    * `hadamardTransform n ⊗ HGate` acts componentwise on the tensor (`QCircuit.par_action_tensor`).
     * The inductive hypothesis rewrites the low `n` qubits to `uniformSuperState n`.
     * `HGate_bit0` rewrites the high qubit `HGate * ❘0⟩` to `plusState`.
 
@@ -55,10 +55,10 @@ theorem hadamardTransform_prepares (n : ℕ) :
   induction n with
   | zero =>
     simp only [hadamardTransform, uniformSuperState]
-    grw [Circuit.id_action]
+    grw [QCircuit.id_action]
   | succ n ih =>
     simp only [hadamardTransform, uniformSuperState, plusState]
-    grw [QState.ket_zero_tensor n 1, Circuit.par_action_tensor, ih, HGate_bit0]
+    grw [QState.ket_zero_tensor n 1, QCircuit.par_action_tensor, ih, HGate_bit0]
 
 end
 

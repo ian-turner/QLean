@@ -103,13 +103,13 @@ Prove this first in `Gate/Standard.lean`. The `H` unitarity proof uses `simp [Ma
 
 ---
 
-## `Circuit.eval` namespace placement
+## `QCircuit.eval` namespace placement
 
-Defining `def eval` inside `namespace QLean` (but outside `namespace Circuit`) does not create `Circuit.eval` as a true name — it only creates `QLean.eval`. Dot notation `c.eval` resolves to the wrong function, and `open Circuit` does not expose it.
+Defining `def eval` inside `namespace QLean` (but outside `namespace QCircuit`) does not create `QCircuit.eval` as a true name — it only creates `QLean.eval`. Dot notation `c.eval` resolves to the wrong function, and `open QCircuit` does not expose it.
 
-**Fix:** Move `def eval` (and its `@[simp]` lemmas) into an explicit `namespace Circuit ... end Circuit` block inside `namespace QLean`. This makes `QLean.Circuit.eval` the canonical qualified name.
+**Fix:** Move `def eval` (and its `@[simp]` lemmas) into an explicit `namespace QCircuit ... end QCircuit` block inside `namespace QLean`. This makes `QLean.QCircuit.eval` the canonical qualified name.
 
-**Side effect of the wrong approach:** Using an `abbrev Circuit.eval := eval` alias inside `namespace QLean` with `open Circuit` in scope causes a termination-check failure because the body's `eval` resolves to the `abbrev` itself.
+**Side effect of the wrong approach:** Using an `abbrev QCircuit.eval := eval` alias inside `namespace QLean` with `open QCircuit` in scope causes a termination-check failure because the body's `eval` resolves to the `abbrev` itself.
 
 ---
 
@@ -151,20 +151,20 @@ exact CNOT_ket_pair a b
 
 ---
 
-## Rewriting modulo `QState.Equiv` / `Circuit.Equiv` — use `grw`, not `rw`/`simp`
+## Rewriting modulo `QState.Equiv` / `QCircuit.Equiv` — use `grw`, not `rw`/`simp`
 
-`QState.Equiv s t` is *defined* as `eval s = eval t` (likewise `Circuit.Equiv`). So an action/congruence lemma such as `Circuit.seq_action : (c₁*c₂)*s ≈ c₁*(c₂*s)` is really `eval ((c₁*c₂)*s) = eval (c₁*(c₂*s))` — an `Eq` whose LHS pattern is an `eval (…)` application.
+`QState.Equiv s t` is *defined* as `eval s = eval t` (likewise `QCircuit.Equiv`). So an action/congruence lemma such as `QCircuit.seq_action : (c₁*c₂)*s ≈ c₁*(c₂*s)` is really `eval ((c₁*c₂)*s) = eval (c₁*(c₂*s))` — an `Eq` whose LHS pattern is an `eval (…)` application.
 
 **Why `rw`/`simp` fail.** `rw` and `simp` only do congruence rewriting for `=`/`↔`, and they match a lemma's LHS against subterms. Since the only `eval (…)` subterms in a goal `eval s = eval t` are the two **outermost** ones, these lemmas can only rewrite the whole expression — never a nested sub-state (e.g. the `1 * ❘b⟩` inside `CNOT * ((Rz θ * ❘a⟩) ⊗ (1 * ❘b⟩))`). `rw [h]` for `h : a ≈ b` unfolds `≈` to the `Eq` of `.eval`s and then can't find an `.eval` subterm in the still-folded goal. `simp [h]` rewrites only at the top level, then stalls. A `@[congr]` lemma can't fix this either: Lean requires `@[congr]` conclusions to be `Eq`/`Iff`, and our congruence lemmas conclude in `≈`.
 
-**Use `grw` (Mathlib's generalized rewrite).** `grw [h₁, h₂, …]` is `rw [h₁, h₂, …]` modulo `≈`: it rewrites subterms under a relation using that relation's `@[gcongr]` congruence lemmas to descend. The congruence lemmas here — `QState.Equiv.apply_congr`/`add_congr`/`smul_congr`/`tensor_congr` and `Circuit.Equiv.seq_congr`/`par_congr` — are all `@[gcongr]`, so `grw` already works on both relations with no extra setup. Behaviour to know:
+**Use `grw` (Mathlib's generalized rewrite).** `grw [h₁, h₂, …]` is `rw [h₁, h₂, …]` modulo `≈`: it rewrites subterms under a relation using that relation's `@[gcongr]` congruence lemmas to descend. The congruence lemmas here — `QState.Equiv.apply_congr`/`add_congr`/`smul_congr`/`tensor_congr` and `QCircuit.Equiv.seq_congr`/`par_congr` — are all `@[gcongr]`, so `grw` already works on both relations with no extra setup. Behaviour to know:
 - Each list entry does **one outermost rewrite** (no fixpoint iteration), and `grw` **errors if a listed lemma matches nothing** — exactly like `rw`. So a `grw` list is a directed derivation, not a grab-bag.
 - Supports `grw [← lem]`, hypotheses (`grw [hφ]`), and lemmas with arguments (`grw [rz_phase b]`).
 - One `grw` can rewrite *both sides* of an `≈` goal to a common form and then close it by `rfl`.
-- A `Circuit.Equiv` fact can be rewritten inside a `QState` goal if the bridge `Circuit.Equiv.apply_state` is tagged `@[gcongr]` (it is not, by default — tag it if needed).
+- A `QCircuit.Equiv` fact can be rewritten inside a `QState` goal if the bridge `QCircuit.Equiv.apply_state` is tagged `@[gcongr]` (it is not, by default — tag it if needed).
 
 This replaces the old `calc`/`Trans` + `gcongr` scaffolding for directional `≈` reductions. See `Examples/RzCNOT.lean`, where each derivation step is a single `grw` list.
 
 **Still useful:**
 - `gcongr` on its own for a pure congruence step (relate `C[s]` and `C[t]` when only a sub-state differs), auto-closing matching leaves by `rfl`/`assumption`.
-- To finish at the matrix level instead, push `eval` all the way in with the structural simp lemmas (`eval_apply`, `eval_tensor`, `eval_basis`, `Circuit.eval_seq/par/gate/id`) and then chain genuine `Matrix`/`QVector` `Eq` lemmas — that is what `Circuit.Equiv.basis_iff` proofs do.
+- To finish at the matrix level instead, push `eval` all the way in with the structural simp lemmas (`eval_apply`, `eval_tensor`, `eval_basis`, `QCircuit.eval_seq/par/gate/id`) and then chain genuine `Matrix`/`QVector` `Eq` lemmas — that is what `QCircuit.Equiv.basis_iff` proofs do.

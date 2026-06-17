@@ -16,15 +16,15 @@ def eval : QState n → QVector n
   | .smul α s   => α • eval s
   | .add s t    => eval s + eval t
   | .tensor s t => tensorState (eval s) (eval t)
-  | .apply C s  => Circuit.eval C * eval s
+  | .apply C s  => QCircuit.eval C * eval s
 
 @[simp] theorem eval_basis (i : Fin (2^n)) : eval (.basis i) = ket i := rfl
 @[simp] theorem eval_smul (α : ℂ) (s : QState n) : eval (α • s) = α • eval s := rfl
 @[simp] theorem eval_add (s t : QState n) : eval (s + t) = eval s + eval t := rfl
 @[simp] theorem eval_tensor {j k : ℕ} (s : QState j) (t : QState k) :
     eval (s ⊗ t) = tensorState (eval s) (eval t) := rfl
-@[simp] theorem eval_apply (C : Circuit n) (s : QState n) :
-    eval (C * s) = Circuit.eval C * eval s := rfl
+@[simp] theorem eval_apply (C : QCircuit n) (s : QState n) :
+    eval (C * s) = QCircuit.eval C * eval s := rfl
 
 theorem eval_castN (h : m = n) (s : QState m) : eval (castN h s) = h ▸ eval s := by
   cases h; rfl

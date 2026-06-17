@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16] (9)
+
+### Changed
+- Renamed the `Circuit` type to `QCircuit` (and its namespace; the `Circuit/` module/directory name is unchanged, mirroring `QState` in `State/`). All qualified names move accordingly: `QCircuit.WF`, `QCircuit.eval`, `QCircuit.Equiv`, `QCircuit.castN`, the rewrite lemmas, etc.
+
+---
+
 ## [2026-06-16] (8)
 
 ### Changed

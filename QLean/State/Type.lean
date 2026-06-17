@@ -12,7 +12,7 @@ inductive QState : ℕ → Type where
   | smul   : ℂ → QState n → QState n
   | add    : QState n → QState n → QState n
   | tensor : QState j → QState k → QState (j + k)
-  | apply  : Circuit n → QState n → QState n
+  | apply  : QCircuit n → QState n → QState n
 
 namespace QState
 
@@ -21,7 +21,7 @@ def castN (h : m = n) (s : QState m) : QState n := h ▸ s
 
 instance : Add (QState n)    := ⟨.add⟩
 instance : SMul ℂ (QState n) := ⟨.smul⟩
-instance : HMul (Circuit n) (QState n) (QState n) := ⟨.apply⟩
+instance : HMul (QCircuit n) (QState n) (QState n) := ⟨.apply⟩
 
 -- `s ⊗ t` is the tensor product of state expressions (qubit counts sum).
 infixl:70 " ⊗ " => QState.tensor

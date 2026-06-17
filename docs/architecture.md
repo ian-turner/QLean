@@ -20,14 +20,14 @@ def IsUnitary {n} (U : QMatrix n) : Prop := U * Uᴴ = 1
 
 One condition only. The other direction (`Uᴴ * U = 1`) is derived via `IsUnitary.conj_mul` using the Dedekind-finite monoid argument for square matrices. Keeping a single obligation minimizes proof burden at every call site.
 
-### `Circuit`
+### `QCircuit`
 
 ```lean
-inductive Circuit : ℕ → Type where
-  | id   : Circuit n
-  | gate : QMatrix n → Circuit n
-  | seq  : Circuit n → Circuit n → Circuit n
-  | par  : Circuit j → Circuit k → Circuit (j + k)
+inductive QCircuit : ℕ → Type where
+  | id   : QCircuit n
+  | gate : QMatrix n → QCircuit n
+  | seq  : QCircuit n → QCircuit n → QCircuit n
+  | par  : QCircuit j → QCircuit k → QCircuit (j + k)
 ```
 
 A structured syntax tree. `seq` is sequential composition (matrix-multiplication order: the rightmost factor acts first); `par` is parallel composition on disjoint wire sets. The qubit count is part of the type, so ill-typed tensor products are rejected at elaboration.
@@ -39,7 +39,7 @@ Notation: `c₁ * c₂` for `seq`, `c₁ ⊗ c₂` for `par`, `1` for `id`.
 ### `eval`
 
 ```lean
-noncomputable def eval : Circuit n → QMatrix n
+noncomputable def eval : QCircuit n → QMatrix n
   | .id        => 1
   | .gate U    => U
   | .seq c₁ c₂ => eval c₁ * eval c₂   -- matrix product; c₂ (rightmost) applied first
@@ -48,23 +48,23 @@ noncomputable def eval : Circuit n → QMatrix n
 
 The denotational semantics. Always returns `QMatrix n`; the `reindex` needed to bridge `Fin (2^j) × Fin (2^k)` to `Fin (2^(j+k))` is encapsulated inside `kron`.
 
-### `Circuit.WF`
+### `QCircuit.WF`
 
 ```lean
-inductive Circuit.WF : Circuit n → Prop where
+inductive QCircuit.WF : QCircuit n → Prop where
   | id   : WF .id
   | gate : IsUnitary U → WF (.gate U)
   | seq  : WF c₁ → WF c₂ → WF (.seq c₁ c₂)
   | par  : WF c₁ → WF c₂ → WF (.par c₁ c₂)
 ```
 
-Unitarity of leaves is tracked as a separate predicate, not bundled into the `gate` constructor, for the same reason `IsUnitary` is kept separate from `QMatrix`. The bridge theorem `Circuit.eval_unitary : WF c → IsUnitary (eval c)` covers everything.
+Unitarity of leaves is tracked as a separate predicate, not bundled into the `gate` constructor, for the same reason `IsUnitary` is kept separate from `QMatrix`. The bridge theorem `QCircuit.eval_unitary : WF c → IsUnitary (eval c)` covers everything.
 
-### `Circuit.Equiv`
+### `QCircuit.Equiv`
 
 ```lean
-def Circuit.Equiv (c₁ c₂ : Circuit n) : Prop := eval c₁ = eval c₂
-notation:50 c₁ " ≈ " c₂ => Circuit.Equiv c₁ c₂
+def QCircuit.Equiv (c₁ c₂ : QCircuit n) : Prop := eval c₁ = eval c₂
+notation:50 c₁ " ≈ " c₂ => QCircuit.Equiv c₁ c₂
 ```
 
 All circuit equalities reduce to matrix equality, closed by `ring`, `simp`, or basis-state reasoning.
@@ -107,11 +107,11 @@ Convenience wrappers: `hadamardAt`, `cnotAt`, `controlledAt`.
 
 ## Type-cast coherence for `par`
 
-`par (par c₁ c₂) c₃ : Circuit ((j+k)+l)` and `par c₁ (par c₂ c₃) : Circuit (j+(k+l))` are different types because `(j+k)+l` and `j+(k+l)` are only propositionally equal. A named combinator handles this:
+`par (par c₁ c₂) c₃ : QCircuit ((j+k)+l)` and `par c₁ (par c₂ c₃) : QCircuit (j+(k+l))` are different types because `(j+k)+l` and `j+(k+l)` are only propositionally equal. A named combinator handles this:
 
 ```lean
-def Circuit.castN (h : m = n) (c : Circuit m) : Circuit n := h ▸ c
+def QCircuit.castN (h : m = n) (c : QCircuit m) : QCircuit n := h ▸ c
 ```
 
-`Circuit.par_assoc` is stated as a `Circuit.Equiv` (eval-level equality) rather than a circuit-term equality — `castN` transports the type but not the term structure.
+`QCircuit.par_assoc` is stated as a `QCircuit.Equiv` (eval-level equality) rather than a circuit-term equality — `castN` transports the type but not the term structure.
 

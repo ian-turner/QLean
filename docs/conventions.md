@@ -37,7 +37,7 @@ All definitions involving `ℝ`, `ℂ`, `Real.sqrt`, `Complex.exp`, or `Euclidea
 - `gateAt_mul` — use as a targeted `rw`, not a simp lemma
 - `IsUnitary.*` lemmas — side conditions for explicit discharge, not simplification rules
 
-**Intended proof idiom for `Circuit.Equiv` goals:**
+**Intended proof idiom for `QCircuit.Equiv` goals:**
 ```lean
 simp only [eval_seq, eval_par, eval_id, eval_gate, kron_mul]
 ring   -- or norm_num for goals with Real.sqrt entries
@@ -50,7 +50,7 @@ ring   -- or norm_num for goals with Real.sqrt entries
 - Gate circuits (abbrevs): `HGate`, `CNOTGate`, `RzGate θ`, etc.
 - Unitarity theorems: `isUnitary_H`, `isUnitary_CNOT`, `IsUnitary.kron`, etc.
 - `WF` decomposition lemmas: `wf_id`, `wf_gate`, `wf_seq`, `wf_par`
-- Circuit rewrite rules (under the `Circuit` namespace): `Circuit.seq_id_left`, `Circuit.par_assoc`, `Circuit.interchange_law`
+- QCircuit rewrite rules (under the `QCircuit` namespace): `QCircuit.seq_id_left`, `QCircuit.par_assoc`, `QCircuit.interchange_law`
 
 ## `QVector` representation
 

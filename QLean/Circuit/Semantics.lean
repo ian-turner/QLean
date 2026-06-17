@@ -3,58 +3,58 @@ import QLean.Basic.Tensor
 
 namespace QLean
 
-open Circuit
+open QCircuit
 
 noncomputable section
 
 -- ── Denotational semantics ────────────────────────────────────────────────────
 
-namespace Circuit
+namespace QCircuit
 
 /-- Map a circuit to the unitary it denotes. `seq` is a homomorphism onto matrix
     multiplication: `eval (seq c₁ c₂) = eval c₁ * eval c₂`, so the rightmost
     factor `c₂` acts first. -/
-def eval : Circuit n → QMatrix n
+def eval : QCircuit n → QMatrix n
   | .id        => 1
   | .gate U    => U
   | .seq c₁ c₂ => eval c₁ * eval c₂
   | .par c₁ c₂ => kron (eval c₁) (eval c₂)
 
-@[simp] theorem eval_id  : eval (1 : Circuit n) = 1 := rfl
+@[simp] theorem eval_id  : eval (1 : QCircuit n) = 1 := rfl
 @[simp] theorem eval_gate (U : QMatrix n) : eval (.gate U) = U := rfl
-@[simp] theorem eval_seq (c₁ c₂ : Circuit n) : eval (c₁ * c₂) = eval c₁ * eval c₂ := rfl
-@[simp] theorem eval_par {j k : ℕ} (c₁ : Circuit j) (c₂ : Circuit k) :
+@[simp] theorem eval_seq (c₁ c₂ : QCircuit n) : eval (c₁ * c₂) = eval c₁ * eval c₂ := rfl
+@[simp] theorem eval_par {j k : ℕ} (c₁ : QCircuit j) (c₂ : QCircuit k) :
     eval (c₁ ⊗ c₂) = kron (eval c₁) (eval c₂) := rfl
 
 /-- `eval_castN`: transporting across a qubit-count equality is a `reindex` at matrix level. -/
-@[simp] theorem eval_castN (h : m = n) (c : Circuit m) :
+@[simp] theorem eval_castN (h : m = n) (c : QCircuit m) :
     eval (castN h c) =
     (eval c).reindex (finCongr (congr_arg (2^·) h)) (finCongr (congr_arg (2^·) h)) := by
   cases h; simp [castN]
 
-end Circuit
+end QCircuit
 
 -- ── Well-formedness ───────────────────────────────────────────────────────────
 
 /-- A circuit is well-formed if every gate is unitary. Defined as a `def` to avoid
     dependent elimination issues with the `par` index. -/
-def Circuit.WF : Circuit n → Prop
-  | Circuit.id        => True
-  | Circuit.gate U    => IsUnitary U
-  | Circuit.seq c₁ c₂ => Circuit.WF c₁ ∧ Circuit.WF c₂
-  | Circuit.par c₁ c₂ => Circuit.WF c₁ ∧ Circuit.WF c₂
+def QCircuit.WF : QCircuit n → Prop
+  | QCircuit.id        => True
+  | QCircuit.gate U    => IsUnitary U
+  | QCircuit.seq c₁ c₂ => QCircuit.WF c₁ ∧ QCircuit.WF c₂
+  | QCircuit.par c₁ c₂ => QCircuit.WF c₁ ∧ QCircuit.WF c₂
 
-@[simp] theorem wf_id   : Circuit.WF (1 : Circuit n) := trivial
-@[simp] theorem wf_gate {U : QMatrix n} : Circuit.WF (.gate U) ↔ IsUnitary U := Iff.rfl
-@[simp] theorem wf_seq  {c₁ c₂ : Circuit n} :
-    Circuit.WF (c₁ * c₂) ↔ Circuit.WF c₁ ∧ Circuit.WF c₂ := Iff.rfl
-@[simp] theorem wf_par  {c₁ : Circuit j} {c₂ : Circuit k} :
-    Circuit.WF (c₁ ⊗ c₂) ↔ Circuit.WF c₁ ∧ Circuit.WF c₂ := Iff.rfl
+@[simp] theorem wf_id   : QCircuit.WF (1 : QCircuit n) := trivial
+@[simp] theorem wf_gate {U : QMatrix n} : QCircuit.WF (.gate U) ↔ IsUnitary U := Iff.rfl
+@[simp] theorem wf_seq  {c₁ c₂ : QCircuit n} :
+    QCircuit.WF (c₁ * c₂) ↔ QCircuit.WF c₁ ∧ QCircuit.WF c₂ := Iff.rfl
+@[simp] theorem wf_par  {c₁ : QCircuit j} {c₂ : QCircuit k} :
+    QCircuit.WF (c₁ ⊗ c₂) ↔ QCircuit.WF c₁ ∧ QCircuit.WF c₂ := Iff.rfl
 
 -- ── WF implies unitarity ──────────────────────────────────────────────────────
 
 /-- A well-formed circuit evaluates to a unitary matrix. -/
-theorem Circuit.eval_unitary (c : Circuit n) (h : c.WF) : IsUnitary (eval c) := by
+theorem QCircuit.eval_unitary (c : QCircuit n) (h : c.WF) : IsUnitary (eval c) := by
   induction c with
   | id => unfold eval IsUnitary; simp [Matrix.conjTranspose_one]
   | gate U => exact h
