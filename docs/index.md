@@ -33,12 +33,13 @@ QLean/
   Circuit/
     Type.lean         — Circuit inductive type, castN
     Semantics.lean    — eval, Circuit.WF, Circuit.eval_unitary
-    Rewrite.lean      — Circuit.Equiv, structural rewrite rules, interchange law
+    Rewrite.lean      — Circuit.Equiv, structural rewrite rules, interchange law;
+                        Circuit.* actions on states + symbolic-state criteria
+                        (apply_state, basis_iff_state, equiv_iff_all_states, basis_iff_tensor)
   State/
     Type.lean         — QState inductive type, castN, ⊗ notation, bit0/bit1
     Semantics.lean    — QState.eval, QState.IsNormalized
-    Rewrite.lean      — QState.Equiv, congruence/distributivity/circuit-action lemmas;
-                        Circuit.Equiv.basis_iff_state, equiv_iff_all_states, basis_iff_tensor
+    Rewrite.lean      — QState.Equiv, congruence/distributivity lemmas, tensor/basis splits
 Examples/
   RzCNOT.lean         — Rz(θ) commutes with CNOT on the control qubit
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition

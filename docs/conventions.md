@@ -50,7 +50,7 @@ ring   -- or norm_num for goals with Real.sqrt entries
 - Gate circuits (abbrevs): `HGate`, `CNOTGate`, `RzGate θ`, etc.
 - Unitarity theorems: `isUnitary_H`, `isUnitary_CNOT`, `IsUnitary.kron`, etc.
 - `WF` decomposition lemmas: `wf_id`, `wf_gate`, `wf_seq`, `wf_par`
-- Circuit rewrite rules: `seq_id_left`, `par_assoc`, `interchange_law`
+- Circuit rewrite rules (under the `Circuit` namespace): `Circuit.seq_id_left`, `Circuit.par_assoc`, `Circuit.interchange_law`
 
 ## `QVector` representation
 

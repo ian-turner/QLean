@@ -30,7 +30,7 @@ The Kronecker product lifted to `QMatrix`.
 - `kron_mul` — mixed-product: `kron (A*C) (B*D) = kron A B * kron C D`
 - `kron_conjTranspose` — `(kron A B)ᴴ = kron Aᴴ Bᴴ`
 - `kron_one_one` — `kron 1 1 = 1`
-- `kron_assoc` — associativity of `kron` up to `reindex` (used in `par_assoc`)
+- `kron_assoc` — associativity of `kron` up to `reindex` (used in `Circuit.par_assoc`)
 - `IsUnitary.kron` — `IsUnitary A → IsUnitary B → IsUnitary (kron A B)`
 - `kron_mul_ket` — `kron A B * ket (tensorIndexEquiv j k ⟨a, b⟩) = tensorState (A * ket a) (B * ket b)`
 - `tensorIndexEquiv_symm_fst_val`, `tensorIndexEquiv_symm_snd_val` — decompose an index into its low and high parts
@@ -144,7 +144,7 @@ The `Circuit` inductive type and the type-cast combinator.
   - Notation: `1` for `id`, `c₁ * c₂` for `seq`, `c₁ + c₂` for `par`
 - `Circuit.castN (h : m = n) (c : Circuit m) : Circuit n` — transport a circuit along a propositional equality of qubit counts
 
-`castN` is used to state `par_assoc`: `par (par c₁ c₂) c₃` and `par c₁ (par c₂ c₃)` live in different types, so associativity is an eval-level statement involving `castN`.
+`castN` is used to state `Circuit.par_assoc`: `par (par c₁ c₂) c₃` and `par c₁ (par c₂ c₃)` live in different types, so associativity is an eval-level statement involving `castN`.
 
 ---
 
@@ -193,7 +193,7 @@ Denotational semantics and normalization for state expressions.
 
 ## `State/Rewrite.lean`
 
-State expression equivalence and equational rewrite rules.
+State expression equivalence and equational rewrite rules. Holds the `QState.*` rewrite lemmas; the `Circuit.*` lemmas that act on state expressions live in `Circuit/Rewrite.lean`, which imports this module.
 
 **Key definitions:**
 - `QState.Equiv (s t : QState n) : Prop` — `eval s = eval t`; notation `s ≈ t`
@@ -212,21 +212,10 @@ State expression equivalence and equational rewrite rules.
 - `QState.smul_tensor_left` — `(α • s) ⊗ t ≈ α • (s ⊗ t)`
 - `QState.tensor_smul_right` — `s ⊗ (α • t) ≈ α • (s ⊗ t)`
 
-**Circuit action on symbolic states** (reshape an `apply` expression; used as `calc`/`grw` steps):
-- `Circuit.apply_add` — `C * (s + t) ≈ C * s + C * t`
-- `Circuit.apply_smul` — `C * (α • s) ≈ α • (C * s)`
-- `Circuit.seq_action` — `(c₁ * c₂) * s ≈ c₁ * (c₂ * s)` (`c₂`, the rightmost factor, acts first)
-- `Circuit.id_action` — `(1 : Circuit n) * s ≈ s`
-- `Circuit.par_action_tensor` — `(c₁ ⊗ c₂) * (s ⊗ t) ≈ (c₁ * s) ⊗ (c₂ * t)`
+**Tensor algebra and basis splits:**
 - `QState.tensor_assoc` — `(s ⊗ t) ⊗ u ≈ s ⊗ (t ⊗ u)` (right-unit case, `u : QState 1`)
 - `QState.ket_zero_tensor` — `(❘0⟩ : QState (j+k)) ≈ (❘0⟩ : QState j) ⊗ (❘0⟩ : QState k)`
-
-**Symbolic-state equivalence criteria:**
-- `Circuit.Equiv.apply_state` — equivalent circuits act identically on a state: if `c₁ ≈ c₂` then `c₁ * s ≈ c₂ * s`
-- `Circuit.Equiv.basis_iff_state` — `c₁ ≈ c₂ ↔ ∀ i, c₁ * ❘i⟩ ≈ c₂ * ❘i⟩` (symbolic-basis form of `basis_iff`)
-- `Circuit.Equiv.equiv_iff_all_states` — `c₁ ≈ c₂ ↔ ∀ s, c₁ * s ≈ c₂ * s`
-- `Circuit.Equiv.basis_iff_tensor` — for `c₁ c₂ : Circuit (j+k)`, `c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)), c₁ * (❘a⟩ ⊗ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ ❘b⟩)`; factored-basis criterion that pairs with the tensor-form gate actions in `Gate/StateActions.lean`
-- `QState.basis_tensor_split` — `❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ ❘b⟩`; the basis split underlying `basis_iff_tensor` (generalizes `QState.ket_zero_tensor`)
+- `QState.basis_tensor_split` — `❘tensorIndexEquiv j k ⟨a, b⟩⟩ ≈ ❘a⟩ ⊗ ❘b⟩`; the basis split underlying `Circuit.Equiv.basis_iff_tensor` (generalizes `QState.ket_zero_tensor`)
 
 ---
 
@@ -244,11 +233,24 @@ Circuit equivalence and equational rewrite rules.
 - `Circuit.Equiv.par_congr` — `≈` is a congruence for `par`
 
 **Structural rewrite rules:**
-- `seq_id_left` — `1 * c ≈ c`
-- `seq_id_right` — `c * 1 ≈ c`
-- `seq_assoc` — `(c₁ * c₂) * c₃ ≈ c₁ * (c₂ * c₃)`
-- `par_assoc` — associativity of `+` up to `castN` (eval-level equality)
-- `interchange_law` — `(a * b) + (c * d) ≈ (a + c) * (b + d)`
+- `Circuit.seq_id_left` — `1 * c ≈ c`
+- `Circuit.seq_id_right` — `c * 1 ≈ c`
+- `Circuit.seq_assoc` — `(c₁ * c₂) * c₃ ≈ c₁ * (c₂ * c₃)`
+- `Circuit.par_assoc` — associativity of `⊗` up to `castN` (eval-level equality)
+- `Circuit.interchange_law` — `(a * b) ⊗ (c * d) ≈ (a ⊗ c) * (b ⊗ d)`
 
 **Basis characterization:**
 - `Circuit.Equiv.basis_iff` — `c₁ ≈ c₂ ↔ ∀ i, eval c₁ * ket i = eval c₂ * ket i`; useful for basis-state proofs
+
+**Circuit action on symbolic states** (the `Circuit.*` lemmas that reshape an `apply` expression `C * s`; used as `calc`/`grw` steps, building on `QState.Equiv` from `State/Rewrite.lean`):
+- `Circuit.apply_add` — `C * (s + t) ≈ C * s + C * t`
+- `Circuit.apply_smul` — `C * (α • s) ≈ α • (C * s)`
+- `Circuit.seq_action` — `(c₁ * c₂) * s ≈ c₁ * (c₂ * s)` (`c₂`, the rightmost factor, acts first)
+- `Circuit.id_action` — `(1 : Circuit n) * s ≈ s`
+- `Circuit.par_action_tensor` — `(c₁ ⊗ c₂) * (s ⊗ t) ≈ (c₁ * s) ⊗ (c₂ * t)`
+
+**Symbolic-state equivalence criteria** (characterize `Circuit.Equiv` through the symbolic `QState` layer; together with the action lemmas above, this is why `Circuit/Rewrite.lean` imports `State/Rewrite.lean`):
+- `Circuit.Equiv.apply_state` — equivalent circuits act identically on a state: if `c₁ ≈ c₂` then `c₁ * s ≈ c₂ * s`
+- `Circuit.Equiv.basis_iff_state` — `c₁ ≈ c₂ ↔ ∀ i, c₁ * ❘i⟩ ≈ c₂ * ❘i⟩` (symbolic-basis form of `basis_iff`)
+- `Circuit.Equiv.equiv_iff_all_states` — `c₁ ≈ c₂ ↔ ∀ s, c₁ * s ≈ c₂ * s`
+- `Circuit.Equiv.basis_iff_tensor` — for `c₁ c₂ : Circuit (j+k)`, `c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)), c₁ * (❘a⟩ ⊗ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ ❘b⟩)`; factored-basis criterion that pairs with the tensor-form gate actions in `Gate/StateActions.lean`

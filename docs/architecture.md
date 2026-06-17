@@ -113,5 +113,5 @@ Convenience wrappers: `hadamardAt`, `cnotAt`, `controlledAt`.
 def Circuit.castN (h : m = n) (c : Circuit m) : Circuit n := h ▸ c
 ```
 
-`par_assoc` is stated as a `Circuit.Equiv` (eval-level equality) rather than a circuit-term equality — `castN` transports the type but not the term structure.
+`Circuit.par_assoc` is stated as a `Circuit.Equiv` (eval-level equality) rather than a circuit-term equality — `castN` transports the type but not the term structure.
 

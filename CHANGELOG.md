@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-16] (8)
+
+### Changed
+- Reorganized the rewrite layer by namespace: moved all `Circuit.*` lemmas (state-action lemmas `apply_add`/`apply_smul`/`seq_action`/`id_action`/`par_action_tensor` and criteria `Circuit.Equiv.apply_state`/`basis_iff_state`/`equiv_iff_all_states`/`basis_iff_tensor`) from `State/Rewrite.lean` to `Circuit/Rewrite.lean` (which now imports `State/Rewrite.lean`, not the reverse), and wrapped both files in their `QState`/`Circuit` namespaces — `QState.*` lemmas live in `State/Rewrite`, `Circuit.*` in `Circuit/Rewrite`; full names unchanged except the structural lemmas `seq_id_left`/`seq_id_right`/`seq_assoc`/`par_assoc`/`interchange_law`, which gained the `Circuit.` prefix
+
+---
+
 ## [2026-06-16] (7)
 
 ### Changed
