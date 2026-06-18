@@ -96,10 +96,8 @@ theorem IsUnitary.kron {j k : ℕ} {A : QMatrix j} {B : QMatrix k}
   unfold IsUnitary
   rw [kron_conjTranspose, ← kron_mul, ha, hb, kron_one_one]
 
--- Associativity: the two ways to flatten three parallel gates agree.
--- The reindex by finCongr (2^·) (add_assoc) bridges the type-level
--- j+k+l = j+(k+l) isomorphism.  The proof reduces to three Nat arithmetic
--- identities about % and / with powers of 2.
+/-- Associativity of `kron`: the two ways to flatten three parallel gates agree,
+    up to the `reindex` bridging `(j+k)+l` and `j+(k+l)`. -/
 theorem kron_assoc {j k l : ℕ} (A : QMatrix j) (B : QMatrix k) (C : QMatrix l) :
     (kron (kron A B) C).reindex
         (finCongr (congr_arg (2 ^ ·) (Nat.add_assoc j k l)))

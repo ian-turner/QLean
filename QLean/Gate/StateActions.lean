@@ -9,15 +9,13 @@ noncomputable section
 
 -- ── Single-qubit gate actions on symbolic states ──────────────────────────────
 
--- A bare-numeral ket `❘0⟩` is `QState.basis (0 : Fin (2^n))`; its `OfNat`
--- instance is stuck while `n` is an unresolved metavariable, so the *first*
--- (gate-applied) ket carries a `: QState 1` annotation to pin `n`.  Once `n` is
--- fixed there, the right-hand side infers it through `≈`, and variable-index
--- kets (`❘a⟩` with `a : Fin (2^1)`) infer it from the index type — neither needs
--- an annotation.
+-- A bare-numeral ket `❘0⟩` is `QState.basis (0 : Fin (2^n))`, whose `OfNat` instance is
+-- stuck while `n` is a metavariable, so the gate-applied ket carries a `: QState 1`
+-- annotation to pin `n`. Variable-index kets (`❘a⟩`, `a : Fin (2^1)`) infer `n` from the
+-- index type and need none.
 --
--- `simp only` reduces the goal to the QVector level; `exact` closes it via
--- the kernel's full definitional equality (which handles Fin (2^1) = Fin 2).
+-- In each proof, `simp only` reduces to the QVector level; `exact` then closes the goal by
+-- definitional equality (handling `Fin (2^1) = Fin 2`).
 
 theorem XGate_bit0 : XGate * (❘0⟩ : QState 1) ≈ ❘1⟩ := by
   simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QCircuit.eval_gate]
@@ -55,10 +53,9 @@ theorem SGate_bit1 : SGate * (❘1⟩ : QState 1) ≈ Complex.I • ❘1⟩ := b
              QCircuit.eval_gate]
   exact S_ket_one
 
--- `((Real.sqrt 2)⁻¹ : ℂ)` elaborates as `(↑(Real.sqrt 2))⁻¹` (ℂ-inverse after coercion),
--- while `H_ket_zero` has `(Real.sqrt 2)⁻¹ : ℝ` (ℝ-smul on QVector).
--- `← Complex.ofReal_inv` rewrites `(↑r)⁻¹ → ↑(r⁻¹)`, then `algebraMap_smul`
--- converts the ℂ-smul to ℝ-smul so `exact H_ket_zero` closes the goal.
+-- `((Real.sqrt 2)⁻¹ : ℂ)` is `(↑(Real.sqrt 2))⁻¹`, whereas `H_ket_zero` uses ℝ-smul by
+-- `(Real.sqrt 2)⁻¹`. `← Complex.ofReal_inv` rewrites `(↑r)⁻¹ → ↑(r⁻¹)`, after which
+-- `exact H_ket_zero` closes the goal (ℂ-smul by `↑r` is defeq to ℝ-smul by `r`).
 theorem HGate_bit0 :
     HGate * (❘0⟩ : QState 1) ≈ ((Real.sqrt 2)⁻¹ : ℂ) • (❘0⟩ + ❘1⟩) := by
   simp only [QState.Equiv, QState.eval_apply, QCircuit.eval_gate, QState.eval_smul,

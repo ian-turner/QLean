@@ -71,30 +71,30 @@ noncomputable def Ry (θ : ℝ) : QMatrix 1 :=
 
 -- ── Two-qubit gates (LSB convention: qubit 0 = low bit) ───────────────────────
 
--- ctrl = qubit 0 (low bit), tgt = qubit 1 (high bit)
--- Differs from textbook !![1,0,0,0; 0,1,0,0; 0,0,0,1; 0,0,1,0] (MSB ctrl)
+/-- CNOT: control = qubit 0 (low bit), target = qubit 1; flips the target when the
+    control is set. (LSB convention; the MSB textbook matrix differs.) -/
 def CNOT : QMatrix 2 :=
   !![1, 0, 0, 0;
      0, 0, 0, 1;
      0, 0, 1, 0;
      0, 1, 0, 0]
 
--- CZ: phase flip on |11⟩ (index 3); same matrix in both LSB and MSB conventions
+/-- CZ: phase flip on `|11⟩`. Symmetric, so identical in the LSB and MSB conventions. -/
 def CZ : QMatrix 2 :=
   !![1, 0, 0,  0;
      0, 1, 0,  0;
      0, 0, 1,  0;
      0, 0, 0, -1]
 
--- SWAP: exchanges qubits 0 and 1; swaps indices 1 and 2
+/-- SWAP: exchanges qubits 0 and 1. -/
 def SWAP : QMatrix 2 :=
   !![1, 0, 0, 0;
      0, 0, 1, 0;
      0, 1, 0, 0;
      0, 0, 0, 1]
 
--- Three-qubit gate; unitarity deferred to v2
--- ctrl0=qubit0, ctrl1=qubit1, tgt=qubit2; flips tgt when both ctrls=1 (index 7)
+/-- Toffoli (CCX): controls = qubits 0,1, target = qubit 2; flips the target when both
+    controls are set. -/
 def Toffoli : QMatrix 3 :=
   !![1, 0, 0, 0, 0, 0, 0, 0;
      0, 1, 0, 0, 0, 0, 0, 0;
@@ -107,7 +107,8 @@ def Toffoli : QMatrix 3 :=
 
 -- ── Controlled-U (2-qubit); ctrl=qubit0, tgt=qubit1 ─────────────────────────
 
--- When ctrl=0: identity on tgt. When ctrl=1: apply U to tgt.
+/-- Controlled-`U`: control = qubit 0, target = qubit 1. Applies `U` to the target
+    when the control is set, identity otherwise. -/
 def controlled (U : QMatrix 1) : QMatrix 2 :=
   !![1,      0,      0,      0;
      0, U 0 0,      0, U 0 1;

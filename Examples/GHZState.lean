@@ -10,16 +10,10 @@ noncomputable section
 
 -- ── GHZ state preparation circuit ─────────────────────────────────────────────
 
-/-- The GHZ preparation circuit on `n + 1` qubits.
-
-    `ghzCircuit 0 = HGate` is a single Hadamard; each step adds one qubit and one
-    CNOT, entangling the new top qubit (qubit `n + 1`) with the previous top qubit
-    (qubit `n`):
-
-    `ghzCircuit (n+1) = ((1 : QCircuit n) ⊗ CNOTGate) * (ghzCircuit n ⊗ (1 : QCircuit 1))`
-
-    Indexed by the number of CNOTs `n`, so `ghzCircuit n : QCircuit (n + 1)` always
-    acts on at least one qubit and `ghzCircuit 1` is exactly the Bell circuit. -/
+/-- The GHZ preparation circuit on `n + 1` qubits: `ghzCircuit 0` is a single Hadamard,
+    and each step adds one qubit and a CNOT entangling the new top qubit with the previous
+    one. Indexed by the CNOT count `n`, so `ghzCircuit n : QCircuit (n + 1)` and
+    `ghzCircuit 1` is exactly the Bell circuit. -/
 def ghzCircuit : (n : ℕ) → QCircuit (n + 1)
   | 0     => HGate
   | n + 1 => ((1 : QCircuit n) ⊗ CNOTGate) * (ghzCircuit n ⊗ (1 : QCircuit 1))
@@ -34,37 +28,24 @@ theorem wf_ghzCircuit (n : ℕ) : QCircuit.WF (ghzCircuit n) := by
 
 -- ── GHZ state ─────────────────────────────────────────────────────────────────
 
-/-- The `(n+1)`-qubit GHZ state `|GHZ⟩ = (|0…0⟩ + |1…1⟩)/√2`, as a symbolic state
-    expression: an equal superposition of the all-zeros basis ket `❘0⟩` and the
-    all-ones basis ket `❘allOnes (n+1)⟩`. Like the Bell state (the `n = 0` case after
-    the first CNOT), it is maximally entangled — it does not factor as a tensor product
-    of single-qubit states. The normalization is always `1/√2`: there are only ever two
-    terms, regardless of the number of qubits. -/
+/-- The `(n+1)`-qubit GHZ state `|GHZ⟩ = (|0…0⟩ + |1…1⟩)/√2`, as a symbolic state: an equal
+    superposition of the all-zeros ket `❘0⟩` and the all-ones ket `❘allOnes (n+1)⟩`. Maximally
+    entangled, and always normalized by `1/√2` — there are only ever two terms. -/
 def ghzState (n : ℕ) : QState (n + 1) :=
   ((Real.sqrt 2)⁻¹ : ℂ) • (❘0⟩ + ❘allOnes (n + 1)⟩)
 
 -- ── Main theorem ──────────────────────────────────────────────────────────────
 
-/-- The GHZ circuit sends the all-zeros ket to the GHZ state.
-
-    Equational reasoning in the symbolic state layer, by induction on `n`.
+/-- The GHZ circuit sends the all-zeros ket to the GHZ state, by induction on `n`.
 
     * **Base case** (`n = 0`): a single Hadamard, `HGate_bit0` turns `❘0⟩` into
-      `(❘0⟩ + ❘1⟩)/√2 = ghzState 0` (since `allOnes 1 = 1`).
+      `(❘0⟩ + ❘1⟩)/√2 = ghzState 0`.
 
-    * **Inductive step**: peel the new top qubit off the input (`ket_zero_tensor`),
-      run `ghzCircuit n` on the low qubits via the inductive hypothesis and the
-      identity on the new qubit (`par_action_tensor`, `id_action`), leaving
-      `ghzState n ⊗ ❘0⟩`. Distribute the tensor over the superposition
-      (`smul_tensor_left`, `add_tensor_left`) and **re-associate** each term so the
-      previous top qubit and the new qubit form an adjacent pair (`ket_zero_tensor`,
-      `allOnes_succ`, `tensor_assoc`) — the step the Hadamard transform and Bell
-      examples never needed, because GHZ's CNOT straddles the tensor boundary. The
-      final CNOT (`1 ⊗ CNOTGate`) then acts on that pair (`apply_smul`, `apply_add`,
-      `par_action_tensor`, `CNOTGate_basis_tensor`), copying the control bit onto the
-      new qubit: `❘0⟩ ⊗ ❘0⟩ ↦ ❘0⟩ ⊗ ❘0⟩` extends the all-zeros run and
-      `❘1⟩ ⊗ ❘0⟩ ↦ ❘1⟩ ⊗ ❘1⟩` extends the all-ones run. A final `gcongr` matches the
-      result against `ghzState (n+1)` by re-expanding its two basis kets. -/
+    * **Inductive step**: peel the new top qubit off the input, run `ghzCircuit n` on the
+      low qubits via the inductive hypothesis, then re-associate so the previous and new
+      top qubits form an adjacent pair — the step the other examples never need, because
+      GHZ's CNOT straddles the tensor boundary. The final CNOT copies the control bit onto
+      the new qubit, extending both the all-zeros and all-ones runs. -/
 theorem ghzCircuit_prepares (n : ℕ) :
     ghzCircuit n * (❘0⟩ : QState (n + 1)) ≈ ghzState n := by
   induction n with

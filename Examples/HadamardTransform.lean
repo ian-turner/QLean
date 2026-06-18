@@ -27,7 +27,7 @@ theorem wf_hadamardTransform (n : ℕ) : QCircuit.WF (hadamardTransform n) := by
 -- ── Uniform superposition state ───────────────────────────────────────────────
 
 /-- The single-qubit uniform superposition `|+⟩ = (❘0⟩ + ❘1⟩)/√2`, as a symbolic state.
-    This is exactly the right-hand side of `HGate_bit0`, so `H` applied to `❘0⟩` is `≈ plusState`. -/
+    Exactly the right-hand side of `HGate_bit0`. -/
 def plusState : QState 1 := ((Real.sqrt 2)⁻¹ : ℂ) • (❘0⟩ + ❘1⟩)
 
 /-- The n-qubit uniform superposition as a symbolic state: a tensor power of `plusState`,
@@ -40,16 +40,9 @@ def uniformSuperState : (n : ℕ) → QState n
 
 /-- The n-qubit Hadamard transform sends the all-zeros ket to the uniform superposition.
 
-    The argument is equational reasoning in the symbolic state layer, mirroring `rz_commutes_cnot`.
-    By induction on `n`, with `grw` (`rw` modulo `≈`, descending under the tensor/apply
-    congruences automatically) driving the inductive step:
-
-    * Split the all-zeros input as `❘0⟩ ≈ ❘0⟩ ⊗ ❘0⟩` (`QState.ket_zero_tensor`).
-    * `hadamardTransform n ⊗ HGate` acts componentwise on the tensor (`QCircuit.par_action_tensor`).
-    * The inductive hypothesis rewrites the low `n` qubits to `uniformSuperState n`.
-    * `HGate_bit0` rewrites the high qubit `HGate * ❘0⟩` to `plusState`.
-
-    The result is `uniformSuperState n ⊗ plusState`, which is `uniformSuperState (n+1)` by definition. -/
+    By induction on `n`: split the input as `❘0⟩ ≈ ❘0⟩ ⊗ ❘0⟩`, act componentwise on the
+    tensor, rewrite the low `n` qubits by the inductive hypothesis and the high qubit by
+    `HGate_bit0`. The result `uniformSuperState n ⊗ plusState` is `uniformSuperState (n+1)`. -/
 theorem hadamardTransform_prepares (n : ℕ) :
     hadamardTransform n * (❘0⟩ : QState n) ≈ uniformSuperState n := by
   induction n with

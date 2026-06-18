@@ -128,8 +128,7 @@ theorem kron_tensorState {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
       (fun p => A ((tensorIndexEquiv j k).symm r).1 p.1 *
                 B ((tensorIndexEquiv j k).symm r).2 p.2 * (ψ p.1 0 * φ p.2 0))
       (fun _ => rfl)]
-  -- Factor: ∑ (a,b), fa*ga*(fb*gb) = (∑ a, fa*ga) * (∑ b, fb*gb)
-  -- mul_mul_mul_comm: a*b*(c*d) = a*c*(b*d) rearranges to separate the two components
+  -- Factor ∑_(a,b) fa·ga·(fb·gb) into (∑_a fa·ga)·(∑_b fb·gb); `mul_mul_mul_comm` separates the factors.
   simp_rw [Fintype.sum_prod_type, mul_mul_mul_comm, ← Finset.mul_sum, ← Finset.sum_mul]
 
 /-- `(A⊗B)|a,b⟩ = (A|a⟩)⊗(B|b⟩)`: Kronecker product distributes over basis kets. -/

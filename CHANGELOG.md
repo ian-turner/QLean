@@ -4,6 +4,16 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-18] (14)
+
+### Changed
+- Docstring/comment cleanup across `QLean/` and `Examples/`: condensed the verbose proof-walkthrough docstrings on the four `Examples/` theorems to a statement + brief approach, converted the `CNOT`/`CZ`/`SWAP`/`Toffoli`/`controlled` `--` comments to `/-- -/` docstrings for consistency, and dropped the `eval_castN` docstring self-reference and the `Toffoli` "deferred to v2" roadmap note
+
+### Fixed
+- `Gate/StateActions.lean`: corrected the `HGate_bit0`/`HGate_bit1` note that named `algebraMap_smul` (absent from the proof) — after `← Complex.ofReal_inv` the goal closes by defeq (ℂ-smul by `↑r` = ℝ-smul by `r`)
+
+---
+
 ## [2026-06-17] (13)
 
 ### Removed

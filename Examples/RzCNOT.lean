@@ -13,19 +13,10 @@ abbrev id1 : QCircuit 1 := 1
 
 /-- `Rz(θ)` on qubit 0 (the CNOT control) commutes with CNOT.
 
-    The argument is equational reasoning in the symbolic state layer. By
-    `QCircuit.Equiv.basis_iff_tensor` it suffices to check both circuit orderings on
-    every factored basis state `❘a⟩ ⊗ ❘b⟩`, and we show they land on the *same*
-    phased state `φ • (❘a⟩ ⊗ ❘a+b⟩)`:
-
-    * Rz is diagonal, so on the control ket `❘a⟩` it is just multiplication by some
-      phase `φ` — we keep `φ` abstract, since its value is irrelevant to commutativity.
-    * `Rz ⊗ 1` therefore phases any basis tensor with control `❘a⟩` by `φ`, leaving the
-      target ket untouched (`rz_phase`).
-    * CNOT flips the target and preserves the control (`CNOTGate_basis_tensor`).
-
-    Running the two gates in either order phases by the same `φ` (it depends only on the
-    control, which CNOT never changes) and flips the target once, so the results agree. -/
+    By `QCircuit.Equiv.basis_iff_tensor` it suffices to check both orderings on every basis
+    tensor `❘a⟩ ⊗ ❘b⟩`. Rz is diagonal, so on the control it is just a phase `φ` (kept
+    abstract); CNOT flips the target and preserves the control. Either order phases by the
+    same `φ` and flips the target once, landing on `φ • (❘a⟩ ⊗ ❘a+b⟩)`. -/
 theorem rz_commutes_cnot (θ : ℝ) :
     (RzGate θ ⊗ id1) * CNOTGate ≈ CNOTGate * (RzGate θ ⊗ id1) := by
   refine (QCircuit.Equiv.basis_iff_tensor (j := 1) (k := 1) _ _).mpr fun a b => ?_

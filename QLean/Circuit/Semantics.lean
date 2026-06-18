@@ -26,7 +26,7 @@ def eval : QCircuit n → QMatrix n
 @[simp] theorem eval_par {j k : ℕ} (c₁ : QCircuit j) (c₂ : QCircuit k) :
     eval (c₁ ⊗ c₂) = kron (eval c₁) (eval c₂) := rfl
 
-/-- `eval_castN`: transporting across a qubit-count equality is a `reindex` at matrix level. -/
+/-- Transporting a circuit across a qubit-count equality is a `reindex` at the matrix level. -/
 @[simp] theorem eval_castN (h : m = n) (c : QCircuit m) :
     eval (castN h c) =
     (eval c).reindex (finCongr (congr_arg (2^·) h)) (finCongr (congr_arg (2^·) h)) := by

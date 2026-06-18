@@ -123,9 +123,8 @@ theorem par_action_tensor (c₁ : QCircuit j) (c₂ : QCircuit k)
   simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, eval_par, kron_tensorState]
 
 -- ── Symbolic-state equivalence criteria ───────────────────────────────────────
--- These characterize `QCircuit.Equiv` through the symbolic `QState` layer, so they
--- build on `State/Rewrite` (`QState.Equiv`, the `c * s` action). They live here,
--- next to `basis_iff`, rather than in `State/Rewrite`.
+-- These characterize `QCircuit.Equiv` through the symbolic `QState` layer (building on
+-- `State/Rewrite`), so they sit here alongside `basis_iff`.
 
 /-- Equivalent circuits act identically on every symbolic state expression. -/
 theorem Equiv.apply_state {n : ℕ} {c₁ c₂ : QCircuit n}
