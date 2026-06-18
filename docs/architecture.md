@@ -91,20 +91,6 @@ Key algebraic properties proved:
 
 ---
 
-## Gate embedding (`gateAt`)
-
-`Gate/Embed.lean` provides a single embedding primitive:
-
-```lean
-noncomputable def gateAt (qs : Fin k ↪ Fin n) (U : QMatrix k) : QMatrix n
-```
-
-`U` acts on the `k` qubit positions selected by the embedding `qs`; identity on the rest. A direct matrix-entry formula avoids constructing permutation matrices. Key lemmas: `gateAt_mul`, `gateAt_one`, `gateAt_conjTranspose`, `gateAt_unitary`, `gateAt_comm_disjoint`.
-
-Convenience wrappers: `hadamardAt`, `cnotAt`, `controlledAt`.
-
----
-
 ## Type-cast coherence for `par`
 
 `par (par c₁ c₂) c₃ : QCircuit ((j+k)+l)` and `par c₁ (par c₂ c₃) : QCircuit (j+(k+l))` are different types because `(j+k)+l` and `j+(k+l)` are only propositionally equal. A named combinator handles this:

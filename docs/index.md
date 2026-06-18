@@ -28,7 +28,6 @@ QLean/
     Standard.lean     — H, X, Y, Z, S, T, Rz, Rx, Ry, CNOT, CZ, SWAP, Toffoli, controlled;
                         unitarity proofs; QCircuit abbreviations (HGate, CNOTGate, …);
                         QVector-level gate action lemmas (X_ket_zero, H_ket_zero, CNOT_ket_pair, …)
-    Embed.lean        — gateAt: embed any k-qubit gate at chosen positions in an n-qubit system
     StateActions.lean — symbolic gate actions: XGate_bit0, HGate_bit0, CNOTGate_basis_tensor, …
   Circuit/
     Type.lean         — QCircuit inductive type, castN

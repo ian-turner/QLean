@@ -30,11 +30,9 @@ All definitions involving `ℝ`, `ℂ`, `Real.sqrt`, `Complex.exp`, or `Euclidea
 **Mark `@[simp]`:**
 - `eval_id`, `eval_gate`, `eval_seq`, `eval_par`, `eval_castN` — unfolding rules for `eval`
 - `wf_id`, `wf_gate`, `wf_seq`, `wf_par` — iff-style WF decomposition lemmas (not the constructors)
-- `gateAt_one` — canonical simplification at gate-embedding boundaries
 
 **Do not mark `@[simp]`:**
 - `kron_mul` — risks looping against matrix ring lemmas
-- `gateAt_mul` — use as a targeted `rw`, not a simp lemma
 - `IsUnitary.*` lemmas — side conditions for explicit discharge, not simplification rules
 
 **Intended proof idiom for `QCircuit.Equiv` goals:**

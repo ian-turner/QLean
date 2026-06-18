@@ -88,26 +88,6 @@ All gate matrices follow the LSB-first qubit convention (see [conventions.md](co
 
 ---
 
-## `Gate/Embed.lean`
-
-Embed a k-qubit gate into an n-qubit system at chosen qubit positions.
-
-**Key definitions:**
-- `gateAt (qs : Fin k ↪ Fin n) (U : QMatrix k) : QMatrix n` — U acts on the positions given by `qs`; identity on the complement. Defined by a direct matrix-entry formula (no permutation matrix).
-- `hadamardAt (i : Fin n) : QMatrix n` — H at qubit `i`
-- `cnotAt (ctrl tgt : Fin n) (h : ctrl ≠ tgt) : QMatrix n` — CNOT with given control and target
-- `controlledAt (ctrl tgt : Fin n) (h : ctrl ≠ tgt) (U : QMatrix 1) : QMatrix n` — controlled-U
-
-**Key theorems:**
-- `gateAt_mul` — `gateAt qs (A * B) = gateAt qs A * gateAt qs B`
-- `gateAt_one` — `gateAt qs 1 = 1` (`@[simp]`)
-- `gateAt_conjTranspose` — `(gateAt qs U)ᴴ = gateAt qs Uᴴ`
-- `gateAt_unitary` — `IsUnitary U → IsUnitary (gateAt qs U)`
-- `gateAt_comm_disjoint` — disjoint embeddings commute: `Disjoint (range qs₁) (range qs₂) → gateAt qs₁ A * gateAt qs₂ B = gateAt qs₂ B * gateAt qs₁ A`
-- `isUnitary_hadamardAt`, `isUnitary_cnotAt`, `isUnitary_controlledAt`
-
----
-
 ## `Gate/StateActions.lean`
 
 Symbolic gate actions: `QState.Equiv` theorems for standard gates acting on `QState.bit0`/`bit1` and tensor products. These are the building blocks for correctness proofs that use `QCircuit.Equiv.basis_iff_state` to reduce a circuit equivalence to per-basis-state obligations.

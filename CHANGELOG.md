@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-17] (13)
+
+### Removed
+- `Gate/Embed.lean`: removed the entire positional gate-embedding module (`gateAt`, `hadamardAt`, `cnotAt`, `controlledAt`, and the `gateAt_*` algebra including `gateAt_comm_disjoint`) — an unused v1 leftover never wired into `QCircuit`/`eval`/`WF` or the `QState` layer; circuit positioning is handled structurally via `par`/`⊗`
+
+---
+
 ## [2026-06-17] (12)
 
 ### Fixed
