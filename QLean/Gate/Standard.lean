@@ -293,12 +293,12 @@ theorem X_ket_one : X * ket (1 : Fin 2) = ket 0 := by
 theorem Y_ket_zero : Y * ket (0 : Fin 2) = Complex.I • ket 1 := by
   ext r s; fin_cases r <;> fin_cases s <;>
   simp [Y, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
-        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+        Matrix.cons_val_zero, Matrix.cons_val_one]
 
 theorem Y_ket_one : Y * ket (1 : Fin 2) = (-Complex.I) • ket 0 := by
   ext r s; fin_cases r <;> fin_cases s <;>
   simp [Y, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
-        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+        Matrix.cons_val_zero, Matrix.cons_val_one]
 
 theorem Z_ket_zero : Z * ket (0 : Fin 2) = ket 0 := by
   ext r s; fin_cases r <;> fin_cases s <;>
@@ -307,7 +307,7 @@ theorem Z_ket_zero : Z * ket (0 : Fin 2) = ket 0 := by
 theorem Z_ket_one : Z * ket (1 : Fin 2) = (-1 : ℂ) • ket 1 := by
   ext r s; fin_cases r <;> fin_cases s <;>
   simp [Z, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
-        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+        Matrix.cons_val_zero, Matrix.cons_val_one]
 
 theorem S_ket_zero : S * ket (0 : Fin 2) = ket 0 := by
   ext r s; fin_cases r <;> fin_cases s <;>
@@ -316,17 +316,17 @@ theorem S_ket_zero : S * ket (0 : Fin 2) = ket 0 := by
 theorem S_ket_one : S * ket (1 : Fin 2) = Complex.I • ket 1 := by
   ext r s; fin_cases r <;> fin_cases s <;>
   simp [S, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
-        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+        Matrix.cons_val_zero, Matrix.cons_val_one]
 
 theorem H_ket_zero : H * ket (0 : Fin 2) = (Real.sqrt 2)⁻¹ • (ket 0 + ket 1) := by
   ext r s; fin_cases r <;> fin_cases s <;>
   simp [H, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
-        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+        Matrix.cons_val_zero, Matrix.cons_val_one]
 
 theorem H_ket_one : H * ket (1 : Fin 2) = (Real.sqrt 2)⁻¹ • (ket 0 + (-1 : ℂ) • ket 1) := by
   ext r s; fin_cases r <;> fin_cases s <;>
   simp [H, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
-        Matrix.cons_val_zero, Matrix.cons_val_one] <;> ring
+        Matrix.cons_val_zero, Matrix.cons_val_one]
 
 -- ── Single-qubit circuit gates ────────────────────────────────────────────────
 

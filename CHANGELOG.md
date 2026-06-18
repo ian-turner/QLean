@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-17] (12)
+
+### Fixed
+- `Gate/Standard.lean`: dropped the redundant trailing `<;> ring` from the six `*_ket_*` lemmas (`Y_ket_zero`, `Y_ket_one`, `Z_ket_one`, `S_ket_one`, `H_ket_zero`, `H_ket_one`); `simp` already closes every goal, so the `ring` raised `unreachableTactic`/`unusedTactic` linter warnings
+
+---
+
 ## [2026-06-17] (11)
 
 ### Added
