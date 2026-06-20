@@ -43,8 +43,7 @@ def ghzState (n : ℕ) : QState (n + 1) :=
 
     * **Inductive step**: peel the new top qubit off the input, run `ghzCircuit n` on the
       low qubits via the inductive hypothesis, then re-associate so the previous and new
-      top qubits form an adjacent pair — the step the other examples never need, because
-      GHZ's CNOT straddles the tensor boundary. The final CNOT copies the control bit onto
+      top qubits form an adjacent pair. The final CNOT copies the control bit onto
       the new qubit, extending both the all-zeros and all-ones runs. -/
 theorem ghzCircuit_prepares (n : ℕ) :
     ghzCircuit n * (❘0⟩ : QState (n + 1)) ≈ ghzState n := by
