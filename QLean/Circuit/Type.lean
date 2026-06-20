@@ -2,8 +2,9 @@ import QLean.Basic.Matrix
 
 namespace QLean
 
-/-- A quantum circuit on `n` qubits. `par` constructs parallel composition with
-    qubits partitioned as `j` low + `k` high, matching the LSB convention of `kron`. -/
+/-- A quantum circuit on `n` qubits. `seq` constructs sequential composition,
+    and `par` constructs parallel composition with qubits partitioned as
+    `j` low + `k` high, matching the LSB convention of `kron`. -/
 inductive QCircuit : ℕ → Type where
   | id   : QCircuit n
   | gate : QMatrix n → QCircuit n
