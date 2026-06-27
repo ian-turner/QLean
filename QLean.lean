@@ -1,5 +1,6 @@
 import QLean.Basic.Matrix
 import QLean.Basic.Tensor
+import QLean.Basic.Embed
 import QLean.Basic.Hilbert
 import QLean.Gate.Standard
 import QLean.Gate.StateActions

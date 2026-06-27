@@ -41,6 +41,32 @@ mul_eq_one_comm.mp h
 
 ---
 
+## `push_neg` deprecated → `push Not` (v4.30.0)
+
+`push_neg at h` now emits a deprecation warning; the replacement is `push Not at h` (the
+general `push` tactic with the `Not` head). Same behaviour: `¬ ∀ x, P x → Q x` becomes
+`∃ x, P x ∧ ¬ Q x`, hypotheses of implications are left positive.
+
+---
+
+## `congr 1` does not split through the `finFunctionFinEquiv.symm` coercion
+
+`finFunctionFinEquiv.symm s a` is `(⇑(Equiv.symm finFunctionFinEquiv) s) a` — a `DFunLike`
+coercion applied to an argument. `congr 1` on `finFunctionFinEquiv.symm s x = finFunctionFinEquiv.symm s y`
+fails to reduce it to `x = y` (it stalls on the coercion rather than peeling the outer
+application). Instead, rewrite the argument directly with a proof `x = y`:
+
+```lean
+have hca : (⟨a, rfl⟩ : ∃ a', qs a' = qs a).choose = a :=
+  qs.injective (Exists.choose_spec (⟨a, rfl⟩ : ∃ a', qs a' = qs a))
+rw [dif_pos ⟨a, rfl⟩, hca]
+```
+
+To compare two `finFunctionFinEquiv`-encoded indices, go the other way: `apply
+finFunctionFinEquiv.symm.injective` then `funext` reduces the goal to a per-bit equality.
+
+---
+
 ## `finFunctionFinEquiv` direction
 
 **Verified in v4.30.0** — in `Mathlib.Algebra.BigOperators.Fin`:

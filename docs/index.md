@@ -23,6 +23,7 @@ QLean/
   Basic/
     Matrix.lean       — QMatrix, IsUnitary, core lemmas
     Tensor.lean       — kron (reindexed Kronecker product) and its algebra
+    Embed.lean        — embed (gate on selected, possibly non-adjacent qubits); embed_* algebra
     Hilbert.lean      — QVector, ket, tensorState, act
   Gate/
     Standard.lean     — H, X, Y, Z, S, T, Rz, Rx, Ry, CNOT, CZ, SWAP, Toffoli, controlled;

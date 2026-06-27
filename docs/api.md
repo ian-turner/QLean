@@ -38,6 +38,29 @@ The Kronecker product lifted to `QMatrix`.
 
 ---
 
+## `Basic/Embed.lean`
+
+Positional embedding: lifting a `k`-qubit gate onto `k` chosen qubits of an `n`-qubit
+system. Unlike `par`/`⊗`, the target qubits may be non-adjacent or reordered (e.g. a CNOT
+between qubits `0` and `2`). The construction is point-wise on matrix entries — no
+permutation matrices and no `n - k` subtraction.
+
+**Key definitions:**
+- `selectIdx qs i : Fin (2^k)` — the `Fin (2^k)` index read off the qubits `qs : Fin k ↪ Fin n` selects from `i` (LSB convention, via `finFunctionFinEquiv`)
+- `AgreeOff qs i j : Prop` — `i` and `j` carry the same bits on every qubit *outside* `range qs`; has `.refl`/`.symm`/`.trans`
+- `embed qs U : QMatrix n` — `U` acting on the qubits selected by `qs`, identity elsewhere; entry `(i,j)` is `U (selectIdx qs i) (selectIdx qs j)` gated by `AgreeOff qs i j`
+
+**Key theorems:**
+- `embed_one` — `embed qs 1 = 1`
+- `embed_mul` — `embed qs (A * B) = embed qs A * embed qs B`
+- `embed_conjTranspose` — `(embed qs U)ᴴ = embed qs Uᴴ`
+- `embed_unitary` — `IsUnitary U → IsUnitary (embed qs U)`
+- `embed_comm_disjoint` — gates on disjoint qubit sets commute (hypothesis `∀ a b, qs₁ a ≠ qs₂ b`)
+- `index_ext_iff` — `i = j ↔ AgreeOff qs i j ∧ selectIdx qs i = selectIdx qs j`
+- `selectIdx_symm_apply`, `selectIdx_eq_of_bits` — bit-level characterizations of `selectIdx`
+
+---
+
 ## `Basic/Hilbert.lean`
 
 State-level layer: quantum states, basis kets, tensor product of states.

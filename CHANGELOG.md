@@ -4,6 +4,13 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-26] (15)
+
+### Added
+- `Basic/Embed.lean`: positional gate embedding `embed (qs : Fin k ↪ Fin n) (U : QMatrix k) : QMatrix n` placing a gate on possibly non-adjacent/reordered qubits, with `selectIdx`/`AgreeOff` helpers, `index_ext_iff`, and the `embed_one`/`embed_mul`/`embed_conjTranspose`/`embed_unitary`/`embed_comm_disjoint` algebra — a fresh point-wise reimplementation of the removed `gateAt`, wired into `QLean.lean`
+
+---
+
 ## [2026-06-18] (14)
 
 ### Changed

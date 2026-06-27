@@ -91,6 +91,36 @@ Key algebraic properties proved:
 
 ---
 
+## Positional embedding (`embed`)
+
+`Basic/Embed.lean` lifts a `k`-qubit gate onto `k` chosen qubits of an `n`-qubit system:
+
+```lean
+def embed (qs : Fin k ↪ Fin n) (U : QMatrix k) : QMatrix n :=
+  fun i j => if AgreeOff qs i j then U (selectIdx qs i) (selectIdx qs j) else 0
+```
+
+`par`/`⊗` can only place gates on *adjacent, in-order* wires; `embed` removes that
+restriction — `qs` is an arbitrary injection, so the target qubits may be non-adjacent or
+reordered (e.g. a CNOT straddling qubits `0` and `2`). This is the primitive that a future
+positional circuit/`Program` layer needs.
+
+**Why point-wise, not conjugation by a permutation.** A gate at arbitrary positions could
+also be written `P · (U ⊗ I) · P⁻¹` for a qubit-permutation matrix `P`. That route forces an
+`n - k` subtraction (the size of `I`), a cast for `k + (n - k) = n`, and the construction of
+`P` from `qs`. The point-wise definition avoids all three: `selectIdx qs i` reads the selected
+bits of an index directly, and `AgreeOff qs i j` ("the indices match on every unselected
+qubit") plays the role of the identity factor. The algebra is then elementary:
+`embed_one`, `embed_mul`, and `embed_conjTranspose` give `embed_unitary` exactly as
+`IsUnitary.kron` is assembled for `kron`, and `embed_comm_disjoint` proves gates on disjoint
+qubit sets commute.
+
+An earlier `gateAt` (removed 2026-06-17) had the same point-wise shape but was never wired
+into anything; `embed` is a fresh implementation with a cleaner `selectIdx`/`AgreeOff`
+helper layer and a `mergeBits`-based fibre bijection for `embed_mul`.
+
+---
+
 ## Type-cast coherence for `par`
 
 `par (par c₁ c₂) c₃ : QCircuit ((j+k)+l)` and `par c₁ (par c₂ c₃) : QCircuit (j+(k+l))` are different types because `(j+k)+l` and `j+(k+l)` are only propositionally equal. A named combinator handles this:
