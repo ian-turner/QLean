@@ -21,10 +21,11 @@ Two results are proved:
 * `isUnitary_qftCircuit` — well-formedness (every gate unitary ⇒ the whole circuit is unitary).
 * `qftCore_correct` — the **product-form correctness** (N&C eq 5.4): on a basis input the QFT
   network (before the reversal swaps) produces the tensor of single-qubit states
-  `❘0⟩ + e^{2πi · j/2^{m+1}} ❘1⟩` (up to `1/√2` each). The proof stays in the `QState` syntax layer
-  (`≈`, `grw`/`gcongr`, the `QCircuit.*`/`QState.*` action lemmas); it drops to the matrix layer
-  only for irreducible per-gate facts and the scalar/binary-fraction arithmetic. The qubit-reversal
-  swap layer is not yet folded into the correctness statement.
+  `❘0⟩ + e^{2πi · j/2^{m+1}} ❘1⟩` (up to `1/√2` each). The proof stays entirely in the `QState`
+  syntax layer (`≈`, `grw`/`gcongr`, the `QCircuit.*`/`QState.*` action lemmas): every gate-specific
+  fact enters through the phase-form action lemmas `embed_H_action` / `embed_controlled_Rk_action`
+  (in `Gate/StateActions`), so no matrix entries appear here — only `≈` rewriting and the
+  scalar/binary-fraction arithmetic. The qubit-reversal swap layer is not yet folded in.
 -/
 
 open scoped Matrix QLean.Notation
@@ -54,14 +55,14 @@ theorem wf_foldr_seq {n : ℕ} {α : Type*} (l : List α) (f : α → QCircuit n
     embedded into `m+1` qubits: a controlled-`R_{m-c+1}`. -/
 def qftCR (m : ℕ) (c : Fin m) : QCircuit (m + 1) :=
   QCircuit.embed (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne')
-        (.gate (controlled (Rk (m - c.val + 1))))
+        (ControlledGate (Rk (m - c.val + 1)))
 
 /-- The stage for the top qubit of an `(m+1)`-qubit register: a Hadamard on qubit `Fin.last m`
     (acting first, so it is the rightmost factor), then the controlled rotations `qftCR m c` from
     each lower qubit `c`. The controlled rotations are diagonal, so their order is immaterial. -/
 def qftStageTop (m : ℕ) : QCircuit (m + 1) :=
   (List.finRange m).foldr (fun c acc => qftCR m c * acc)
-    (QCircuit.embed (singleEmb (Fin.last m)) (.gate H))
+    (QCircuit.embed (singleEmb (Fin.last m)) HGate)
 
 theorem wf_qftStageTop (m : ℕ) : QCircuit.WF (qftStageTop m) := by
   unfold qftStageTop
@@ -95,7 +96,7 @@ def swapLayer (n : ℕ) : QCircuit n :=
         (pairEmb (⟨i.val, by have := i.isLt; omega⟩ : Fin n)
                  (⟨n - 1 - i.val, by have := i.isLt; omega⟩ : Fin n)
           (by have hi := i.isLt; intro heq; rw [Fin.mk.injEq] at heq; omega))
-        (.gate SWAP) * acc)
+        SWAPGate * acc)
     1
 
 theorem wf_swapLayer (n : ℕ) : QCircuit.WF (swapLayer n) := by
@@ -119,13 +120,13 @@ theorem isUnitary_qftCircuit (n : ℕ) : IsUnitary (QCircuit.eval (qftCircuit n)
   QCircuit.eval_unitary _ (wf_qftCircuit n)
 
 -- ════════════════════════════ Correctness ════════════════════════════════════
--- The semantic atoms: how one embedded gate acts on one basis ket, plus the scalar entries.
+-- On a computational basis input the QFT network produces the product-form state. The whole proof
+-- lives in the `QState` layer: the only gate-specific facts are the phase-form action lemmas
+-- `embed_H_action` / `embed_controlled_Rk_action` (in `Gate/StateActions`), which have already
+-- resolved the Hadamard and controlled-rotation matrix entries to explicit phases. Everything below
+-- is `≈` rewriting together with index- and scalar-arithmetic; no matrix entry ever appears.
 
-/-- The diagonal entry by which `qftCR m c` scales `ket x`. -/
-def crEntry (m : ℕ) (c : Fin m) (x : Fin (2 ^ (m + 1))) : ℂ :=
-  (controlled (Rk (m - c.val + 1)))
-    (selectIdx (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne') x)
-    (selectIdx (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne') x)
+-- ── Index arithmetic: reading the addressed bits of a merged index ─────────────
 
 /-- `selectIdx` of a pair embedding reads its two bits (low = position `a`, high = position `b`). -/
 theorem selectIdx_pairEmb_val {n} (a b : Fin n) (h : a ≠ b) (x : Fin (2 ^ n)) :
@@ -137,17 +138,14 @@ theorem selectIdx_pairEmb_val {n} (a b : Fin n) (h : a ≠ b) (x : Fin (2 ^ n)) 
              mul_one]
   ring
 
-theorem controlled_Rk_diag (k : ℕ) (idx : Fin (2 ^ 2)) :
-    (controlled (Rk k)) idx idx
-      = if idx = 3 then Complex.exp (2 * Real.pi * Complex.I / (2:ℂ) ^ k) else 1 := by
-  fin_cases idx <;> simp [controlled, Rk, Matrix.cons_val_zero, Matrix.cons_val_one]
-
 /-- Bit `c` of the input `j` at the control position. -/
 def jbit (m : ℕ) (c : Fin m) (j : Fin (2 ^ (m + 1))) : ℕ := (finFunctionFinEquiv.symm j c.castSucc).val
 
 theorem jbit_lt (m : ℕ) (c : Fin m) (j : Fin (2 ^ (m + 1))) : jbit m c j < 2 := by
   have := (finFunctionFinEquiv.symm j c.castSucc).isLt; simpa [jbit] using this
 
+/-- The pair address of a controlled rotation, read off `mergeBits … s`: bit `s` on the top qubit,
+    bit `jbit` on the control — i.e. the index value `s + 2·jbit`. -/
 theorem selectIdx_qftCR_merge (m : ℕ) (c : Fin m) (j : Fin (2 ^ (m + 1))) (s : Fin (2 ^ 1)) :
     (selectIdx (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne')
         (mergeBits (singleEmb (Fin.last m)) j s)).val = s.val + 2 * jbit m c j := by
@@ -163,28 +161,13 @@ theorem selectIdx_qftCR_merge (m : ℕ) (c : Fin m) (j : Fin (2 ^ (m + 1))) (s :
   simp only [Fin.val_zero, pow_zero, Nat.div_one]
   rw [Nat.mod_eq_of_lt (show s.val < 2 by simpa using s.isLt)]; rfl
 
-theorem crEntry_merge0 (m : ℕ) (c : Fin m) (j : Fin (2 ^ (m + 1))) :
-    crEntry m c (mergeBits (singleEmb (Fin.last m)) j 0) = 1 := by
-  unfold crEntry; rw [controlled_Rk_diag, if_neg]
-  intro hcon
-  have h3 := congrArg Fin.val hcon
-  rw [selectIdx_qftCR_merge] at h3
-  have e3 : (3 : Fin (2 ^ 2)).val = 3 := rfl
-  have := jbit_lt m c j; rw [e3] at h3; simp only [Fin.val_zero, Nat.zero_add] at h3; omega
-
-theorem crEntry_merge1 (m : ℕ) (c : Fin m) (j : Fin (2 ^ (m + 1))) :
-    crEntry m c (mergeBits (singleEmb (Fin.last m)) j 1)
-      = Complex.exp ((jbit m c j : ℂ) * (2 * Real.pi * Complex.I / (2:ℂ) ^ (m - c.val + 1))) := by
-  unfold crEntry; rw [controlled_Rk_diag]
-  have e3 : (3 : Fin (2 ^ 2)).val = 3 := rfl
-  rcases (show jbit m c j = 0 ∨ jbit m c j = 1 by have := jbit_lt m c j; omega) with h0 | h1
-  · rw [if_neg]
-    · rw [h0]; simp
-    · intro hcon; have h3 := congrArg Fin.val hcon; rw [selectIdx_qftCR_merge, e3] at h3
-      simp only [Fin.val_one] at h3; rw [h0] at h3; omega
-  · rw [if_pos]
-    · rw [h1]; simp
-    · apply Fin.ext; rw [selectIdx_qftCR_merge, e3]; simp only [Fin.val_one]; rw [h1]
+/-- Selecting the single top qubit `Fin.last m` reads `j`'s top (MSB) bit. -/
+theorem selectIdx_singleEmb_last_val (m : ℕ) (j : Fin (2 ^ (m + 1))) :
+    (selectIdx (singleEmb (Fin.last m)) j).val = (finFunctionFinEquiv.symm j (Fin.last m)).val := by
+  unfold selectIdx
+  rw [finFunctionFinEquiv_apply_val]
+  simp only [singleEmb, Function.Embedding.coeFn_mk, Finset.univ_unique, Finset.sum_singleton,
+             Fin.default_eq_zero, Fin.val_zero, pow_zero, mul_one]
 
 -- ── Binary-fraction phase identity ────────────────────────────────────────────
 
@@ -213,84 +196,98 @@ theorem qft_frac (m : ℕ) (j : Fin (2 ^ (m + 1))) :
     rw [show (2:ℂ) ^ (m + 1) = 2 ^ m * 2 from by rw [pow_succ]]; field_simp
   rw [hcast, add_div, Finset.sum_div, e2]; simp_rw [e1]; ring
 
--- ── Layer scalars: the rotation-product and the Hadamard entries ──────────────
-
-/-- The product of the rotation phases over all controls is `exp` of the bit-weighted sum. -/
-theorem prodMerge1 (m : ℕ) (j : Fin (2 ^ (m + 1))) :
-    ((List.finRange m).map (fun c => crEntry m c (mergeBits (singleEmb (Fin.last m)) j 1))).prod
-      = Complex.exp (∑ c : Fin m, (jbit m c j : ℂ) * (2 * Real.pi * Complex.I / (2:ℂ) ^ (m - c.val + 1))) := by
-  rw [← Fin.prod_univ_def, Complex.exp_sum]
-  apply Finset.prod_congr rfl
-  intro c _; exact crEntry_merge1 m c j
-
-theorem H_row0 (t : Fin (2 ^ 1)) : (H : QMatrix 1) 0 t = (Real.sqrt 2 : ℂ)⁻¹ := by
-  fin_cases t <;> simp [H, Matrix.cons_val_zero, Matrix.cons_val_one]
-
-theorem H_row1 (t : Fin (2 ^ 1)) :
-    (H : QMatrix 1) 1 t = (Real.sqrt 2 : ℂ)⁻¹ * Complex.exp (2 * Real.pi * Complex.I * (t.val : ℂ) / 2) := by
-  fin_cases t
-  · simp [H, Matrix.cons_val_zero, Matrix.cons_val_one]
-  · show (H : QMatrix 1) 1 1 = (Real.sqrt 2 : ℂ)⁻¹ * Complex.exp (2 * Real.pi * Complex.I * ((1 : Fin (2 ^ 1)).val : ℂ) / 2)
-    rw [show (2 * (Real.pi:ℂ) * Complex.I * ((1 : Fin (2 ^ 1)).val : ℂ)) / 2 = (Real.pi:ℂ) * Complex.I from by
-          simp only [Fin.val_one, Nat.cast_one]; ring, Complex.exp_pi_mul_I]
-    simp [H, Matrix.cons_val_one]
-
-theorem selectIdx_singleEmb_last_val (m : ℕ) (j : Fin (2 ^ (m + 1))) :
-    (selectIdx (singleEmb (Fin.last m)) j).val = (finFunctionFinEquiv.symm j (Fin.last m)).val := by
-  unfold selectIdx
-  rw [finFunctionFinEquiv_apply_val]
-  simp only [singleEmb, Function.Embedding.coeFn_mk, Finset.univ_unique, Finset.sum_singleton,
-             Fin.default_eq_zero, Fin.val_zero, pow_zero, mul_one]
-
--- ── QState layer: the syntax-level action lemmas and the inductive proof ──────
+-- ── The per-qubit phases (defined symbolically, never as matrix entries) ───────
 
 variable {m : ℕ}
 
 /-- Phase of the top output qubit for an `sz`-qubit register holding value `jv`: `e^{2πi·jv/2^sz}`. -/
 def qftPhase (sz jv : ℕ) : ℂ := Complex.exp (2 * Real.pi * Complex.I * (jv : ℂ) / (2:ℂ) ^ sz)
 
-/-- The QState lift of `qftCR_mul_ket`: an embedded controlled rotation scales a basis ket. -/
-theorem qftCR_apply (c : Fin m) (x : Fin (2 ^ (m + 1))) :
-    qftCR m c * (❘x⟩ : QState (m + 1)) ≈ crEntry m c x • ❘x⟩ := by
-  unfold qftCR crEntry
-  exact QCircuit.embed_diag_action _ (controlled_isDiag (Rk_isDiag _)) x
+/-- The Hadamard's contribution to the top output qubit: the sign `(-1)^{jₘ}` of the top input bit,
+    written as the phase `e^{2πi·jₘ/2}` so it slots into the binary fraction. -/
+def hPhase (j : Fin (2 ^ (m + 1))) : ℂ :=
+  Complex.exp (2 * Real.pi * Complex.I * ((finFunctionFinEquiv.symm j (Fin.last m)).val : ℂ) / 2)
 
-/-- The QState lift of `embed_single_mul_ket` for the Hadamard on the top qubit. -/
-theorem embedH_apply (j : Fin (2 ^ (m + 1))) :
-    QCircuit.embed (singleEmb (Fin.last m)) (.gate H) * (❘j⟩ : QState (m + 1))
-      ≈ (H 0 (selectIdx (singleEmb (Fin.last m)) j)) • ❘mergeBits (singleEmb (Fin.last m)) j 0⟩
-        + (H 1 (selectIdx (singleEmb (Fin.last m)) j)) • ❘mergeBits (singleEmb (Fin.last m)) j 1⟩ :=
-  QCircuit.embed_single_action (singleEmb (Fin.last m)) H j
+/-- The controlled rotation from control `c` contributes `e^{2πi·jₐ/2^{m-c+1}}` to the `❘1⟩` branch
+    of the top qubit (`= 1` when the control bit `jₐ` is `0`). -/
+def crPhase (c : Fin m) (j : Fin (2 ^ (m + 1))) : ℂ :=
+  Complex.exp ((jbit m c j : ℂ) * (2 * Real.pi * Complex.I / (2:ℂ) ^ (m - c.val + 1)))
+
+-- ── Per-gate state actions of one QFT stage, in phase form ─────────────────────
+
+/-- A controlled rotation `qftCR m c` fixes the top-bit-cleared branch: with the top qubit `0` the
+    two addressed bits are never both set, so the diagonal eigenvalue is `1`. -/
+theorem qftCR_merge0 (c : Fin m) (j : Fin (2 ^ (m + 1))) :
+    qftCR m c * ❘mergeBits (singleEmb (Fin.last m)) j 0⟩
+      ≈ (❘mergeBits (singleEmb (Fin.last m)) j 0⟩ : QState (m + 1)) := by
+  unfold qftCR
+  refine (embed_controlled_Rk_action _ _ _).trans ?_
+  have hne : selectIdx (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne')
+      (mergeBits (singleEmb (Fin.last m)) j 0) ≠ 3 := by
+    intro hcon
+    have h3 := congrArg Fin.val hcon
+    rw [selectIdx_qftCR_merge, show (3 : Fin (2 ^ 2)).val = 3 from rfl] at h3
+    simp only [Fin.val_zero, Nat.zero_add] at h3
+    have := jbit_lt m c j; omega
+  rw [if_neg hne]
+  exact QState.one_smul _
+
+/-- A controlled rotation `qftCR m c` threads the rotation phase `crPhase c j` onto the top-bit-set
+    branch: the phase is `e^{2πi/2^{m-c+1}}` when the control bit is set, and `1` (i.e. `e^0`)
+    otherwise. -/
+theorem qftCR_merge1 (c : Fin m) (j : Fin (2 ^ (m + 1))) :
+    qftCR m c * ❘mergeBits (singleEmb (Fin.last m)) j 1⟩
+      ≈ crPhase c j • ❘mergeBits (singleEmb (Fin.last m)) j 1⟩ := by
+  unfold qftCR
+  refine (embed_controlled_Rk_action _ _ _).trans ?_
+  rcases (show jbit m c j = 0 ∨ jbit m c j = 1 by have := jbit_lt m c j; omega) with h0 | h1
+  · have hne : selectIdx (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne')
+        (mergeBits (singleEmb (Fin.last m)) j 1) ≠ 3 := by
+      intro hcon
+      have h3 := congrArg Fin.val hcon
+      rw [selectIdx_qftCR_merge, show (3 : Fin (2 ^ 2)).val = 3 from rfl] at h3
+      simp only [Fin.val_one] at h3; rw [h0] at h3; omega
+    rw [if_neg hne, show crPhase c j = 1 from by unfold crPhase; rw [h0]; simp]
+  · have heq : selectIdx (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne')
+        (mergeBits (singleEmb (Fin.last m)) j 1) = 3 := by
+      apply Fin.ext
+      rw [selectIdx_qftCR_merge, show (3 : Fin (2 ^ 2)).val = 3 from rfl]
+      simp only [Fin.val_one]; rw [h1]
+    rw [if_pos heq, show crPhase c j
+          = Complex.exp (2 * Real.pi * Complex.I / (2:ℂ) ^ (m - c.val + 1)) from by
+        unfold crPhase; rw [h1]; simp]
+
+/-- The product of the controlled-rotation phases over all controls is `exp` of the bit-weighted
+    sum — a single `Complex.exp` carrying the binary-fraction tail. -/
+theorem prodMerge1 (j : Fin (2 ^ (m + 1))) :
+    ((List.finRange m).map (fun c => crPhase c j)).prod
+      = Complex.exp (∑ c : Fin m, (jbit m c j : ℂ) * (2 * Real.pi * Complex.I / (2:ℂ) ^ (m - c.val + 1))) := by
+  rw [← Fin.prod_univ_def, Complex.exp_sum]
+  apply Finset.prod_congr rfl
+  intro c _; rfl
 
 /-- The cascade, in the syntax layer: applying the foldr of controlled rotations onto the Hadamard
     keeps the input's low bits as a basis ket and threads the accumulated rotation phase onto the
     `❘1⟩` component of the top qubit. Proved by induction over the control list using only `QState`
-    rewriting (`seq_action`, `apply_add`/`apply_smul`, the per-gate `qftCR_apply`, scalar algebra). -/
+    rewriting: `embed_H_action` for the base Hadamard, then `seq_action`/`apply_add`/`apply_smul`
+    with the per-gate `qftCR_merge0`/`qftCR_merge1` and scalar algebra at each step. -/
 theorem stage_apply (j : Fin (2 ^ (m + 1))) (l : List (Fin m)) :
     (l.foldr (fun c acc => qftCR m c * acc)
-        (QCircuit.embed (singleEmb (Fin.last m)) (.gate H))) * (❘j⟩ : QState (m + 1))
-      ≈ (H 0 (selectIdx (singleEmb (Fin.last m)) j)) • ❘mergeBits (singleEmb (Fin.last m)) j 0⟩
-        + ((H 1 (selectIdx (singleEmb (Fin.last m)) j))
-            * (l.map (fun c => crEntry m c (mergeBits (singleEmb (Fin.last m)) j 1))).prod)
+        (QCircuit.embed (singleEmb (Fin.last m)) HGate)) * (❘j⟩ : QState (m + 1))
+      ≈ ((Real.sqrt 2)⁻¹ : ℂ) • ❘mergeBits (singleEmb (Fin.last m)) j 0⟩
+        + (((Real.sqrt 2)⁻¹ : ℂ) * hPhase j * (l.map (fun c => crPhase c j)).prod)
           • ❘mergeBits (singleEmb (Fin.last m)) j 1⟩ := by
   induction l with
   | nil =>
     simp only [List.foldr_nil, List.map_nil, List.prod_nil, mul_one]
-    exact embedH_apply j
+    refine (embed_H_action (singleEmb (Fin.last m)) j).trans ?_
+    rw [selectIdx_singleEmb_last_val]; rfl
   | cons c cs ih =>
-    have hfold : (c :: cs).foldr (fun c acc => qftCR m c * acc)
-          (QCircuit.embed (singleEmb (Fin.last m)) (.gate H))
-        = qftCR m c * (cs.foldr (fun c acc => qftCR m c * acc)
-          (QCircuit.embed (singleEmb (Fin.last m)) (.gate H))) := rfl
-    rw [hfold]
+    simp only [List.foldr_cons]
     grw [QCircuit.seq_action, ih, QCircuit.apply_add, QCircuit.apply_smul, QCircuit.apply_smul,
-         qftCR_apply, qftCR_apply, crEntry_merge0]
-    grw [QState.one_smul, QState.smul_smul]
-    have hs : H 1 (selectIdx (singleEmb (Fin.last m)) j)
-            * (List.map (fun c => crEntry m c (mergeBits (singleEmb (Fin.last m)) j 1)) cs).prod
-            * crEntry m c (mergeBits (singleEmb (Fin.last m)) j 1)
-        = H 1 (selectIdx (singleEmb (Fin.last m)) j)
-            * (List.map (fun c => crEntry m c (mergeBits (singleEmb (Fin.last m)) j 1)) (c :: cs)).prod := by
+         qftCR_merge0, qftCR_merge1, QState.smul_smul]
+    have hs : ((Real.sqrt 2)⁻¹ : ℂ) * hPhase j * (cs.map (fun c => crPhase c j)).prod * crPhase c j
+        = ((Real.sqrt 2)⁻¹ : ℂ) * hPhase j * ((c :: cs).map (fun c => crPhase c j)).prod := by
       rw [List.map_cons, List.prod_cons]; ring
     rw [hs]
 
@@ -299,26 +296,31 @@ def qftQubitState (sz jv : ℕ) : QState 1 :=
   ((Real.sqrt 2)⁻¹ : ℂ) • (❘(0 : Fin (2 ^ 1))⟩ + qftPhase sz jv • ❘(1 : Fin (2 ^ 1))⟩)
 
 /-- The single-stage lemma: the top-qubit layer sends `❘j⟩` to the product state, separating the
-    low qubits (still `❘j_low⟩`) from the top qubit's `qftQubitState`. -/
+    low qubits (still `❘j_low⟩`) from the top qubit's `qftQubitState`. The Hadamard phase `hPhase`
+    and the rotation product `prodMerge1` combine, via the binary-fraction identity `qft_frac`, into
+    the single output phase `qftPhase (m+1) j`. -/
 theorem qftStageTop_apply (j : Fin (2 ^ (m + 1))) :
     qftStageTop m * (❘j⟩ : QState (m + 1))
       ≈ ❘((tensorIndexEquiv m 1).symm j).1⟩ ⊗ qftQubitState (m + 1) j.val := by
-  have key : (2 * Real.pi * Complex.I * ((finFunctionFinEquiv.symm j (Fin.last m)).val : ℂ) / 2
-      + ∑ c : Fin m, (jbit m c j : ℂ) * (2 * Real.pi * Complex.I / (2:ℂ) ^ (m - c.val + 1)))
-      = 2 * Real.pi * Complex.I * (((finFunctionFinEquiv.symm j (Fin.last m)).val : ℂ) / 2
-        + ∑ c : Fin m, (jbit m c j : ℂ) / (2:ℂ) ^ (m - c.val + 1)) := by
-    rw [mul_add, Finset.mul_sum]; congr 1
-    · ring
-    · apply Finset.sum_congr rfl; intro c _; ring
   have harg : (2 * Real.pi * Complex.I * ((finFunctionFinEquiv.symm j (Fin.last m)).val : ℂ) / 2
       + ∑ c : Fin m, (jbit m c j : ℂ) * (2 * Real.pi * Complex.I / (2:ℂ) ^ (m - c.val + 1)))
-      = 2 * Real.pi * Complex.I * (j.val : ℂ) / (2:ℂ) ^ (m + 1) := by rw [key, qft_frac]; ring
-  have hco : H 1 (selectIdx (singleEmb (Fin.last m)) j)
-        * (List.map (fun c => crEntry m c (mergeBits (singleEmb (Fin.last m)) j 1)) (List.finRange m)).prod
-      = (Real.sqrt 2 : ℂ)⁻¹ * qftPhase (m + 1) j.val := by
-    rw [prodMerge1, H_row1, selectIdx_singleEmb_last_val, mul_assoc, ← Complex.exp_add, harg, qftPhase]
+      = 2 * Real.pi * Complex.I * (j.val : ℂ) / (2:ℂ) ^ (m + 1) := by
+    have key : (2 * Real.pi * Complex.I * ((finFunctionFinEquiv.symm j (Fin.last m)).val : ℂ) / 2
+        + ∑ c : Fin m, (jbit m c j : ℂ) * (2 * Real.pi * Complex.I / (2:ℂ) ^ (m - c.val + 1)))
+        = 2 * Real.pi * Complex.I * (((finFunctionFinEquiv.symm j (Fin.last m)).val : ℂ) / 2
+          + ∑ c : Fin m, (jbit m c j : ℂ) / (2:ℂ) ^ (m - c.val + 1)) := by
+      rw [mul_add, Finset.mul_sum]; congr 1
+      · ring
+      · apply Finset.sum_congr rfl; intro c _; ring
+    rw [key, qft_frac]; ring
+  have hco : ((Real.sqrt 2)⁻¹ : ℂ) * hPhase j
+        * (List.map (fun c => crPhase c j) (List.finRange m)).prod
+      = ((Real.sqrt 2)⁻¹ : ℂ) * qftPhase (m + 1) j.val := by
+    rw [prodMerge1]; unfold hPhase qftPhase
+    rw [mul_assoc, ← Complex.exp_add, harg]
   refine (stage_apply j (List.finRange m)).trans ?_
-  grw [H_row0, hco, mergeBits_singleEmb_last, mergeBits_singleEmb_last,
+  rw [hco]
+  grw [mergeBits_singleEmb_last, mergeBits_singleEmb_last,
        QState.basis_tensor_split, QState.basis_tensor_split,
        ← QState.tensor_smul_right, ← QState.tensor_smul_right, ← QState.tensor_add_right]
   gcongr
@@ -349,3 +351,6 @@ theorem qftCore_correct : (n : ℕ) → (j : Fin (2 ^ n)) →
 end
 
 end QLean.Examples
+
+
+

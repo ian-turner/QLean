@@ -121,6 +121,8 @@ Standard gate matrices, unitarity proofs, and `QCircuit` abbreviations.
 
 `Rk k = diag(1, e^{2πi/2ᵏ})` is the QFT phase gate (N&C §5.1); `R₁ = Z`, `R₂ = S`, `R₃ = T`. `Rk_isDiag` proves it diagonal; `controlled_isDiag` lifts diagonality through `controlled` (so `controlled (Rk k)` is diagonal — the fact the QFT rotation layers rely on).
 
+**Phase-form matrix entries** (the only matrix-level facts the QFT correctness proof bottoms out at — wrapped by the embedded actions in `Gate/StateActions.lean`, so callers never touch raw entries): `H_row0 (t) : H 0 t = (√2)⁻¹` and `H_row1 (t) : H 1 t = (√2)⁻¹ · e^{2πi·t/2}` give the Hadamard's two rows in phase form; `controlled_Rk_diag (k) (idx) : (controlled (Rk k)) idx idx = if idx = 3 then e^{2πi/2ᵏ} else 1` gives the controlled-rotation eigenphase.
+
 **Two-qubit gates** (`QMatrix 2`): `CNOT`, `CZ`, `SWAP`, `controlled U`
 
 **Three-qubit gate** (`QMatrix 3`): `Toffoli`
@@ -147,7 +149,7 @@ All gate matrices follow the LSB-first qubit convention (see [conventions.md](co
 
 Symbolic gate actions: `QState.Equiv` theorems for standard gates acting on `QState.bit0`/`bit1` and tensor products. These are the building blocks for correctness proofs that use `QCircuit.Equiv.basis_iff_state` to reduce a circuit equivalence to per-basis-state obligations.
 
-Imports `Gate/Standard.lean` and `State/Rewrite.lean`; no circular dependency.
+Imports `Gate/Standard.lean`, `State/Rewrite.lean`, and `Circuit/Embed.lean` (for the embedded actions below); no circular dependency.
 
 **Single-qubit actions** (all proved by unfolding `QState.Equiv` and applying the QVector lemmas from `Gate/Standard.lean`):
 
@@ -169,6 +171,10 @@ Parameterized over the basis index rather than `bit0`/`bit1`:
 
 **Two-qubit actions:**
 - `CNOTGate_basis_tensor (a b : Fin 2)` — `CNOTGate * (basis a ⊗ basis b) ≈ basis a ⊗ basis (a + b)`
+
+**Embedded gate actions in phase form** — these lift the gate-agnostic `QCircuit.embed_single_action` / `embed_diag_action` (from `Circuit/Embed.lean`) to the two specific gates a positional algorithm like the QFT addresses, resolving the gate matrix entries to explicit phases *once*. Downstream proofs (e.g. `Examples/QFT.lean`) then stay entirely in the `QState` layer and never see a matrix entry:
+- `embed_H_action (qs : Fin 1 ↪ Fin n) (x)` — `embed qs HGate * ❘x⟩ ≈ (√2)⁻¹ • ❘mergeBits qs x 0⟩ + ((√2)⁻¹ · e^{2πi·b/2}) • ❘mergeBits qs x 1⟩` where `b = selectIdx qs x` (the addressed bit); the `❘1⟩` branch carries the sign `(-1)ᵇ`
+- `embed_controlled_Rk_action (qs : Fin 2 ↪ Fin n) (k) (x)` — `embed qs (ControlledGate (Rk k)) * ❘x⟩ ≈ (if selectIdx qs x = 3 then e^{2πi/2ᵏ} else 1) • ❘x⟩`; the embedded controlled rotation is diagonal, scaling by the phase exactly when both addressed qubits are set
 
 ---
 

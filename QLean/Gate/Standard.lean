@@ -237,6 +237,14 @@ theorem controlled_isDiag {U : QMatrix 1} (hU : Matrix.IsDiag U) :
   fin_cases i <;> fin_cases j <;>
     simp_all [controlled, Matrix.cons_val_zero, Matrix.cons_val_one]
 
+/-- The diagonal eigenphase of `controlled (Rk k)`: the rotation phase `e^{2πi/2ᵏ}` on the `|11⟩`
+    index (`3`), and `1` on every other diagonal entry. The single matrix-entry fact behind an
+    embedded controlled-rotation layer (used by `embed_controlled_Rk_action`). -/
+theorem controlled_Rk_diag (k : ℕ) (idx : Fin (2 ^ 2)) :
+    (controlled (Rk k)) idx idx
+      = if idx = 3 then Complex.exp (2 * Real.pi * Complex.I / (2:ℂ) ^ k) else 1 := by
+  fin_cases idx <;> simp [controlled, Rk, Matrix.cons_val_zero, Matrix.cons_val_one]
+
 -- ── Gate actions on computational basis states ────────────────────────────────
 
 theorem Rz_ket_zero (θ : ℝ) : Rz θ * ket 0 = Complex.exp (-Complex.I * θ / 2) • ket 0 := by
@@ -362,6 +370,23 @@ theorem H_ket_one : H * ket (1 : Fin 2) = (Real.sqrt 2)⁻¹ • (ket 0 + (-1 : 
   ext r s; fin_cases r <;> fin_cases s <;>
   simp [H, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
         Matrix.cons_val_zero, Matrix.cons_val_one]
+
+-- Phase-form matrix entries of `H`: both rows have constant magnitude `(√2)⁻¹`, with row `1`
+-- carrying the sign `(-1)^t = e^{2πi·t/2}`. These two entry facts are the only matrix-level input
+-- to the embedded-Hadamard state action `embed_H_action`.
+
+theorem H_row0 (t : Fin (2 ^ 1)) : (H : QMatrix 1) 0 t = (Real.sqrt 2 : ℂ)⁻¹ := by
+  fin_cases t <;> simp [H, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem H_row1 (t : Fin (2 ^ 1)) :
+    (H : QMatrix 1) 1 t = (Real.sqrt 2 : ℂ)⁻¹ * Complex.exp (2 * Real.pi * Complex.I * (t.val : ℂ) / 2) := by
+  fin_cases t
+  · simp [H, Matrix.cons_val_zero, Matrix.cons_val_one]
+  · show (H : QMatrix 1) 1 1
+        = (Real.sqrt 2 : ℂ)⁻¹ * Complex.exp (2 * Real.pi * Complex.I * ((1 : Fin (2 ^ 1)).val : ℂ) / 2)
+    rw [show (2 * (Real.pi:ℂ) * Complex.I * ((1 : Fin (2 ^ 1)).val : ℂ)) / 2 = (Real.pi:ℂ) * Complex.I from by
+          simp only [Fin.val_one, Nat.cast_one]; ring, Complex.exp_pi_mul_I]
+    simp [H, Matrix.cons_val_one]
 
 -- ── Single-qubit circuit gates ────────────────────────────────────────────────
 

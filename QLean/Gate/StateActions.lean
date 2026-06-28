@@ -1,5 +1,6 @@
 import QLean.Gate.Standard
 import QLean.State.Rewrite
+import QLean.Circuit.Embed
 
 open scoped QLean.Notation
 
@@ -92,6 +93,34 @@ theorem CNOTGate_basis_tensor (a b : Fin (2^1)) :
   simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
              QCircuit.eval_gate, ket_tensorState]
   exact CNOT_ket_pair a b
+
+-- ── Embedded gate actions in phase form (entry points for positional layers) ───
+-- These lift the gate-agnostic `QCircuit.embed_single_action` / `embed_diag_action` to the two
+-- specific gates an algorithm like the QFT addresses positionally, resolving the gate's matrix
+-- entries to explicit phases once and for all. Downstream proofs then stay in the `QState` layer.
+
+/-- A Hadamard embedded at the single qubit `qs 0` splits a basis ket into the equal superposition
+    that clears / sets that qubit, the `❘1⟩` branch carrying the bit's sign as the phase
+    `e^{2πi·b/2} = (-1)ᵇ` (where `b = selectIdx qs x` is the current bit). The phase-form lift of
+    `embed_single_action` for `H`. -/
+theorem embed_H_action {n : ℕ} (qs : Fin 1 ↪ Fin n) (x : Fin (2 ^ n)) :
+    QCircuit.embed qs HGate * (❘x⟩ : QState n)
+      ≈ ((Real.sqrt 2)⁻¹ : ℂ) • ❘mergeBits qs x 0⟩
+        + (((Real.sqrt 2)⁻¹ : ℂ)
+            * Complex.exp (2 * Real.pi * Complex.I * ((selectIdx qs x).val : ℂ) / 2))
+          • ❘mergeBits qs x 1⟩ := by
+  refine (QCircuit.embed_single_action qs H x).trans ?_
+  rw [H_row0, H_row1]
+
+/-- An embedded controlled-`Rₖ` (between the two qubits addressed by `qs`) is diagonal: it scales a
+    basis ket by `e^{2πi/2ᵏ}` exactly when both addressed qubits are set (`selectIdx qs x = 3`), and
+    fixes it otherwise. The phase-form lift of `embed_diag_action` for `controlled (Rk k)`. -/
+theorem embed_controlled_Rk_action {n : ℕ} (qs : Fin 2 ↪ Fin n) (k : ℕ) (x : Fin (2 ^ n)) :
+    QCircuit.embed qs (ControlledGate (Rk k)) * (❘x⟩ : QState n)
+      ≈ (if selectIdx qs x = 3 then Complex.exp (2 * Real.pi * Complex.I / (2:ℂ) ^ k) else 1)
+        • ❘x⟩ := by
+  refine (QCircuit.embed_diag_action qs (controlled_isDiag (Rk_isDiag k)) x).trans ?_
+  rw [controlled_Rk_diag]
 
 end
 

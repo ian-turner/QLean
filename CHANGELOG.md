@@ -4,6 +4,21 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-28] (21)
+
+### Added
+- `Gate/Standard.lean`: phase-form matrix-entry atoms `H_row0`/`H_row1` (the Hadamard's two rows: magnitude `(√2)⁻¹`, row 1 carrying the sign `(-1)ᵗ = e^{2πi·t/2}`) and `controlled_Rk_diag` (the controlled-`Rk` eigenphase `if idx = 3 then e^{2πi/2ᵏ} else 1`) — the sole matrix-level facts the QFT correctness proof rests on
+- `Gate/StateActions.lean`: phase-form embedded-gate actions `embed_H_action` and `embed_controlled_Rk_action`, lifting `QCircuit.embed_single_action`/`embed_diag_action` to `H`/`controlled (Rk k)` with the matrix entries resolved to explicit phases (now imports `Circuit/Embed.lean`)
+
+### Changed
+- `Examples/QFT.lean`: the `qftCore_correct` proof is now **fully matrix-free** — it stays entirely in the `QState` layer via `embed_H_action`/`embed_controlled_Rk_action`. Replaced the matrix-entry helpers `crEntry`/`crEntry_merge0`/`crEntry_merge1`/`qftCR_apply`/`embedH_apply` with symbolic phase defs `crPhase`/`hPhase` and the phase-form stage actions `qftCR_merge0`/`qftCR_merge1`; `stage_apply`/`qftStageTop_apply` rewritten in phase form (since `qftCR_merge0` now returns the ket unscaled, `stage_apply`'s induction drops a `one_smul` step). Statements of `qftCore_correct`/`qftStageTop_apply`/`qftQubitState`/`qftProductState` unchanged
+- Use the `QCircuit` gate abbreviations (`HGate`, `SWAPGate`, `ControlledGate (Rk k)`) in place of raw `.gate H`/`.gate SWAP`/`.gate (controlled (Rk k))` in `Examples/QFT.lean` (`qftCR`/`qftStageTop`/`swapLayer`/`stage_apply`) and `Gate/StateActions.lean` (`embed_H_action`/`embed_controlled_Rk_action`)
+
+### Removed
+- `Examples/QFT.lean`: `controlled_Rk_diag`/`H_row0`/`H_row1` (moved to `Gate/Standard.lean`) and `crEntry`/`crEntry_merge0`/`crEntry_merge1`/`qftCR_apply`/`embedH_apply` (superseded by the phase-form lemmas)
+
+---
+
 ## [2026-06-28] (20)
 
 ### Added
