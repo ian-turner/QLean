@@ -52,23 +52,23 @@ theorem wf_foldr_seq {n : ℕ} {α : Type*} (l : List α) (f : α → QCircuit n
 
 /-- The controlled-rotation gate between the top qubit `Fin.last m` and a lower qubit `c`,
     embedded into `m+1` qubits: a controlled-`R_{m-c+1}`. -/
-def qftCR (m : ℕ) (c : Fin m) : QMatrix (m + 1) :=
-  embed (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne')
-        (controlled (Rk (m - c.val + 1)))
+def qftCR (m : ℕ) (c : Fin m) : QCircuit (m + 1) :=
+  QCircuit.embed (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne')
+        (.gate (controlled (Rk (m - c.val + 1))))
 
 /-- The stage for the top qubit of an `(m+1)`-qubit register: a Hadamard on qubit `Fin.last m`
     (acting first, so it is the rightmost factor), then the controlled rotations `qftCR m c` from
     each lower qubit `c`. The controlled rotations are diagonal, so their order is immaterial. -/
 def qftStageTop (m : ℕ) : QCircuit (m + 1) :=
-  (List.finRange m).foldr (fun c acc => .gate (qftCR m c) * acc)
-    (.gate (embed (singleEmb (Fin.last m)) H))
+  (List.finRange m).foldr (fun c acc => qftCR m c * acc)
+    (QCircuit.embed (singleEmb (Fin.last m)) (.gate H))
 
 theorem wf_qftStageTop (m : ℕ) : QCircuit.WF (qftStageTop m) := by
   unfold qftStageTop
   apply wf_foldr_seq
-  · exact embed_unitary _ isUnitary_H
+  · exact isUnitary_H
   · intro c _
-    exact embed_unitary _ (isUnitary_controlled (isUnitary_Rk _))
+    exact isUnitary_controlled (isUnitary_Rk _)
 
 -- ── The QFT, without the qubit-reversal swaps ─────────────────────────────────
 
@@ -91,10 +91,11 @@ theorem wf_qftCore (n : ℕ) : QCircuit.WF (qftCore n) := by
 def swapLayer (n : ℕ) : QCircuit n :=
   (List.finRange (n / 2)).foldr
     (fun i acc =>
-      .gate (embed
-        (pairEmb ⟨i.val, by have := i.isLt; omega⟩ ⟨n - 1 - i.val, by have := i.isLt; omega⟩
+      QCircuit.embed
+        (pairEmb (⟨i.val, by have := i.isLt; omega⟩ : Fin n)
+                 (⟨n - 1 - i.val, by have := i.isLt; omega⟩ : Fin n)
           (by have hi := i.isLt; intro heq; rw [Fin.mk.injEq] at heq; omega))
-        SWAP) * acc)
+        (.gate SWAP) * acc)
     1
 
 theorem wf_swapLayer (n : ℕ) : QCircuit.WF (swapLayer n) := by
@@ -102,7 +103,7 @@ theorem wf_swapLayer (n : ℕ) : QCircuit.WF (swapLayer n) := by
   apply wf_foldr_seq
   · exact wf_id
   · intro i _
-    exact embed_unitary _ isUnitary_SWAP
+    exact isUnitary_SWAP
 
 -- ── The full QFT circuit ──────────────────────────────────────────────────────
 
@@ -125,10 +126,6 @@ def crEntry (m : ℕ) (c : Fin m) (x : Fin (2 ^ (m + 1))) : ℂ :=
   (controlled (Rk (m - c.val + 1)))
     (selectIdx (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne') x)
     (selectIdx (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne') x)
-
-theorem qftCR_mul_ket (m : ℕ) (c : Fin m) (x : Fin (2 ^ (m + 1))) :
-    qftCR m c * ket x = crEntry m c x • ket x :=
-  embed_diag_mul_ket (controlled_isDiag (Rk_isDiag _)) x
 
 /-- `selectIdx` of a pair embedding reads its two bits (low = position `a`, high = position `b`). -/
 theorem selectIdx_pairEmb_val {n} (a b : Fin n) (h : a ≠ b) (x : Fin (2 ^ n)) :
@@ -254,26 +251,24 @@ def qftPhase (sz jv : ℕ) : ℂ := Complex.exp (2 * Real.pi * Complex.I * (jv :
 
 /-- The QState lift of `qftCR_mul_ket`: an embedded controlled rotation scales a basis ket. -/
 theorem qftCR_apply (c : Fin m) (x : Fin (2 ^ (m + 1))) :
-    (QCircuit.gate (qftCR m c)) * (❘x⟩ : QState (m + 1)) ≈ crEntry m c x • ❘x⟩ := by
-  simp only [QState.Equiv, QState.eval_apply, QCircuit.eval_gate, QState.eval_smul, QState.eval_basis]
-  exact qftCR_mul_ket m c x
+    qftCR m c * (❘x⟩ : QState (m + 1)) ≈ crEntry m c x • ❘x⟩ := by
+  unfold qftCR crEntry
+  exact QCircuit.embed_diag_action _ (controlled_isDiag (Rk_isDiag _)) x
 
 /-- The QState lift of `embed_single_mul_ket` for the Hadamard on the top qubit. -/
 theorem embedH_apply (j : Fin (2 ^ (m + 1))) :
-    (QCircuit.gate (embed (singleEmb (Fin.last m)) H)) * (❘j⟩ : QState (m + 1))
+    QCircuit.embed (singleEmb (Fin.last m)) (.gate H) * (❘j⟩ : QState (m + 1))
       ≈ (H 0 (selectIdx (singleEmb (Fin.last m)) j)) • ❘mergeBits (singleEmb (Fin.last m)) j 0⟩
-        + (H 1 (selectIdx (singleEmb (Fin.last m)) j)) • ❘mergeBits (singleEmb (Fin.last m)) j 1⟩ := by
-  simp only [QState.Equiv, QState.eval_apply, QCircuit.eval_gate, QState.eval_add, QState.eval_smul,
-             QState.eval_basis]
-  exact embed_single_mul_ket (singleEmb (Fin.last m)) H j
+        + (H 1 (selectIdx (singleEmb (Fin.last m)) j)) • ❘mergeBits (singleEmb (Fin.last m)) j 1⟩ :=
+  QCircuit.embed_single_action (singleEmb (Fin.last m)) H j
 
 /-- The cascade, in the syntax layer: applying the foldr of controlled rotations onto the Hadamard
     keeps the input's low bits as a basis ket and threads the accumulated rotation phase onto the
     `❘1⟩` component of the top qubit. Proved by induction over the control list using only `QState`
     rewriting (`seq_action`, `apply_add`/`apply_smul`, the per-gate `qftCR_apply`, scalar algebra). -/
 theorem stage_apply (j : Fin (2 ^ (m + 1))) (l : List (Fin m)) :
-    (l.foldr (fun c acc => QCircuit.gate (qftCR m c) * acc)
-        (QCircuit.gate (embed (singleEmb (Fin.last m)) H))) * (❘j⟩ : QState (m + 1))
+    (l.foldr (fun c acc => qftCR m c * acc)
+        (QCircuit.embed (singleEmb (Fin.last m)) (.gate H))) * (❘j⟩ : QState (m + 1))
       ≈ (H 0 (selectIdx (singleEmb (Fin.last m)) j)) • ❘mergeBits (singleEmb (Fin.last m)) j 0⟩
         + ((H 1 (selectIdx (singleEmb (Fin.last m)) j))
             * (l.map (fun c => crEntry m c (mergeBits (singleEmb (Fin.last m)) j 1))).prod)
@@ -283,10 +278,10 @@ theorem stage_apply (j : Fin (2 ^ (m + 1))) (l : List (Fin m)) :
     simp only [List.foldr_nil, List.map_nil, List.prod_nil, mul_one]
     exact embedH_apply j
   | cons c cs ih =>
-    have hfold : (c :: cs).foldr (fun c acc => QCircuit.gate (qftCR m c) * acc)
-          (QCircuit.gate (embed (singleEmb (Fin.last m)) H))
-        = QCircuit.gate (qftCR m c) * (cs.foldr (fun c acc => QCircuit.gate (qftCR m c) * acc)
-          (QCircuit.gate (embed (singleEmb (Fin.last m)) H))) := rfl
+    have hfold : (c :: cs).foldr (fun c acc => qftCR m c * acc)
+          (QCircuit.embed (singleEmb (Fin.last m)) (.gate H))
+        = qftCR m c * (cs.foldr (fun c acc => qftCR m c * acc)
+          (QCircuit.embed (singleEmb (Fin.last m)) (.gate H))) := rfl
     rw [hfold]
     grw [QCircuit.seq_action, ih, QCircuit.apply_add, QCircuit.apply_smul, QCircuit.apply_smul,
          qftCR_apply, qftCR_apply, crEntry_merge0]

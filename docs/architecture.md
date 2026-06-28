@@ -24,41 +24,44 @@ One condition only. The other direction (`Uᴴ * U = 1`) is derived via `IsUnita
 
 ```lean
 inductive QCircuit : ℕ → Type where
-  | id   : QCircuit n
-  | gate : QMatrix n → QCircuit n
-  | seq  : QCircuit n → QCircuit n → QCircuit n
-  | par  : QCircuit j → QCircuit k → QCircuit (j + k)
+  | id    : QCircuit n
+  | gate  : QMatrix n → QCircuit n
+  | seq   : QCircuit n → QCircuit n → QCircuit n
+  | par   : QCircuit j → QCircuit k → QCircuit (j + k)
+  | embed : (Fin k ↪ Fin n) → QCircuit k → QCircuit n
 ```
 
-A structured syntax tree. `seq` is sequential composition (matrix-multiplication order: the rightmost factor acts first); `par` is parallel composition on disjoint wire sets. The qubit count is part of the type, so ill-typed tensor products are rejected at elaboration.
+A structured syntax tree. `seq` is sequential composition (matrix-multiplication order: the rightmost factor acts first); `par` is parallel composition on disjoint wire sets; `embed qs c` places the `k`-qubit sub-circuit `c` at the qubits selected by `qs : Fin k ↪ Fin n` (an arbitrary injection) — the addressing primitive for non-adjacent / reordered placement that `par` cannot express. The qubit count is part of the type, so ill-typed tensor products are rejected at elaboration. See *Embedding as a circuit constructor* below for why `embed` is a constructor rather than `gate ∘ embedₘ`.
 
 **Why not `List (QGate n)`?** A flat list cannot state general rewrite rules about circuit structure. The inductive type with `seq` and `par` makes the interchange law stateable and provable.
 
-Notation: `c₁ * c₂` for `seq`, `c₁ ⊗ c₂` for `par`, `1` for `id`.
+Notation: `c₁ * c₂` for `seq`, `c₁ ⊗ c₂` for `par`, `1` for `id`; `embed` has no infix (write `QCircuit.embed qs c`).
 
 ### `eval`
 
 ```lean
 noncomputable def eval : QCircuit n → QMatrix n
-  | .id        => 1
-  | .gate U    => U
-  | .seq c₁ c₂ => eval c₁ * eval c₂   -- matrix product; c₂ (rightmost) applied first
-  | .par c₁ c₂ => kron (eval c₁) (eval c₂)
+  | .id         => 1
+  | .gate U     => U
+  | .seq c₁ c₂  => eval c₁ * eval c₂   -- matrix product; c₂ (rightmost) applied first
+  | .par c₁ c₂  => kron (eval c₁) (eval c₂)
+  | .embed qs c => embed qs (eval c)   -- the matrix `embed` of Basic/Embed.lean, on the denotation
 ```
 
-The denotational semantics. Always returns `QMatrix n`; the `reindex` needed to bridge `Fin (2^j) × Fin (2^k)` to `Fin (2^(j+k))` is encapsulated inside `kron`.
+The denotational semantics. Always returns `QMatrix n`; the `reindex` needed to bridge `Fin (2^j) × Fin (2^k)` to `Fin (2^(j+k))` is encapsulated inside `kron`, and the `embed` case delegates to the matrix `embed` of `Basic/Embed.lean` — so the constructor adds no new semantics, only first-class syntax.
 
 ### `QCircuit.WF`
 
 ```lean
-inductive QCircuit.WF : QCircuit n → Prop where
-  | id   : WF .id
-  | gate : IsUnitary U → WF (.gate U)
-  | seq  : WF c₁ → WF c₂ → WF (.seq c₁ c₂)
-  | par  : WF c₁ → WF c₂ → WF (.par c₁ c₂)
+def QCircuit.WF : QCircuit n → Prop
+  | .id         => True
+  | .gate U     => IsUnitary U
+  | .seq c₁ c₂  => WF c₁ ∧ WF c₂
+  | .par c₁ c₂  => WF c₁ ∧ WF c₂
+  | .embed _ c  => WF c
 ```
 
-Unitarity of leaves is tracked as a separate predicate, not bundled into the `gate` constructor, for the same reason `IsUnitary` is kept separate from `QMatrix`. The bridge theorem `QCircuit.eval_unitary : WF c → IsUnitary (eval c)` covers everything.
+A `def` by structural recursion (not an `inductive`), which sidesteps dependent-elimination friction on the heterogeneous `par`/`embed` arity indices. Unitarity of leaves is tracked as a separate predicate, not bundled into the `gate` constructor, for the same reason `IsUnitary` is kept separate from `QMatrix`. The bridge theorem `QCircuit.eval_unitary : WF c → IsUnitary (eval c)` covers everything (the `embed` case is just `embed_unitary qs (ih h)`).
 
 ### `QCircuit.Equiv`
 
@@ -113,11 +116,45 @@ bits of an index directly, and `AgreeOff qs i j` ("the indices match on every un
 qubit") plays the role of the identity factor. The algebra is then elementary:
 `embed_one`, `embed_mul`, and `embed_conjTranspose` give `embed_unitary` exactly as
 `IsUnitary.kron` is assembled for `kron`, and `embed_comm_disjoint` proves gates on disjoint
-qubit sets commute.
+qubit sets commute. Two further laws support the circuit-level constructor (below):
+`embed_embed` (`embed qs (embed qs2 U) = embed (qs2.trans qs) U`, composing addressing maps) and
+`embed_kron_factor` (`embed qs (kron A B) = embed (lowEmb.trans qs) A * embed (highEmb.trans qs) B`,
+splitting a tensor across the low/high coordinate blocks `lowEmb`/`highEmb : Fin _ ↪ Fin (j+k)`).
 
 An earlier `gateAt` (removed 2026-06-17) had the same point-wise shape but was never wired
 into anything; `embed` is a fresh implementation with a cleaner `selectIdx`/`AgreeOff`
 helper layer and a `mergeBits`-based fibre bijection for `embed_mul`.
+
+---
+
+## Embedding as a circuit constructor
+
+`embed` is also a **constructor of `QCircuit`** (`embed : (Fin k ↪ Fin n) → QCircuit k → QCircuit n`),
+not merely the matrix function wrapped in `gate`. Its semantics delegates to the matrix `embed`:
+`eval (embed qs c) = embed qs (eval c)`, and `WF (embed qs c) = WF c`.
+
+**Why first-class.** The matrix `embed` is already maximally expressive — it places any gate at any
+injective set of qubits — so the constructor adds *no expressiveness*. What it adds is that
+embeddings are **visible in the syntax tree**: a circuit-to-circuit transformation (topology
+routing, locality-aware optimization, resource counting) can pattern-match an `embed` and read its
+addressing `qs`, whereas `gate (embedₘ qs U)` flattens the placement into an opaque matrix. It also
+makes well-formedness/unitarity structural — the `embed` case of `eval_unitary` is just
+`embed_unitary qs (ih h)`.
+
+**Why `par` is kept, not derived.** A `kron` is a special case of two embeddings on disjoint
+contiguous blocks (`embed_kron_factor`), so `par` *could* be derived from `embed`. We keep `par` as
+its own constructor: removing it would break every `⊗`, the
+`par_action_tensor`/`par_assoc`/`interchange_law` lemmas, and re-open the `j + k` index pain
+doubled. Instead the bridge `QCircuit.par_as_embed` (`c₁ ⊗ c₂ ≈ embed (lowEmb) c₁ * embed (highEmb) c₂`,
+with `embed_par_split` its already-embedded form) lets a pass normalize `par` into `embed` when
+a uniform view is wanted.
+
+**The circuit-level algebra** lives in `Circuit/Embed.lean` as `≈`-lemmas, each reducing to the
+matrix algebra above: `embed_gate` (bridge to `gate (embedₘ qs U)`), `embed_id`, `embed_seq`
+(distributes over `*`), `embed_comp` (composes addressing maps via `qs2.trans qs`),
+`embed_par_split`, `par_as_embed`, and `embed_comm_disjoint`. The action lemmas `embed_diag_action` /
+`embed_single_action` describe how an embedded gate acts on a basis ket — the entry points the
+per-layer correctness proofs (e.g. the QFT) use.
 
 ---
 

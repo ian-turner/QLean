@@ -4,6 +4,20 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-28] (20)
+
+### Added
+- `QCircuit.embed` constructor (`Circuit/Type.lean`): positional embedding is now **first-class syntax** — `embed (qs : Fin k ↪ Fin n) (c : QCircuit k) : QCircuit n`, mirroring `seq`/`par`, so circuit-to-circuit passes can pattern-match where a sub-circuit is placed instead of seeing an opaque matrix. `eval`/`WF`/`eval_unitary` extended with the `embed` case (`eval (embed qs c) = embedₘ qs (eval c)`, `WF (embed qs c) = WF c`); `@[simp]` `eval_embed`/`wf_embed`
+- `Basic/Embed.lean`: the two crux matrix laws — `embed_embed` (`embed qs (embed qs2 U) = embed (qs2.trans qs) U`, composing addressing maps, via `selectIdx_trans`) and `embed_kron_factor` (`embed qs (kron A B) = embed (lowEmb.trans qs) A * embed (highEmb.trans qs) B`, splitting a tensor across the new split-coordinate embeddings `lowEmb`/`highEmb`, via `selectIdx_lowEmb`/`selectIdx_highEmb` and the per-bit `tensor_symm_fst_bit`/`tensor_symm_snd_bit`); plus `embed_refl` (`embed (Embedding.refl) U = U`, via `selectIdx_refl`) and `kron_eq_embed` (`kron A B = embed (lowEmb) A * embed (highEmb) B`)
+- `Circuit/Embed.lean` (new module, wired into `QLean.lean`): circuit-level `≈`-algebra of `embed` — `embed_gate`/`embed_id`/`embed_seq`/`embed_comp`/`embed_par_split`/`par_as_embed`/`embed_comm_disjoint` — plus the basis-ket action lemmas `embed_diag_action`/`embed_single_action` (lifting `embed_diag_mul_ket`/`embed_single_mul_ket` to the `QState` layer)
+- `docs/lean-api.md`: `Function.Embedding.trans_apply` existence, `Fin.castAdd_injective`/`natAdd_injective` arg order + `val_*` lemmas, `push Not` needing `unfold` through a `def`-wrapped `∀`, and the anonymous-`Fin`-constructor / `omega` modulus-metavar pitfall
+
+### Changed
+- `Examples/QFT.lean`: migrated onto the first-class `embed` constructor — `qftCR` is now a `QCircuit`, `qftStageTop`/`swapLayer` place gates with `QCircuit.embed`, WF proofs are structural (dropped the by-hand `embed_unitary`), and `qftCR_apply`/`embedH_apply` are instances of `QCircuit.embed_diag_action`/`embed_single_action` (removed the bespoke `qftCR_mul_ket`); the bit-arithmetic/`qft_frac` correctness core is unchanged. `par` kept as its own constructor (not derived), with `embed_par_split` as the bridge
+- `docs/`: `architecture.md` (new *Embedding as a circuit constructor* section; updated `QCircuit`/`eval`/`WF`), `api.md` (Embed/Type/Semantics + new `Circuit/Embed.lean` section), `index.md` (module map), `examples.md` (QFT)
+
+---
+
 ## [2026-06-28] (19)
 
 ### Added

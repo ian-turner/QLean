@@ -1,15 +1,20 @@
 import QLean.Basic.Matrix
+import Mathlib.Logic.Embedding.Basic
 
 namespace QLean
 
 /-- A quantum circuit on `n` qubits. `seq` constructs sequential composition,
-    and `par` constructs parallel composition with qubits partitioned as
-    `j` low + `k` high, matching the LSB convention of `kron`. -/
+    `par` constructs parallel composition with qubits partitioned as `j` low + `k`
+    high (matching the LSB convention of `kron`), and `embed qs c` places the
+    `k`-qubit sub-circuit `c` at the qubits selected by `qs : Fin k ↪ Fin n` — the
+    addressing primitive for non-adjacent / reordered multi-qubit gates that plain
+    `par` cannot express. -/
 inductive QCircuit : ℕ → Type where
-  | id   : QCircuit n
-  | gate : QMatrix n → QCircuit n
-  | seq  : QCircuit n → QCircuit n → QCircuit n
-  | par  : QCircuit j → QCircuit k → QCircuit (j + k)
+  | id    : QCircuit n
+  | gate  : QMatrix n → QCircuit n
+  | seq   : QCircuit n → QCircuit n → QCircuit n
+  | par   : QCircuit j → QCircuit k → QCircuit (j + k)
+  | embed : (Fin k ↪ Fin n) → QCircuit k → QCircuit n
 
 /-- Transport a circuit across a propositional equality of qubit counts. -/
 def QCircuit.castN (h : m = n) (c : QCircuit m) : QCircuit n := h ▸ c

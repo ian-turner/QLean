@@ -6,7 +6,7 @@ A Lean 4 library for equational reasoning about quantum circuits, built on Mathl
 
 QLean provides a typed circuit language with denotational matrix semantics, standard gates with unitarity proofs, and tools for proving that two circuits compute the same unitary.
 
-- `QCircuit n` — structured inductive type with sequential (`*`) and parallel (`⊗`) composition
+- `QCircuit n` — structured inductive type with sequential (`*`), parallel (`⊗`), and positional (`embed`) composition
 - `eval : QCircuit n → QMatrix n` — denotational semantics (matrix product and Kronecker product)
 - `QCircuit.Equiv` / `≈` — circuit equality up to matrix equality
 - State-level layer: `QVector n`, `ket`, `tensorState`, `QState` symbolic state expressions
@@ -23,7 +23,8 @@ QLean/
   Basic/
     Matrix.lean       — QMatrix, IsUnitary, core lemmas
     Tensor.lean       — kron (reindexed Kronecker product) and its algebra
-    Embed.lean        — embed (gate on selected, possibly non-adjacent qubits); embed_* algebra
+    Embed.lean        — embed (gate on selected, possibly non-adjacent qubits); embed_* algebra,
+                        composition (embed_embed) + tensor split (embed_kron_factor), lowEmb/highEmb
     Hilbert.lean      — QVector, ket, tensorState, act
     EmbedState.lean   — bridge: embed acting on basis kets (embed_diag_mul_ket, embed_single_mul_ket)
   Gate/
@@ -32,11 +33,13 @@ QLean/
                         QVector-level gate action lemmas (X_ket_zero, H_ket_zero, CNOT_ket_pair, …)
     StateActions.lean — symbolic gate actions: XGate_bit0, HGate_bit0, CNOTGate_basis_tensor, …
   Circuit/
-    Type.lean         — QCircuit inductive type, castN
-    Semantics.lean    — eval, QCircuit.WF, QCircuit.eval_unitary
+    Type.lean         — QCircuit inductive type (id/gate/seq/par/embed), castN
+    Semantics.lean    — eval, QCircuit.WF, QCircuit.eval_unitary (all covering the embed case)
     Rewrite.lean      — QCircuit.Equiv, structural rewrite rules, interchange law;
                         QCircuit.* actions on states + symbolic-state criteria
                         (apply_state, basis_iff_state, equiv_iff_all_states, basis_iff_tensor)
+    Embed.lean        — circuit-level embed algebra (embed_gate/id/seq/comp/par_split/comm_disjoint)
+                        and basis-ket action lemmas (embed_diag_action, embed_single_action)
   State/
     Type.lean         — QState inductive type, castN, ⊗ notation, bit0/bit1
     Semantics.lean    — QState.eval, QState.IsNormalized
@@ -46,9 +49,10 @@ Examples/
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition
   BellState.lean      — H then CNOT prepares the entangled Bell state |Φ⁺⟩
   GHZState.lean       — H then a CNOT cascade prepares the (n+1)-qubit GHZ state
-  QFT.lean            — quantum Fourier transform circuit (qftCircuit n) with swap layer;
-                        well-formedness/unitarity + product-form correctness of qftCore
-                        (qftCore_correct, proved in the QState syntax layer; swaps not yet folded in)
+  QFT.lean            — quantum Fourier transform circuit (qftCircuit n) with swap layer, built
+                        from the first-class `embed` constructor; well-formedness/unitarity +
+                        product-form correctness of qftCore (qftCore_correct, in the QState layer;
+                        swaps not yet folded in)
 ```
 
 See [api.md](api.md) for per-module detail.

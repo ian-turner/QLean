@@ -52,6 +52,7 @@ permutation matrices and no `n - k` subtraction.
 - `mergeBits qs i s : Fin (2^n)` — index carrying bits `s : Fin (2^k)` on the selected qubits and agreeing with `i` elsewhere; a one-sided inverse to `selectIdx`. The address-reconstruction primitive the state-action lemmas (`Basic/EmbedState.lean`) are phrased with
 - `singleEmb t : Fin 1 ↪ Fin n` — embed at a single qubit `t`; `@[simp]` lemma `singleEmb_apply`
 - `pairEmb a b (h : a ≠ b) : Fin 2 ↪ Fin n` — embed at two distinct qubits (`a` = gate-qubit `0`, `b` = gate-qubit `1`); `@[simp]` lemmas `pairEmb_apply_zero/one`. The addressing for embedded single- and two-qubit gates (e.g. the QFT layers)
+- `lowEmb j k : Fin j ↪ Fin (j+k)`, `highEmb j k : Fin k ↪ Fin (j+k)` — the low (`Fin.castAdd`) and high (`Fin.natAdd`) coordinate blocks of a `(j+k)`-qubit register; `@[simp]` lemmas `lowEmb_apply`/`highEmb_apply`. The split coordinates `embed_kron_factor` factors a tensor across
 
 **Key theorems:**
 - `embed_one` — `embed qs 1 = 1`
@@ -59,6 +60,10 @@ permutation matrices and no `n - k` subtraction.
 - `embed_conjTranspose` — `(embed qs U)ᴴ = embed qs Uᴴ`
 - `embed_unitary` — `IsUnitary U → IsUnitary (embed qs U)`
 - `embed_comm_disjoint` — gates on disjoint qubit sets commute (hypothesis `∀ a b, qs₁ a ≠ qs₂ b`)
+- `embed_embed` — composition collapses the addressing maps: `embed qs (embed qs2 U) = embed (qs2.trans qs) U` (via the `selectIdx_trans` helper)
+- `embed_kron_factor` — a tensor embedded at `qs` factors into its halves: `embed qs (kron A B) = embed (lowEmb.trans qs) A * embed (highEmb.trans qs) B`; the matrix fact behind `QCircuit.embed_par_split`. Helpers `selectIdx_lowEmb`/`selectIdx_highEmb` (and the per-bit `tensor_symm_fst_bit`/`tensor_symm_snd_bit`) align `selectIdx` with the `tensorIndexEquiv` low/high split
+- `embed_refl` — the identity embedding is the gate: `embed (Function.Embedding.refl _) U = U` (via `selectIdx_refl`)
+- `kron_eq_embed` — `kron A B = embed (lowEmb j k) A * embed (highEmb j k) B`; the matrix fact behind `QCircuit.par_as_embed` (`embed_kron_factor` at the identity embedding)
 - `index_ext_iff` — `i = j ↔ AgreeOff qs i j ∧ selectIdx qs i = selectIdx qs j`
 - `selectIdx_symm_apply`, `selectIdx_eq_of_bits` — bit-level characterizations of `selectIdx`
 - `selectIdx_mergeBits` (`@[simp]`), `agreeOff_mergeBits`, `mergeBits_selectIdx`, `mergeBits_bit_mem`, `mergeBits_bit_not_mem` — `mergeBits`/`selectIdx` round-trips and per-bit values
@@ -172,8 +177,9 @@ Parameterized over the basis index rather than `bit0`/`bit1`:
 The `QCircuit` inductive type and the type-cast combinator.
 
 **Key definitions:**
-- `QCircuit n` — inductive type with constructors `id`, `gate`, `seq`, `par`
-  - Notation: `1` for `id`, `c₁ * c₂` for `seq`, `c₁ + c₂` for `par`
+- `QCircuit n` — inductive type with constructors `id`, `gate`, `seq`, `par`, `embed`
+  - `embed (qs : Fin k ↪ Fin n) (c : QCircuit k) : QCircuit n` — places the `k`-qubit sub-circuit `c` at the qubits selected by `qs` (arbitrary injection); the addressing primitive `par` cannot express
+  - Notation: `1` for `id`, `c₁ * c₂` for `seq`, `c₁ ⊗ c₂` for `par`; `embed` has no infix
 - `QCircuit.castN (h : m = n) (c : QCircuit m) : QCircuit n` — transport a circuit along a propositional equality of qubit counts
 
 `castN` is used to state `QCircuit.par_assoc`: `par (par c₁ c₂) c₃` and `par c₁ (par c₂ c₃)` live in different types, so associativity is an eval-level statement involving `castN`.
@@ -185,9 +191,9 @@ The `QCircuit` inductive type and the type-cast combinator.
 Denotational semantics and well-formedness.
 
 **Key definitions:**
-- `eval : QCircuit n → QMatrix n` — denotational semantics; `@[simp]` lemmas `eval_id`, `eval_gate`, `eval_seq`, `eval_par`, `eval_castN`
-- `QCircuit.WF : QCircuit n → Prop` — inductive predicate asserting all `gate` leaves are unitary
-  - `@[simp]` iff lemmas: `wf_id`, `wf_gate`, `wf_seq`, `wf_par`
+- `eval : QCircuit n → QMatrix n` — denotational semantics; the `embed` case is `eval (.embed qs c) = embed qs (eval c)` (the matrix `embed`). `@[simp]` lemmas `eval_id`, `eval_gate`, `eval_seq`, `eval_par`, `eval_embed`, `eval_castN`
+- `QCircuit.WF : QCircuit n → Prop` — `def` by structural recursion asserting all `gate` leaves are unitary (the `embed` case is `WF (.embed qs c) = WF c`)
+  - `@[simp]` iff lemmas: `wf_id`, `wf_gate`, `wf_seq`, `wf_par`, `wf_embed`
 
 **Key theorems:**
 - `QCircuit.eval_unitary` — `WF c → IsUnitary (eval c)`
@@ -292,3 +298,24 @@ QCircuit equivalence and equational rewrite rules.
 - `QCircuit.Equiv.basis_iff_state` — `c₁ ≈ c₂ ↔ ∀ i, c₁ * ❘i⟩ ≈ c₂ * ❘i⟩` (symbolic-basis form of `basis_iff`)
 - `QCircuit.Equiv.equiv_iff_all_states` — `c₁ ≈ c₂ ↔ ∀ s, c₁ * s ≈ c₂ * s`
 - `QCircuit.Equiv.basis_iff_tensor` — for `c₁ c₂ : QCircuit (j+k)`, `c₁ ≈ c₂ ↔ ∀ (a : Fin (2^j)) (b : Fin (2^k)), c₁ * (❘a⟩ ⊗ ❘b⟩) ≈ c₂ * (❘a⟩ ⊗ ❘b⟩)`; factored-basis criterion that pairs with the tensor-form gate actions in `Gate/StateActions.lean`
+
+---
+
+## `Circuit/Embed.lean`
+
+Circuit-level algebra of the `embed` constructor — `≈`-lemmas lifting the matrix algebra of
+`Basic/Embed.lean` to `QCircuit`, plus basis-ket action lemmas. Imports `Circuit/Rewrite.lean` and
+`Basic/EmbedState.lean`. See [architecture.md](architecture.md) *Embedding as a circuit constructor*.
+
+**Circuit-algebra lemmas** (all `QCircuit.Equiv`, each reducing to the matrix algebra):
+- `QCircuit.embed_gate` — bridge: `embed qs (gate U) ≈ gate (embedₘ qs U)` (`rfl`)
+- `QCircuit.embed_id` — `embed qs 1 ≈ 1`
+- `QCircuit.embed_seq` — distributes over sequencing: `embed qs (c₁ * c₂) ≈ embed qs c₁ * embed qs c₂`
+- `QCircuit.embed_comp` — nested embeddings compose: `embed qs (embed qs2 c) ≈ embed (qs2.trans qs) c`
+- `QCircuit.embed_par_split` — `embed qs (c₁ ⊗ c₂) ≈ embed (lowEmb.trans qs) c₁ * embed (highEmb.trans qs) c₂` (the embedded form)
+- `QCircuit.par_as_embed` — `c₁ ⊗ c₂ ≈ embed (lowEmb) c₁ * embed (highEmb) c₂`; normalizes a bare `par` into the `embed` view for a structural pass
+- `QCircuit.embed_comm_disjoint` — embedded sub-circuits on disjoint qubit sets commute
+
+**Action lemmas** (`QState.Equiv`; the entry points for per-layer correctness proofs):
+- `QCircuit.embed_diag_action` — a diagonal gate embedded at `qs` scales a basis ket: `embed qs (gate U) * ❘i⟩ ≈ U (selectIdx qs i) (selectIdx qs i) • ❘i⟩` (lifts `embed_diag_mul_ket`)
+- `QCircuit.embed_single_action` — a 1-qubit gate embedded at `qs 0` splits `❘i⟩` into the two indices that clear/set that qubit (lifts `embed_single_mul_ket`)

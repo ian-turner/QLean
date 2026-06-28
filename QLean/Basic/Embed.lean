@@ -1,4 +1,5 @@
 import QLean.Basic.Matrix
+import QLean.Basic.Tensor
 import Mathlib.Algebra.BigOperators.Fin
 
 /-!
@@ -295,6 +296,171 @@ theorem embed_comm_disjoint {n j k : ℕ} (qs₁ : Fin j ↪ Fin n) (qs₂ : Fin
   · push Not at houter
     obtain ⟨pos, h1, h2, hne⟩ := houter
     rw [embed_comm_zero qs₁ qs₂ A B h1 h2 hne, embed_comm_zero qs₂ qs₁ B A h2 h1 hne]
+
+-- ── Composition of embeddings ─────────────────────────────────────────────────
+
+/-- Selecting through a composed embedding factors: reading the bits of `qs2.trans qs`
+    is reading the bits of `qs2` off the index already restricted by `qs`. -/
+lemma selectIdx_trans {m : ℕ} (qs : Fin k ↪ Fin n) (qs2 : Fin m ↪ Fin k) (i : Fin (2 ^ n)) :
+    selectIdx (qs2.trans qs) i = selectIdx qs2 (selectIdx qs i) := by
+  apply finFunctionFinEquiv.symm.injective
+  funext a
+  rw [selectIdx_symm_apply, selectIdx_symm_apply, selectIdx_symm_apply,
+      Function.Embedding.trans_apply]
+
+/-- Embedding through a composition is the embedding through the composed address map:
+    `embed qs (embed qs2 U) = embed (qs2.trans qs) U`. -/
+theorem embed_embed {m : ℕ} (qs : Fin k ↪ Fin n) (qs2 : Fin m ↪ Fin k) (U : QMatrix m) :
+    embed qs (embed qs2 U) = embed (qs2.trans qs) U := by
+  ext i j
+  rw [embed_apply qs (embed qs2 U) i j, embed_apply (qs2.trans qs) U i j]
+  by_cases htrans : AgreeOff (qs2.trans qs) i j
+  · have hqs : AgreeOff qs i j := fun l hl =>
+      htrans l (fun a => by rw [Function.Embedding.trans_apply]; exact hl (qs2 a))
+    have hagree2 : AgreeOff qs2 (selectIdx qs i) (selectIdx qs j) := by
+      intro b hb
+      rw [selectIdx_symm_apply, selectIdx_symm_apply]
+      exact htrans (qs b) (fun a heq =>
+        hb a (qs.injective (by rw [← Function.Embedding.trans_apply]; exact heq)))
+    rw [if_pos hqs, if_pos htrans, embed_apply, if_pos hagree2,
+        selectIdx_trans, selectIdx_trans]
+  · rw [if_neg htrans]
+    by_cases hqs : AgreeOff qs i j
+    · rw [if_pos hqs, embed_apply, if_neg]
+      unfold AgreeOff at htrans
+      push Not at htrans
+      obtain ⟨l, hltrans, hne⟩ := htrans
+      by_cases hlrange : ∃ b, qs b = l
+      · obtain ⟨b, rfl⟩ := hlrange
+        intro hagree2
+        apply hne
+        have hb : ∀ a, qs2 a ≠ b := fun a heq =>
+          hltrans a (by rw [Function.Embedding.trans_apply, heq])
+        have hh := hagree2 b hb
+        rwa [selectIdx_symm_apply, selectIdx_symm_apply] at hh
+      · push Not at hlrange
+        exact absurd (hqs l hlrange) hne
+    · rw [if_neg hqs]
+
+-- ── Split-coordinate embeddings for the tensor factoring ───────────────────────
+
+/-- The low `j` of `j + k` coordinates, value-preserving (`Fin.castAdd`). -/
+def lowEmb (j k : ℕ) : Fin j ↪ Fin (j + k) :=
+  ⟨Fin.castAdd k, Fin.castAdd_injective j k⟩
+
+/-- The high `k` of `j + k` coordinates, shifted up by `j` (`Fin.natAdd`). -/
+def highEmb (j k : ℕ) : Fin k ↪ Fin (j + k) :=
+  ⟨Fin.natAdd j, Fin.natAdd_injective k j⟩
+
+@[simp] lemma lowEmb_apply (j k : ℕ) (a : Fin j) : lowEmb j k a = Fin.castAdd k a := rfl
+@[simp] lemma highEmb_apply (j k : ℕ) (b : Fin k) : highEmb j k b = Fin.natAdd j b := rfl
+
+/-- Bit `a` (for `a : Fin j`) of the low tensor factor of `S` is bit `castAdd k a` of `S`:
+    the low `j` bits are kept unchanged by the `mod 2^j` split. -/
+lemma tensor_symm_fst_bit (j k : ℕ) (S : Fin (2 ^ (j + k))) (a : Fin j) :
+    finFunctionFinEquiv.symm ((tensorIndexEquiv j k).symm S).1 a
+      = finFunctionFinEquiv.symm S (Fin.castAdd k a) := by
+  apply Fin.ext
+  rw [finFunctionFinEquiv_symm_apply_val, finFunctionFinEquiv_symm_apply_val,
+      tensorIndexEquiv_symm_fst_val, Fin.val_castAdd]
+  have hpow : (2 : ℕ) ^ j = 2 ^ (a : ℕ) * 2 ^ (j - (a : ℕ)) := by
+    rw [← pow_add]; congr 1; omega
+  rw [hpow, Nat.mod_mul_right_div_self,
+      Nat.mod_mod_of_dvd _ (dvd_pow_self 2 (show j - (a : ℕ) ≠ 0 by omega))]
+
+/-- Bit `b` (for `b : Fin k`) of the high tensor factor of `S` is bit `natAdd j b` of `S`:
+    the high `k` bits are the `div 2^j` shift. -/
+lemma tensor_symm_snd_bit (j k : ℕ) (S : Fin (2 ^ (j + k))) (b : Fin k) :
+    finFunctionFinEquiv.symm ((tensorIndexEquiv j k).symm S).2 b
+      = finFunctionFinEquiv.symm S (Fin.natAdd j b) := by
+  apply Fin.ext
+  rw [finFunctionFinEquiv_symm_apply_val, finFunctionFinEquiv_symm_apply_val,
+      tensorIndexEquiv_symm_snd_val, Fin.val_natAdd, Nat.div_div_eq_div_mul, ← pow_add]
+
+/-- `selectIdx` through the low split embedding is the low tensor factor of `selectIdx qs`. -/
+lemma selectIdx_lowEmb {j : ℕ} (qs : Fin (j + k) ↪ Fin n) (s : Fin (2 ^ n)) :
+    selectIdx ((lowEmb j k).trans qs) s
+      = ((tensorIndexEquiv j k).symm (selectIdx qs s)).1 := by
+  apply finFunctionFinEquiv.symm.injective
+  funext a
+  rw [selectIdx_symm_apply, Function.Embedding.trans_apply, tensor_symm_fst_bit,
+      selectIdx_symm_apply, lowEmb_apply]
+
+/-- `selectIdx` through the high split embedding is the high tensor factor of `selectIdx qs`. -/
+lemma selectIdx_highEmb {j : ℕ} (qs : Fin (j + k) ↪ Fin n) (s : Fin (2 ^ n)) :
+    selectIdx ((highEmb j k).trans qs) s
+      = ((tensorIndexEquiv j k).symm (selectIdx qs s)).2 := by
+  apply finFunctionFinEquiv.symm.injective
+  funext b
+  rw [selectIdx_symm_apply, Function.Embedding.trans_apply, tensor_symm_snd_bit,
+      selectIdx_symm_apply, highEmb_apply]
+
+/-- Factoring a parallel (`kron`) gate through an embedding: embedding `A ⊗ B` at `qs` is the
+    product of `A` embedded at the low half of `qs` and `B` embedded at the high half. -/
+theorem embed_kron_factor {j : ℕ} (qs : Fin (j + k) ↪ Fin n) (A : QMatrix j) (B : QMatrix k) :
+    embed qs (kron A B)
+      = embed ((lowEmb j k).trans qs) A * embed ((highEmb j k).trans qs) B := by
+  have hdisj : ∀ (a : Fin j) (b : Fin k),
+      ((lowEmb j k).trans qs) a ≠ ((highEmb j k).trans qs) b := by
+    intro a b heq
+    rw [Function.Embedding.trans_apply, Function.Embedding.trans_apply] at heq
+    have hv := congrArg Fin.val (qs.injective heq)
+    simp only [lowEmb_apply, highEmb_apply, Fin.val_castAdd, Fin.val_natAdd] at hv
+    omega
+  ext i l
+  rw [Matrix.mul_apply]
+  by_cases hA : AgreeOff qs i l
+  · have houter : ∀ pos, (∀ a, ((lowEmb j k).trans qs) a ≠ pos) →
+        (∀ b, ((highEmb j k).trans qs) b ≠ pos) →
+        finFunctionFinEquiv.symm i pos = finFunctionFinEquiv.symm l pos := by
+      intro pos h1 h2
+      refine hA pos ?_
+      intro c
+      refine Fin.addCases (motive := fun c => qs c ≠ pos) (fun a => ?_) (fun b => ?_) c
+      · exact h1 a
+      · exact h2 b
+    rw [embed_apply, if_pos hA,
+        embed_comm_aux ((lowEmb j k).trans qs) ((highEmb j k).trans qs) hdisj A B houter]
+    simp only [kron, Matrix.reindex_apply, Matrix.submatrix_apply, Matrix.kroneckerMap_apply]
+    rw [← selectIdx_lowEmb, ← selectIdx_lowEmb, ← selectIdx_highEmb, ← selectIdx_highEmb]
+  · rw [embed_apply, if_neg hA]
+    unfold AgreeOff at hA
+    push Not at hA
+    obtain ⟨pos, hposqs, hne⟩ := hA
+    have h1 : ∀ a, ((lowEmb j k).trans qs) a ≠ pos := by
+      intro a
+      rw [Function.Embedding.trans_apply]
+      exact hposqs ((lowEmb j k) a)
+    have h2 : ∀ b, ((highEmb j k).trans qs) b ≠ pos := by
+      intro b
+      rw [Function.Embedding.trans_apply]
+      exact hposqs ((highEmb j k) b)
+    rw [embed_comm_zero ((lowEmb j k).trans qs) ((highEmb j k).trans qs) A B h1 h2 hne]
+
+-- ── The identity embedding and `kron` as a product of two embeddings ───────────
+
+/-- Selecting through the identity embedding (all qubits, in order) is the identity. -/
+@[simp] lemma selectIdx_refl (i : Fin (2 ^ n)) :
+    selectIdx (Function.Embedding.refl (Fin n)) i = i := by
+  apply finFunctionFinEquiv.symm.injective
+  funext a
+  rw [selectIdx_symm_apply]
+  rfl
+
+/-- Embedding through the identity embedding leaves the gate unchanged. -/
+theorem embed_refl (U : QMatrix n) : embed (Function.Embedding.refl (Fin n)) U = U := by
+  ext i j
+  have hagree : AgreeOff (Function.Embedding.refl (Fin n)) i j := fun l hl => (hl l rfl).elim
+  rw [embed_apply, if_pos hagree, selectIdx_refl, selectIdx_refl]
+
+/-- A tensor product is the product of its two factors embedded at the low/high coordinate blocks —
+    the matrix form behind `QCircuit.par_as_embed` (a special case of `embed_kron_factor` at the
+    identity embedding). -/
+theorem kron_eq_embed {j k : ℕ} (A : QMatrix j) (B : QMatrix k) :
+    kron A B = embed (lowEmb j k) A * embed (highEmb j k) B := by
+  have h := embed_kron_factor (Function.Embedding.refl (Fin (j + k))) A B
+  rw [embed_refl] at h
+  exact h
 
 end QLean
 
