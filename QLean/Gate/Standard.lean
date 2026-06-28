@@ -1,6 +1,7 @@
 import QLean.Basic.Hilbert
 import QLean.Circuit.Semantics
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.LinearAlgebra.Matrix.IsDiag
 
 open scoped Matrix
 
@@ -203,6 +204,39 @@ theorem isUnitary_Ry (θ : ℝ) : IsUnitary (Ry θ) := by
   · ring
   · ring_nf; simp
 
+-- ── QFT phase gate Rₖ ─────────────────────────────────────────────────────────
+
+/-- Phase gate `Rₖ` (Nielsen & Chuang §5.1): diagonal `diag(1, e^{2πi/2ᵏ})`, the rotation
+    family of the quantum Fourier transform. Note `R₁ = Z`, `R₂ = S`, `R₃ = T`. -/
+noncomputable def Rk (k : ℕ) : QMatrix 1 :=
+  !![1, 0;
+     0, Complex.exp (2 * Real.pi * Complex.I / (2 : ℂ) ^ k)]
+
+/-- `Rₖ` is diagonal. -/
+theorem Rk_isDiag (k : ℕ) : Matrix.IsDiag (Rk k) := by
+  intro i j hij
+  fin_cases i <;> fin_cases j <;>
+    simp_all [Rk, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem isUnitary_Rk (k : ℕ) : IsUnitary (Rk k) := by
+  unfold IsUnitary Rk
+  ext i j; fin_cases i <;> fin_cases j <;>
+    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
+          Matrix.cons_val_zero, Matrix.cons_val_one]
+  apply exp_mul_conj_eq_one
+  simp only [map_div₀, map_mul, map_pow, map_ofNat, Complex.conj_I, Complex.conj_ofReal]
+  ring
+
+/-- A controlled diagonal gate is diagonal: the only off-diagonal candidates `(1,3)` and `(3,1)`
+    carry `U 0 1` and `U 1 0`, which vanish when `U` is diagonal. -/
+theorem controlled_isDiag {U : QMatrix 1} (hU : Matrix.IsDiag U) :
+    Matrix.IsDiag (controlled U) := by
+  have h01 : U 0 1 = 0 := hU (by decide)
+  have h10 : U 1 0 = 0 := hU (by decide)
+  intro i j hij
+  fin_cases i <;> fin_cases j <;>
+    simp_all [controlled, Matrix.cons_val_zero, Matrix.cons_val_one]
+
 -- ── Gate actions on computational basis states ────────────────────────────────
 
 theorem Rz_ket_zero (θ : ℝ) : Rz θ * ket 0 = Complex.exp (-Complex.I * θ / 2) • ket 0 := by
@@ -341,6 +375,7 @@ abbrev TGate : QCircuit 1 := .gate T
 abbrev RzGate (θ : ℝ) : QCircuit 1 := .gate (Rz θ)
 abbrev RxGate (θ : ℝ) : QCircuit 1 := .gate (Rx θ)
 abbrev RyGate (θ : ℝ) : QCircuit 1 := .gate (Ry θ)
+abbrev RkGate (k : ℕ) : QCircuit 1 := .gate (Rk k)
 
 -- ── Two-qubit circuit gates ───────────────────────────────────────────────────
 
@@ -368,6 +403,7 @@ abbrev ControlledGate (U : QMatrix 1) : QCircuit 2 := .gate (controlled U)
 @[simp] theorem wf_RzGate (θ : ℝ) : QCircuit.WF (RzGate θ) := isUnitary_Rz θ
 @[simp] theorem wf_RxGate (θ : ℝ) : QCircuit.WF (RxGate θ) := isUnitary_Rx θ
 @[simp] theorem wf_RyGate (θ : ℝ) : QCircuit.WF (RyGate θ) := isUnitary_Ry θ
+@[simp] theorem wf_RkGate (k : ℕ) : QCircuit.WF (RkGate k) := isUnitary_Rk k
 
 @[simp] theorem wf_CNOTGate : QCircuit.WF CNOTGate := isUnitary_CNOT
 @[simp] theorem wf_CZGate   : QCircuit.WF CZGate   := isUnitary_CZ

@@ -95,17 +95,37 @@ lemma embed_apply (qs : Fin k ↪ Fin n) (U : QMatrix k) (i j : Fin (2 ^ n)) :
     embed qs U i j = if AgreeOff qs i j then U (selectIdx qs i) (selectIdx qs j) else 0 :=
   rfl
 
+-- ── Common embeddings: single qubit and a qubit pair ──────────────────────────
+
+/-- Embed a 1-qubit gate at a single qubit `t`. Injectivity is automatic on `Fin 1`. -/
+def singleEmb (t : Fin n) : Fin 1 ↪ Fin n :=
+  ⟨fun _ => t, fun a b _ => Subsingleton.elim a b⟩
+
+@[simp] lemma singleEmb_apply (t : Fin n) (a : Fin 1) : singleEmb t a = t := rfl
+
+/-- Embed a 2-qubit gate at distinct qubits `a` (gate-qubit `0`) and `b` (gate-qubit `1`). -/
+def pairEmb (a b : Fin n) (h : a ≠ b) : Fin 2 ↪ Fin n :=
+  ⟨![a, b], by
+    intro x y hxy
+    fin_cases x <;> fin_cases y <;>
+      simp_all [Matrix.cons_val_zero, Matrix.cons_val_one]⟩
+
+@[simp] lemma pairEmb_apply_zero (a b : Fin n) (h : a ≠ b) : pairEmb a b h 0 = a := rfl
+@[simp] lemma pairEmb_apply_one (a b : Fin n) (h : a ≠ b) : pairEmb a b h 1 = b := rfl
+
 -- ── Reconstructing an index from selected bits ────────────────────────────────
 
 /-- The index whose selected qubits carry the bits of `s : Fin (2^k)` and whose
     unselected qubits agree with `i`. A one-sided inverse to `selectIdx` on the
-    `AgreeOff qs i` fibre. -/
-private def mergeBits (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k)) : Fin (2 ^ n) :=
+    `AgreeOff qs i` fibre, and the public address-reconstruction primitive that the
+    state-action lemmas in `Basic/EmbedState.lean` are phrased with. -/
+def mergeBits (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k)) : Fin (2 ^ n) :=
   finFunctionFinEquiv fun l =>
     if h : ∃ a, qs a = l then finFunctionFinEquiv.symm s h.choose
     else finFunctionFinEquiv.symm i l
 
-private lemma mergeBits_bit_mem (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k))
+/-- On a selected qubit `qs a`, `mergeBits qs i s` carries bit `a` of `s`. -/
+lemma mergeBits_bit_mem (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k))
     (a : Fin k) :
     finFunctionFinEquiv.symm (mergeBits qs i s) (qs a) = finFunctionFinEquiv.symm s a := by
   have hca : (⟨a, rfl⟩ : ∃ a', qs a' = qs a).choose = a :=
@@ -114,24 +134,25 @@ private lemma mergeBits_bit_mem (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fi
   simp only [Equiv.symm_apply_apply]
   rw [dif_pos ⟨a, rfl⟩, hca]
 
-private lemma mergeBits_bit_not_mem (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k))
+/-- On an unselected qubit `l`, `mergeBits qs i s` carries bit `l` of `i`. -/
+lemma mergeBits_bit_not_mem (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k))
     (l : Fin n) (hl : ∀ a, qs a ≠ l) :
     finFunctionFinEquiv.symm (mergeBits qs i s) l = finFunctionFinEquiv.symm i l := by
   unfold mergeBits
   simp only [Equiv.symm_apply_apply]
   rw [dif_neg (fun ⟨a, ha⟩ => hl a ha)]
 
-@[simp] private lemma selectIdx_mergeBits (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k)) :
+@[simp] lemma selectIdx_mergeBits (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k)) :
     selectIdx qs (mergeBits qs i s) = s := by
   apply finFunctionFinEquiv.symm.injective
   funext a
   rw [selectIdx_symm_apply, mergeBits_bit_mem]
 
-private lemma agreeOff_mergeBits (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k)) :
+lemma agreeOff_mergeBits (qs : Fin k ↪ Fin n) (i : Fin (2 ^ n)) (s : Fin (2 ^ k)) :
     AgreeOff qs i (mergeBits qs i s) :=
   fun l hl => (mergeBits_bit_not_mem qs i s l hl).symm
 
-private lemma mergeBits_selectIdx (qs : Fin k ↪ Fin n) {i m : Fin (2 ^ n)} (h : AgreeOff qs i m) :
+lemma mergeBits_selectIdx (qs : Fin k ↪ Fin n) {i m : Fin (2 ^ n)} (h : AgreeOff qs i m) :
     mergeBits qs i (selectIdx qs m) = m := by
   apply finFunctionFinEquiv.symm.injective
   funext l

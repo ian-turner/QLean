@@ -4,6 +4,51 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-28] (19)
+
+### Added
+- `Examples/QFT.lean`: **product-form correctness of the QFT network** — `qftCore_correct n j : qftCore n * ❘j⟩ ≈ qftProductState n j` (Nielsen & Chuang eq 5.4), with `qftQubitState`/`qftProductState` the symbolic per-qubit/n-qubit targets. Proved in the `QState` syntax layer: `stage_apply` (cascade induction threading the rotation phase), `qftStageTop_apply` (single-stage → tensor), and a clean `qftCore_correct` induction; the matrix layer is touched only for atoms (`qftCR`/`crEntry`/`qftCR_mul_ket`, `crEntry_merge0/1`, `controlled_Rk_diag`, `H_row0/1`) and arithmetic (`qft_frac`/`digit_recon`, `prodMerge1`). Per-qubit phase is `e^{2πi·j/2^{m+1}}`. Swaps not yet folded into the correctness statement
+- `State/Rewrite.lean`: `QState.one_smul`/`QState.smul_smul`/`QState.smul_add` — scalar-algebra `≈` lemmas recovering `MulAction`/`Module` rewriting in the symbolic layer (`QState.smul` is a bare `SMul`)
+
+### Changed
+- `Examples/QFT.lean`: factored the controlled-rotation gate into a named `qftCR m c`, so `qftStageTop` is `foldr (gate (qftCR …) * acc)` (was an inline `embed`); enables the correctness lemmas to name the per-gate action
+
+---
+
+## [2026-06-28] (18)
+
+### Fixed
+- `Examples/QFT.lean`: corrected the layer order in `qftStageTop` — the Hadamard must act *first* (be the rightmost `seq` factor), but the foldr placed it leftmost so the controlled rotations acted before it, computing the wrong unitary. Switched the foldr to prepend the rotations (`gate * acc`); `swapLayer` and the `wf_foldr_seq` helper updated to match. Found while setting up the correctness proof; WF was unaffected (order-independent)
+
+### Added
+- `Basic/EmbedState.lean`: top-qubit action bridge — `embedTop_mul_ket` (`embed (singleEmb (Fin.last m)) U * ket j = tensorState (ket j_low) (U * ket j_top)`), built on the index bridges `selectIdx_singleEmb_last`/`mergeBits_singleEmb_last` (relating `embed`'s `finFunctionFinEquiv` bit-addressing to `tensorIndexEquiv`'s tensor split) and the helper `mul_ket_one`. The clean entry point for proving correctness of circuits that process the most significant qubit
+- `Basic/Hilbert.lean`: `tensorState_smul_right`, `tensorState_add_right` (right-factor linearity of `tensorState`, mirroring `tensorState_smul_left`)
+
+---
+
+## [2026-06-27] (17)
+
+### Added
+- `Gate/Standard.lean`: QFT phase gate `Rk k = diag(1, e^{2πi/2ᵏ})` (`R₁ = Z`, `R₂ = S`, `R₃ = T`) with `Rk_isDiag`, `isUnitary_Rk`, `RkGate`/`wf_RkGate`; plus `controlled_isDiag` (a controlled diagonal gate is diagonal — the basis for the QFT rotation layers)
+- `Basic/Embed.lean`: `singleEmb`/`pairEmb` embedding constructors (`Fin 1 ↪ Fin n` at one qubit, `Fin 2 ↪ Fin n` at a distinct pair) with `@[simp]` apply lemmas — the addressing for embedded single-/two-qubit gates
+- `Examples/QFT.lean`: the quantum Fourier transform circuit `qftCircuit n` (Nielsen & Chuang §5.1, Fig 5.1) — `qftStageTop`, recursive `qftCore`, qubit-reversal `swapLayer`, and `qftCircuit = swapLayer * qftCore`; well-formedness/unitarity (`wf_qftCircuit`, `isUnitary_qftCircuit`) via `embed_unitary` and the `wf_foldr_seq` helper; wired into `Examples.lean`
+
+### Changed
+- `Basic/EmbedState.lean`: factored the generic `isDiag_mul_ket` (any diagonal matrix acts on a basis ket by its eigenvalue) out of `embed_diag_mul_ket`, which is now one line (via `embed_isDiag` + `isDiag_mul_ket`), removing the duplicated off-diagonal-vanishing argument
+
+---
+
+## [2026-06-27] (16)
+
+### Added
+- `Basic/EmbedState.lean`: bridge from the `embed` matrix algebra to the state layer — `embed_diag_mul_ket` (a diagonal gate, embedded, acts on `ket i` by the scalar `U (selectIdx qs i) (selectIdx qs i)` with no superposition), `embed_isDiag`, the general `embed_mul_ket` (sum over `mergeBits` columns), the single-qubit `embed_single_mul_ket`, and the `mul_ket_apply` helper; wired into `QLean.lean`. Unblocks the long-range controlled-rotation layers of a QFT proof, which collapse to scalar phases
+- `docs/lean-api.md`: `Matrix.IsDiag` import/dot-notation pitfall on `QMatrix`, and the `Fin.sum_univ_two`-vs-`Fin (2^1)` `rw`/`exact` pitfall
+
+### Changed
+- `Basic/Embed.lean`: promoted `mergeBits` and its round-trip lemmas (`mergeBits_bit_mem`, `mergeBits_bit_not_mem`, `selectIdx_mergeBits`, `agreeOff_mergeBits`, `mergeBits_selectIdx`) from `private` to public API — they are the address-reconstruction primitives the new state-action lemmas are phrased with
+
+---
+
 ## [2026-06-26] (15)
 
 ### Added

@@ -211,3 +211,27 @@ This replaces the old `calc`/`Trans` + `gcongr` scaffolding for directional `≈
 **Still useful:**
 - `gcongr` on its own for a pure congruence step (relate `C[s]` and `C[t]` when only a sub-state differs), auto-closing matching leaves by `rfl`/`assumption`.
 - To finish at the matrix level instead, push `eval` all the way in with the structural simp lemmas (`eval_apply`, `eval_tensor`, `eval_basis`, `QCircuit.eval_seq/par/gate/id`) and then chain genuine `Matrix`/`QVector` `Eq` lemmas — that is what `QCircuit.Equiv.basis_iff` proofs do.
+
+---
+
+## `Matrix.IsDiag`
+
+`Matrix.IsDiag (A : Matrix n n α) : Prop := ∀ ⦃i j⦄, i ≠ j → A i j = 0`. Lives in
+`Mathlib.LinearAlgebra.Matrix.IsDiag` (import it explicitly). Comes with `IsDiag.add`/`.smul`/
+`.mul`/`.conjTranspose`/`.neg` etc.
+
+**Dot-notation pitfall.** `QMatrix n` is `abbrev`-reduced to the function type `Fin (2^n) → Fin (2^n) → ℂ`,
+so `U.IsDiag` resolves to the (nonexistent) `Function.IsDiag` and errors with
+`Invalid field 'IsDiag': … does not contain 'Function.IsDiag'`. Write `Matrix.IsDiag U`
+(and `Matrix.IsDiag (embed qs U)`) in full — the explicit form unifies `QMatrix` with `Matrix … … …`
+fine; only the projection notation breaks.
+
+---
+
+## `Fin.sum_univ_two` against a `Fin (2^1)` binder
+
+`Fin.sum_univ_two : ∑ i : Fin 2, f i = f 0 + f 1` (and `_three`, etc.) will **not `rw`** against a
+sum over `Fin (2^1)` — `rw` uses keyed/syntactic matching and does not reduce the numeral `2^1` to
+`2`, so it reports "did not find an occurrence of the pattern". Full unification *does* reduce it,
+so close the goal with `exact Fin.sum_univ_two _` (or `simp [Fin.sum_univ_two]`) instead of `rw`.
+Same trick applies wherever a `Fin (2^k)` index must defeq-collapse to a concrete `Fin m`.

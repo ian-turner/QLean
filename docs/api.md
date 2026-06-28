@@ -49,6 +49,9 @@ permutation matrices and no `n - k` subtraction.
 - `selectIdx qs i : Fin (2^k)` — the `Fin (2^k)` index read off the qubits `qs : Fin k ↪ Fin n` selects from `i` (LSB convention, via `finFunctionFinEquiv`)
 - `AgreeOff qs i j : Prop` — `i` and `j` carry the same bits on every qubit *outside* `range qs`; has `.refl`/`.symm`/`.trans`
 - `embed qs U : QMatrix n` — `U` acting on the qubits selected by `qs`, identity elsewhere; entry `(i,j)` is `U (selectIdx qs i) (selectIdx qs j)` gated by `AgreeOff qs i j`
+- `mergeBits qs i s : Fin (2^n)` — index carrying bits `s : Fin (2^k)` on the selected qubits and agreeing with `i` elsewhere; a one-sided inverse to `selectIdx`. The address-reconstruction primitive the state-action lemmas (`Basic/EmbedState.lean`) are phrased with
+- `singleEmb t : Fin 1 ↪ Fin n` — embed at a single qubit `t`; `@[simp]` lemma `singleEmb_apply`
+- `pairEmb a b (h : a ≠ b) : Fin 2 ↪ Fin n` — embed at two distinct qubits (`a` = gate-qubit `0`, `b` = gate-qubit `1`); `@[simp]` lemmas `pairEmb_apply_zero/one`. The addressing for embedded single- and two-qubit gates (e.g. the QFT layers)
 
 **Key theorems:**
 - `embed_one` — `embed qs 1 = 1`
@@ -58,6 +61,27 @@ permutation matrices and no `n - k` subtraction.
 - `embed_comm_disjoint` — gates on disjoint qubit sets commute (hypothesis `∀ a b, qs₁ a ≠ qs₂ b`)
 - `index_ext_iff` — `i = j ↔ AgreeOff qs i j ∧ selectIdx qs i = selectIdx qs j`
 - `selectIdx_symm_apply`, `selectIdx_eq_of_bits` — bit-level characterizations of `selectIdx`
+- `selectIdx_mergeBits` (`@[simp]`), `agreeOff_mergeBits`, `mergeBits_selectIdx`, `mergeBits_bit_mem`, `mergeBits_bit_not_mem` — `mergeBits`/`selectIdx` round-trips and per-bit values
+
+---
+
+## `Basic/EmbedState.lean`
+
+Bridge from the `embed` matrix algebra to the *state* layer: how an embedded gate acts on a
+computational basis ket. These are the lemmas circuit-correctness proofs use, since algorithm
+inputs and intermediate states are (superpositions of) basis kets. Imports `Basic/Embed.lean`,
+`Basic/Hilbert.lean`, and Mathlib's `Matrix.IsDiag`.
+
+**Key theorems:**
+- `mul_ket_apply` — `(M * ket i) r 0 = M r i` (reads off a single column)
+- `isDiag_mul_ket` — generic: any diagonal matrix acts on a basis ket by its eigenvalue, `M * ket i = M i i • ket i`. The reusable fact behind every diagonal gate's action (Rz, S, T, CZ, controlled-Rₖ), not just embedded ones
+- `embed_isDiag` — `Matrix.IsDiag U → Matrix.IsDiag (embed qs U)` (diagonal gates stay diagonal when embedded)
+- `embed_diag_mul_ket` — **the workhorse**: a diagonal gate, embedded, acts on `ket i` by the scalar `U (selectIdx qs i) (selectIdx qs i)`, with no superposition: `embed qs U * ket i = U (selectIdx qs i) (selectIdx qs i) • ket i`. One line from `isDiag_mul_ket` + `embed_isDiag`; collapses an entire layer of controlled-phase/rotation gates, however addressed, into a phase read off the index bits
+- `embed_mul_ket` — general action on a basis ket: `embed qs U * ket i = ∑ s, U s (selectIdx qs i) • ket (mergeBits qs i s)`
+- `embed_single_mul_ket` — single-qubit (`k = 1`) specialization, splitting `ket i` into the two indices that clear/set the addressed qubit; the entry point for an embedded `H`
+- `mul_ket_one` — a 1-qubit gate on a basis ket is its column: `U * ket t = U 0 t • ket 0 + U 1 t • ket 1`
+- `selectIdx_singleEmb_last`, `mergeBits_singleEmb_last` — bridge `embed`'s `finFunctionFinEquiv` bit-addressing of the **top** qubit `Fin.last m` to `tensorIndexEquiv`'s tensor split: selecting the top qubit reads the high factor, and reconstructing it pairs `s` with `j`'s low bits
+- `embedTop_mul_ket` — a 1-qubit gate embedded on the top qubit acts as `embed (singleEmb (Fin.last m)) U * ket j = tensorState (ket j_low) (U * ket j_top)`; the clean entry point for circuits that process the most significant qubit
 
 ---
 
@@ -77,6 +101,7 @@ State-level layer: quantum states, basis kets, tensor product of states.
 - `ket_normalized` — every basis ket is normalized
 - `ket_inner` — `(ket i)ᴴ * ket j = if i = j then 1 else 0`
 - `ket_tensorState` — `tensorState (ket a) (ket b) = ket (tensorIndexEquiv j k ⟨a, b⟩)`
+- `tensorState_smul_left`/`tensorState_smul_right`/`tensorState_add_right` — linearity of `tensorState` in each factor
 - `kron_tensorState` — `kron A B * tensorState ψ φ = tensorState (A * ψ) (B * φ)`
 - `IsNormalized.tensorState` — tensor product preserves normalization
 - `act_mul`, `act_one`
@@ -87,7 +112,9 @@ State-level layer: quantum states, basis kets, tensor product of states.
 
 Standard gate matrices, unitarity proofs, and `QCircuit` abbreviations.
 
-**Single-qubit gates** (`QMatrix 1`): `H`, `X`, `Y`, `Z`, `S`, `T`, `Rz θ`, `Rx θ`, `Ry θ`
+**Single-qubit gates** (`QMatrix 1`): `H`, `X`, `Y`, `Z`, `S`, `T`, `Rz θ`, `Rx θ`, `Ry θ`, `Rk k`
+
+`Rk k = diag(1, e^{2πi/2ᵏ})` is the QFT phase gate (N&C §5.1); `R₁ = Z`, `R₂ = S`, `R₃ = T`. `Rk_isDiag` proves it diagonal; `controlled_isDiag` lifts diagonality through `controlled` (so `controlled (Rk k)` is diagonal — the fact the QFT rotation layers rely on).
 
 **Two-qubit gates** (`QMatrix 2`): `CNOT`, `CZ`, `SWAP`, `controlled U`
 
@@ -95,7 +122,7 @@ Standard gate matrices, unitarity proofs, and `QCircuit` abbreviations.
 
 All gate matrices follow the LSB-first qubit convention (see [conventions.md](conventions.md)).
 
-**Unitarity theorems:** `isUnitary_H`, `isUnitary_X`, `isUnitary_Y`, `isUnitary_Z`, `isUnitary_S`, `isUnitary_T`, `isUnitary_CNOT`, `isUnitary_CZ`, `isUnitary_SWAP`, `isUnitary_controlled`, `isUnitary_Rz`, `isUnitary_Rx`, `isUnitary_Ry`
+**Unitarity theorems:** `isUnitary_H`, `isUnitary_X`, `isUnitary_Y`, `isUnitary_Z`, `isUnitary_S`, `isUnitary_T`, `isUnitary_CNOT`, `isUnitary_CZ`, `isUnitary_SWAP`, `isUnitary_controlled`, `isUnitary_Rz`, `isUnitary_Rx`, `isUnitary_Ry`, `isUnitary_Rk`
 
 **State-action lemmas:** `Rz_ket_zero`, `Rz_ket_one`, `Rz_ket_diag`, `CNOT_ket_pair`, `CNOT_tensorState_smul_ket`; single-qubit actions `X_ket_zero`, `X_ket_one`, `Y_ket_zero`, `Y_ket_one`, `Z_ket_zero`, `Z_ket_one`, `S_ket_zero`, `S_ket_one`, `H_ket_zero`, `H_ket_one`
 
@@ -104,7 +131,7 @@ All gate matrices follow the LSB-first qubit convention (see [conventions.md](co
 | Abbrev | Type |
 |---|---|
 | `HGate`, `XGate`, `YGate`, `ZGate`, `SGate`, `TGate` | `QCircuit 1` |
-| `RzGate θ`, `RxGate θ`, `RyGate θ` | `QCircuit 1` |
+| `RzGate θ`, `RxGate θ`, `RyGate θ`, `RkGate k` | `QCircuit 1` |
 | `CNOTGate`, `CZGate`, `SWAPGate` | `QCircuit 2` |
 | `ToffoliGate` | `QCircuit 3` |
 | `ControlledGate U` | `QCircuit 2` |
@@ -210,6 +237,11 @@ State expression equivalence and equational rewrite rules. Holds the `QState.*` 
 - `QState.Equiv.add_congr` — `≈` is a congruence for `add`
 - `QState.Equiv.smul_congr` — `≈` is a congruence for `smul`
 - `QState.Equiv.tensor_congr` — `≈` is a congruence for `tensor`
+
+**Scalar algebra** (`QState.smul` is a bare `SMul`, so the `MulAction`/`Module` lemmas do not fire — these recover the scalar algebra symbolically):
+- `QState.one_smul` — `(1 : ℂ) • s ≈ s`
+- `QState.smul_smul` — `a • (b • s) ≈ (a * b) • s`
+- `QState.smul_add` — `a • (s + t) ≈ a • s + a • t`
 
 **Distributivity rules:**
 - `QState.add_tensor_left` — `(s + t) ⊗ u ≈ s ⊗ u + t ⊗ u`

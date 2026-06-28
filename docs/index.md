@@ -25,8 +25,9 @@ QLean/
     Tensor.lean       — kron (reindexed Kronecker product) and its algebra
     Embed.lean        — embed (gate on selected, possibly non-adjacent qubits); embed_* algebra
     Hilbert.lean      — QVector, ket, tensorState, act
+    EmbedState.lean   — bridge: embed acting on basis kets (embed_diag_mul_ket, embed_single_mul_ket)
   Gate/
-    Standard.lean     — H, X, Y, Z, S, T, Rz, Rx, Ry, CNOT, CZ, SWAP, Toffoli, controlled;
+    Standard.lean     — H, X, Y, Z, S, T, Rz, Rx, Ry, Rk, CNOT, CZ, SWAP, Toffoli, controlled;
                         unitarity proofs; QCircuit abbreviations (HGate, CNOTGate, …);
                         QVector-level gate action lemmas (X_ket_zero, H_ket_zero, CNOT_ket_pair, …)
     StateActions.lean — symbolic gate actions: XGate_bit0, HGate_bit0, CNOTGate_basis_tensor, …
@@ -45,6 +46,9 @@ Examples/
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition
   BellState.lean      — H then CNOT prepares the entangled Bell state |Φ⁺⟩
   GHZState.lean       — H then a CNOT cascade prepares the (n+1)-qubit GHZ state
+  QFT.lean            — quantum Fourier transform circuit (qftCircuit n) with swap layer;
+                        well-formedness/unitarity + product-form correctness of qftCore
+                        (qftCore_correct, proved in the QState syntax layer; swaps not yet folded in)
 ```
 
 See [api.md](api.md) for per-module detail.

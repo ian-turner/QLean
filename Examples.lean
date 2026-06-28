@@ -3,3 +3,4 @@ import Examples.RzCNOT
 import Examples.HadamardTransform
 import Examples.BellState
 import Examples.GHZState
+import Examples.QFT

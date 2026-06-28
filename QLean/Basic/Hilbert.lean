@@ -109,6 +109,18 @@ theorem tensorState_smul_left {j k : ℕ} (c : ℂ) (ψ : QVector j) (φ : QVect
   simp only [tensorState, Matrix.smul_apply, smul_eq_mul]
   ring
 
+theorem tensorState_smul_right {j k : ℕ} (c : ℂ) (ψ : QVector j) (φ : QVector k) :
+    tensorState ψ (c • φ) = c • tensorState ψ φ := by
+  funext r s
+  simp only [tensorState, Matrix.smul_apply, smul_eq_mul]
+  ring
+
+theorem tensorState_add_right {j k : ℕ} (ψ : QVector j) (φ χ : QVector k) :
+    tensorState ψ (φ + χ) = tensorState ψ φ + tensorState ψ χ := by
+  funext r s
+  simp only [tensorState, Matrix.add_apply]
+  ring
+
 -- ── Kronecker product on states ───────────────────────────────────────────────
 
 /-- `(A⊗B)(ψ⊗φ) = (Aψ)⊗(Bφ)`: the Kronecker product of gates acts componentwise on product states. -/

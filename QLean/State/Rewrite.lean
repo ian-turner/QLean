@@ -45,6 +45,20 @@ theorem Equiv.tensor_congr {s s' : QState j} {t t' : QState k}
     (hs : s ≈ s') (ht : t ≈ t') : s ⊗ t ≈ s' ⊗ t' := by
   simp only [Equiv, eval_tensor]; rw [hs, ht]
 
+-- ── Scalar algebra ────────────────────────────────────────────────────────────
+-- `QState.smul` is a bare `SMul` (a raw constructor), so the `MulAction`/`Module`
+-- lemmas (`one_smul`, `smul_smul`, …) do not fire on it. These `≈` lemmas recover
+-- the scalar algebra in the symbolic layer.
+
+theorem one_smul (s : QState n) : (1 : ℂ) • s ≈ s := by
+  simp only [Equiv, eval_smul, _root_.one_smul]
+
+theorem smul_smul (a b : ℂ) (s : QState n) : a • (b • s) ≈ (a * b) • s := by
+  simp only [Equiv, eval_smul, _root_.smul_smul]
+
+theorem smul_add (a : ℂ) (s t : QState n) : a • (s + t) ≈ a • s + a • t := by
+  simp only [Equiv, eval_smul, eval_add, _root_.smul_add]
+
 -- ── Distributivity rules ──────────────────────────────────────────────────────
 
 theorem add_tensor_left (s t : QState j) (u : QState k) :
