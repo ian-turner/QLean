@@ -39,7 +39,7 @@ noncomputable section
 -- ── Folding a list of gates into a sequential circuit preserves WF ────────────
 
 /-- Prepending a list of well-formed gates onto a well-formed initial circuit is well-formed. -/
-theorem wf_foldr_seq {n : ℕ} {α : Type*} (l : List α) (f : α → QCircuit n) (init : QCircuit n)
+theorem wf_foldr_seq {n : ℕ} {α : Type} (l : List α) (f : α → QCircuit n) (init : QCircuit n)
     (hinit : QCircuit.WF init) (hf : ∀ a ∈ l, QCircuit.WF (f a)) :
     QCircuit.WF (l.foldr (fun a acc => f a * acc) init) := by
   induction l with
