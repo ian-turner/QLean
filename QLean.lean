@@ -13,6 +13,7 @@ import QLean.Program.Angle
 import QLean.Program.Basis
 import QLean.Program.Type
 import QLean.Program.QASM
+import QLean.Program.Rewrite
 import QLean.State.Type
 import QLean.State.Semantics
 import QLean.State.Rewrite

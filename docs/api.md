@@ -359,6 +359,7 @@ The `Program` IR and its denotation. Imports `Program/Basis.lean`, `Circuit/Sema
 - `Program.denote_id`/`denote_prim`/`denote_seq` — `@[simp]` homomorphism lemmas
 - `Program.denote_WF (p) : p.denote.WF` and `Program.denote_unitary (p) : IsUnitary (eval p.denote)` — **unconditional** (always-unitary primitives + injective operands ⇒ no side condition)
 - `Program.ofList (g : Prim) (qs : List (Fin n)) : Option (Program n)` — smart constructor; succeeds iff `qs.length = g.arity ∧ qs.Nodup` (both decidable), building the `↪` from the deduped list
+- `Program.relabel (f : Fin n ↪ Fin m) : Program n → Program m` — re-address every gate through `f` (move a sub-block onto a chosen qubit window: `prim g qs ↦ prim g (qs.trans f)`)
 
 ## `Program/QASM.lean`
 
@@ -370,3 +371,11 @@ OpenQASM 3.0 emission. Imports `Program/Type.lean`. Fully **computable** — rea
 - `Program.toQASM (p : Program n) : String` — full program string (`OPENQASM 3.0;` header, `qubit[n] q;` register, body)
 
 The emitter is **trusted** (we do not formalize OpenQASM's semantics); what is verified is everything upstream (`denote_unitary`, and per-program `denote ≈ target` theorems).
+
+## `Program/Rewrite.lean`
+
+Equational lemmas about `Program.denote`, used to relate a program to a target circuit. Imports `Program/Type.lean`, `Circuit/Embed.lean`.
+
+- `QCircuit.embed_congr (qs) (h : c₁ ≈ c₂) : embed qs c₁ ≈ embed qs c₂` — embedding respects `≈` (`@[gcongr]`, so `grw` can rewrite under an `embed`)
+- `Program.denote_foldr_seq (l) (P) (init)` — `denote` commutes with a right-fold of sequenced gates: `(l.foldr (P · * ·) init).denote = l.foldr ((P ·).denote * ·) init.denote` (an equality; each step is `denote_seq`)
+- `Program.denote_relabel (f) (p) : (p.relabel f).denote ≈ embed f p.denote` — re-addressing denotes to the embedding of the denotation (via `embed_id`/`embed_comp`/`embed_seq`)

@@ -44,8 +44,9 @@ QLean/
   Program/            — serializable named-gate IR; compiles to OpenQASM
     Angle.lean        — Angle := ℚ multiples of π; denote (· π), toQASM ("pi/4")
     Basis.lean        — Prim basis-gate enum; arity/matrix/isUnitary/toQASM
-    Type.lean         — Program (id/prim/seq), denote → QCircuit, denote_unitary, ofList
+    Type.lean         — Program (id/prim/seq), denote → QCircuit, denote_unitary, ofList, relabel
     QASM.lean         — Program.toQASM : Program n → String (OpenQASM 3.0)
+    Rewrite.lean      — denote_foldr_seq, denote_relabel (re-addressing), embed_congr
   State/
     Type.lean         — QState inductive type, castN, ⊗ notation, bit0/bit1
     Semantics.lean    — QState.eval, QState.IsNormalized

@@ -56,6 +56,14 @@ theorem Program.denote_WF : (p : Program n) → p.denote.WF
 theorem Program.denote_unitary (p : Program n) : IsUnitary (QCircuit.eval p.denote) :=
   QCircuit.eval_unitary _ p.denote_WF
 
+/-- Re-address a program through an injection `f`: every gate placed at qubits `qs` is moved to
+    `qs.trans f`. Lifts a `Program n` to a `Program m` placed at the image of `f` (e.g. a sub-block
+    onto a chosen qubit window). Denotes to the embedded denotation — see `Program/Rewrite.lean`. -/
+def Program.relabel {n m : ℕ} (f : Fin n ↪ Fin m) : Program n → Program m
+  | .id        => .id
+  | .prim g qs => .prim g (qs.trans f)
+  | .seq p q   => .seq (p.relabel f) (q.relabel f)
+
 /-- Smart constructor: build a single-gate program from a gate and a raw operand list,
     succeeding only when the list has the gate's arity and distinct entries (both decidable).
     This is the entry point for programs assembled from data (e.g. a parser or a model). -/

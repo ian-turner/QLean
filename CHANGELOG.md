@@ -4,6 +4,16 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-30] (23)
+
+### Added
+- `Program/Type.lean`: `Program.relabel (f : Fin n ↪ Fin m) : Program n → Program m` — re-address every gate of a program through `f` (move a sub-block onto a chosen qubit window)
+- `Program/Rewrite.lean`: `QCircuit.embed_congr` (`@[gcongr]`: embedding respects `≈`), `Program.denote_foldr_seq` (`denote` commutes with a sequenced `foldr`), `Program.denote_relabel` (`denote (relabel f p) ≈ embed f (denote p)`, via the circuit `embed` algebra)
+- `Examples/QFT.lean`: **acid test** — `qftProgram n : Program n` (the QFT in the serializable IR, via `qftCRProg`/`qftStageTopProg`/`qftCoreProg`/`swapLayerProg`, the recursive core re-addressed onto the low qubits with `relabel (lowEmb n 1)`) and `denote_qftProgram n : (qftProgram n).denote ≈ qftCircuit n` proving it denotes to exactly the verified circuit; `isUnitary_qftProgram` follows from `Program.denote_unitary`. Axioms: `{propext, Classical.choice, Quot.sound}`, no `sorry`
+- `docs/`: `Program/Rewrite.lean` section + `relabel` in `api.md`; `Rewrite.lean` in the `index.md` module map; `relabel`/trust-boundary update in `architecture.md`; the acid-test definitions, theorems, and technique in `examples.md`
+
+---
+
 ## [2026-06-30] (22)
 
 ### Added

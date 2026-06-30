@@ -206,10 +206,13 @@ and the only noncomputable part.
   parsed / model-emitted programs).
 - *No `par`.* OpenQASM is flat; disjoint-qubit `prim`s under `seq` cover tensor placement, and
   omitting `par` keeps `denote` a clean monoid homomorphism (`denote (p*q) = denote p * denote q`,
-  `denote 1 = 1`).
+  `denote 1 = 1`). Where a sub-block must be placed on a qubit window (e.g. the QFT's recursive
+  `core ⊗ id₁`), `Program.relabel (f : Fin n ↪ Fin m)` re-addresses every gate through `f`, with
+  `denote_relabel : denote (relabel f p) ≈ embed f (denote p)` bridging it to the `embed` algebra.
 
 **Trust boundary.** `Program.toQASM` is *trusted* — we do not formalize OpenQASM's semantics.
 Everything upstream is verified: `denote_unitary` unconditionally, and per-program
-`denote p ≈ target` theorems (e.g. the QFT) tie a syntactic program to its intended unitary.
+`denote p ≈ target` theorems (e.g. `denote_qftProgram : denote (qftProgram n) ≈ qftCircuit n`,
+the acid test in `Examples/QFT.lean`) tie a syntactic program to its intended unitary.
 Out of scope (v2+): measurement / classical control, hardware topology, optimization passes,
 a QASM *parser*, and a computable simulator.

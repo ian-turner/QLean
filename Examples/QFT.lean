@@ -348,6 +348,68 @@ theorem qftCore_correct : (n : ℕ) → (j : Fin (2 ^ n)) →
         ≈ qftProductState m ((tensorIndexEquiv m 1).symm j).1 ⊗ qftQubitState (m + 1) j.val
     grw [QCircuit.seq_action, qftStageTop_apply, QCircuit.par_action_tensor, ih, QCircuit.id_action]
 
+-- ═══════════════ Acid test: the QFT as a serializable `Program` ════════════════
+-- The QFT circuit reproduced in the flat `Program` IR (named gates, no `par`). The recursive
+-- core's parallel step `qftCore n ⊗ id₁` is re-addressed onto the low `n` qubits with
+-- `Program.relabel (lowEmb n 1)`. `denote_qftProgram` then proves the program denotes to exactly
+-- the verified `qftCircuit` — validating the whole IR + denotation stack end to end.
+
+/-- Controlled rotation `qftCR m c` as a program primitive (`CRk` between the top qubit and `c`). -/
+def qftCRProg (m : ℕ) (c : Fin m) : Program (m + 1) :=
+  Program.prim (Prim.CRk (m - c.val + 1))
+    (pairEmb (Fin.last m) c.castSucc (Fin.castSucc_lt_last c).ne')
+
+/-- The top-qubit stage `qftStageTop m` as a program: a Hadamard then the controlled rotations. -/
+def qftStageTopProg (m : ℕ) : Program (m + 1) :=
+  (List.finRange m).foldr (fun c acc => qftCRProg m c * acc)
+    (Program.prim Prim.H (singleEmb (Fin.last m)))
+
+/-- The QFT network `qftCore n` as a program; the recursive core is re-addressed onto the low
+    `n` qubits via `relabel (lowEmb n 1)` — the program analogue of `qftCore n ⊗ id₁`. -/
+def qftCoreProg : (n : ℕ) → Program n
+  | 0       => 1
+  | (n + 1) => (qftCoreProg n).relabel (lowEmb n 1) * qftStageTopProg n
+
+/-- The qubit-reversal swap layer `swapLayer n` as a program. -/
+def swapLayerProg (n : ℕ) : Program n :=
+  (List.finRange (n / 2)).foldr
+    (fun i acc =>
+      Program.prim Prim.SWAP
+        (pairEmb (⟨i.val, by have := i.isLt; omega⟩ : Fin n)
+                 (⟨n - 1 - i.val, by have := i.isLt; omega⟩ : Fin n)
+          (by have hi := i.isLt; intro heq; rw [Fin.mk.injEq] at heq; omega)) * acc)
+    1
+
+/-- The full QFT circuit as a serializable program. -/
+def qftProgram (n : ℕ) : Program n := swapLayerProg n * qftCoreProg n
+
+-- ── Each program piece denotes to the corresponding circuit ───────────────────
+
+theorem denote_qftStageTopProg (m : ℕ) : (qftStageTopProg m).denote = qftStageTop m := by
+  rw [qftStageTopProg, Program.denote_foldr_seq]; rfl
+
+theorem denote_swapLayerProg (n : ℕ) : (swapLayerProg n).denote = swapLayer n := by
+  rw [swapLayerProg, Program.denote_foldr_seq]; rfl
+
+theorem denote_qftCoreProg : (n : ℕ) → (qftCoreProg n).denote ≈ qftCore n
+  | 0 => by rfl
+  | (n + 1) => by
+    have ih := denote_qftCoreProg n
+    show ((qftCoreProg n).relabel (lowEmb n 1)).denote * (qftStageTopProg n).denote
+        ≈ (qftCore n ⊗ (1 : QCircuit 1)) * qftStageTop n
+    grw [Program.denote_relabel (lowEmb n 1) (qftCoreProg n), ih, denote_qftStageTopProg,
+         QCircuit.par_as_embed, QCircuit.embed_id, QCircuit.seq_id_right]
+
+/-- **Acid test.** The serializable `qftProgram n` denotes to exactly the verified `qftCircuit n`. -/
+theorem denote_qftProgram (n : ℕ) : (qftProgram n).denote ≈ qftCircuit n := by
+  show (swapLayerProg n).denote * (qftCoreProg n).denote ≈ swapLayer n * qftCore n
+  rw [denote_swapLayerProg]
+  grw [denote_qftCoreProg n]
+
+/-- The program is unitary directly via `Program.denote_unitary` (and agrees with `qftCircuit`). -/
+theorem isUnitary_qftProgram (n : ℕ) : IsUnitary (QCircuit.eval (qftProgram n).denote) :=
+  Program.denote_unitary _
+
 end
 
 end QLean.Examples
