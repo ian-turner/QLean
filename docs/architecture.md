@@ -168,3 +168,48 @@ def QCircuit.castN (h : m = n) (c : QCircuit m) : QCircuit n := h ▸ c
 
 `QCircuit.par_assoc` is stated as a `QCircuit.Equiv` (eval-level equality) rather than a circuit-term equality — `castN` transports the type but not the term structure.
 
+
+---
+
+## The `Program` IR and OpenQASM compilation
+
+`QCircuit` is the *semantic* IR: maximally expressive (it carries raw `ℂ`-matrices), and its
+`eval` is noncomputable and unprintable. `Program` (`QLean/Program/`) is the *syntactic,
+serializable* IR layered on top — the frontend a compiler and (later) a simulator need.
+
+```lean
+inductive Program : ℕ → Type where
+  | id   : Program n
+  | prim : (g : Prim) → (Fin g.arity ↪ Fin n) → Program n
+  | seq  : Program n → Program n → Program n
+```
+
+A `Program` stores **only** gate *names* (`Prim`), symbolic *angles* (`Angle := ℚ` multiples
+of `π`), and qubit *indices* — never a matrix. So it is computable and serializes directly to
+OpenQASM (`Program.toQASM`, e.g. `rz(pi/4) q[2];`, `cp(pi/4) q[0], q[1];`).
+
+**Why a separate IR, given `embed` already places gates anywhere.** Since `embed` became a
+`QCircuit` constructor, `Program` is *not* needed for expressiveness — `QCircuit` can already
+express any placement. `Program`'s job is the one thing `QCircuit` cannot do: name gates
+symbolically so they can be **printed** (and angle-formatted as `pi/4`) and **computed with**
+(no `ℂ`-matrix in the data). `denote : Program n → QCircuit n` is the only bridge to semantics
+and the only noncomputable part.
+
+**Design choices.**
+- *Angle = `ℚ` multiples of `π`.* Exact, decidable, trivially printable, and complete for a
+  discrete basis (Clifford+T is multiples of `π/4`; the QFT phase `Rk k` is `2^{1-k}·π`).
+  `denote`/`toQASM` are the sole interface, so a symbolic-expression `Angle` can replace it later.
+- *Operands as a bundled `Fin g.arity ↪ Fin n`.* Injectivity is intrinsic (as in `embed`/`pairEmb`),
+  so `denote` is total and `denote_unitary` holds **with no `WF` hypothesis** — every program
+  denotes to a unitary, the clean substrate for circuit-synthesis theorems. `Program.ofList`
+  rebuilds the `↪` from a raw operand list with decidable length+`Nodup` checks (the path for
+  parsed / model-emitted programs).
+- *No `par`.* OpenQASM is flat; disjoint-qubit `prim`s under `seq` cover tensor placement, and
+  omitting `par` keeps `denote` a clean monoid homomorphism (`denote (p*q) = denote p * denote q`,
+  `denote 1 = 1`).
+
+**Trust boundary.** `Program.toQASM` is *trusted* — we do not formalize OpenQASM's semantics.
+Everything upstream is verified: `denote_unitary` unconditionally, and per-program
+`denote p ≈ target` theorems (e.g. the QFT) tie a syntactic program to its intended unitary.
+Out of scope (v2+): measurement / classical control, hardware topology, optimization passes,
+a QASM *parser*, and a computable simulator.

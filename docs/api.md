@@ -325,3 +325,48 @@ Circuit-level algebra of the `embed` constructor — `≈`-lemmas lifting the ma
 **Action lemmas** (`QState.Equiv`; the entry points for per-layer correctness proofs):
 - `QCircuit.embed_diag_action` — a diagonal gate embedded at `qs` scales a basis ket: `embed qs (gate U) * ❘i⟩ ≈ U (selectIdx qs i) (selectIdx qs i) • ❘i⟩` (lifts `embed_diag_mul_ket`)
 - `QCircuit.embed_single_action` — a 1-qubit gate embedded at `qs 0` splits `❘i⟩` into the two indices that clear/set that qubit (lifts `embed_single_mul_ket`)
+
+---
+
+## `Program/Angle.lean`
+
+Symbolic, serializable rotation angles. `Angle := ℚ`, interpreted as a multiple of `π`.
+
+- `Angle.denote (a : Angle) : ℝ` — the real angle `a · π` (noncomputable; uses `Real.pi`)
+- `Angle.toQASM (a : Angle) : String` — OpenQASM rendering of `a · π` (`0 ↦ "0"`, `1 ↦ "pi"`, `1/4 ↦ "pi/4"`, `3/4 ↦ "3*pi/4"`, `-1/2 ↦ "-pi/2"`, `2 ↦ "2*pi"`)
+
+`denote`/`toQASM` are the only interface, so a richer symbolic-expression `Angle` can replace this without touching callers.
+
+## `Program/Basis.lean`
+
+The named basis-gate enum `Prim` — a serializable alternative to `QCircuit.gate`'s opaque matrix. Imports `Gate/Standard.lean`.
+
+- `Prim` — `H/X/Y/Z/S/T`, `Rz/Rx/Ry (a : Angle)`, `Rk (k : ℕ)`, `CX/CZ/SWAP`, `CRk (k : ℕ)` (`deriving DecidableEq, Repr`)
+- `Prim.arity : Prim → ℕ` — qubit count (computable)
+- `Prim.matrix : (g : Prim) → QMatrix g.arity` — denotation to the concrete `Gate/Standard` gate (noncomputable; gate RHS are `_root_`-qualified, see [lean-api.md](lean-api.md))
+- `Prim.isUnitary (g : Prim) : IsUnitary g.matrix` — one `isUnitary_*` lemma per constructor
+- `Prim.rkAngle (k : ℕ) : Angle` — `Rk k`'s QASM phase, `2/2^k` (so `R₁=p(pi)`, `R₂=p(pi/2)`, `R₃=p(pi/4)`)
+- `Prim.toQASM : Prim → String` — mnemonic with symbolic parameter (`Rk`/`CRk` emit `p(…)`/`cp(…)`)
+
+Extending the basis = one constructor + one line in each of `arity`/`matrix`/`isUnitary`/`toQASM`.
+
+## `Program/Type.lean`
+
+The `Program` IR and its denotation. Imports `Program/Basis.lean`, `Circuit/Semantics.lean`.
+
+- `Program : ℕ → Type` — `id`, `prim (g : Prim) (Fin g.arity ↪ Fin n)`, `seq`; `1 = id`, `* = seq` (no `par` — flat, QASM-aligned). Stores no matrices, only names/angles/indices (computable, serializable).
+- `Program.denote : Program n → QCircuit n` — `prim g qs ↦ embed qs (gate g.matrix)`, `seq ↦ *`, `id ↦ 1` (noncomputable; the only bridge to the semantic layer)
+- `Program.denote_id`/`denote_prim`/`denote_seq` — `@[simp]` homomorphism lemmas
+- `Program.denote_WF (p) : p.denote.WF` and `Program.denote_unitary (p) : IsUnitary (eval p.denote)` — **unconditional** (always-unitary primitives + injective operands ⇒ no side condition)
+- `Program.ofList (g : Prim) (qs : List (Fin n)) : Option (Program n)` — smart constructor; succeeds iff `qs.length = g.arity ∧ qs.Nodup` (both decidable), building the `↪` from the deduped list
+
+## `Program/QASM.lean`
+
+OpenQASM 3.0 emission. Imports `Program/Type.lean`. Fully **computable** — reads only gate names, symbolic angles, and qubit indices; never a matrix, never `denote`.
+
+- `qasmQubit (i : Fin n) : String` — `q[i]`
+- `Program.instrLine (g) (qs) : String` — one gate-application line (gate-qubit `i` → physical `qs i`)
+- `Program.bodyLines : Program n → List String` — lines in execution order (`seq p q` runs `q` first, so `q`'s lines precede `p`'s)
+- `Program.toQASM (p : Program n) : String` — full program string (`OPENQASM 3.0;` header, `qubit[n] q;` register, body)
+
+The emitter is **trusted** (we do not formalize OpenQASM's semantics); what is verified is everything upstream (`denote_unitary`, and per-program `denote ≈ target` theorems).

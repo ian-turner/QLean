@@ -10,6 +10,7 @@ QLean provides a typed circuit language with denotational matrix semantics, stan
 - `eval : QCircuit n → QMatrix n` — denotational semantics (matrix product and Kronecker product)
 - `QCircuit.Equiv` / `≈` — circuit equality up to matrix equality
 - State-level layer: `QVector n`, `ket`, `tensorState`, `QState` symbolic state expressions
+- `Program n` — serializable named-gate IR (`Prim` basis gates, symbolic `Angle`s, qubit indices); `denote : Program n → QCircuit n` bridges to semantics, `Program.toQASM` compiles to OpenQASM 3.0
 
 ## What it is not
 
@@ -40,6 +41,11 @@ QLean/
                         (apply_state, basis_iff_state, equiv_iff_all_states, basis_iff_tensor)
     Embed.lean        — circuit-level embed algebra (embed_gate/id/seq/comp/par_split/comm_disjoint)
                         and basis-ket action lemmas (embed_diag_action, embed_single_action)
+  Program/            — serializable named-gate IR; compiles to OpenQASM
+    Angle.lean        — Angle := ℚ multiples of π; denote (· π), toQASM ("pi/4")
+    Basis.lean        — Prim basis-gate enum; arity/matrix/isUnitary/toQASM
+    Type.lean         — Program (id/prim/seq), denote → QCircuit, denote_unitary, ofList
+    QASM.lean         — Program.toQASM : Program n → String (OpenQASM 3.0)
   State/
     Type.lean         — QState inductive type, castN, ⊗ notation, bit0/bit1
     Semantics.lean    — QState.eval, QState.IsNormalized

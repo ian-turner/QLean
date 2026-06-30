@@ -265,3 +265,31 @@ Same trick applies wherever a `Fin (2^k)` index must defeq-collapse to a concret
 ## Anonymous `Fin` constructor + `omega` can capture a modulus metavar
 
 Writing `⟨i.val, by … omega⟩` where the expected `Fin ?N` modulus `?N` is still a metavariable is dangerous: `omega` may **instantiate `?N`** from a bound it has on hand (e.g. `i.isLt : i.val < n/2`), giving the term type `Fin (n/2)` instead of the intended `Fin n` — surfacing later as a mismatched `HMul (QCircuit (n/2)) …` instance failure. This bit the QFT `swapLayer` when its gate moved from `gate (embed …)` (codomain fixed early) to the `QCircuit.embed` constructor (codomain fixed only by the outer `* acc`). Fix: pin the modulus at the constructor — `(⟨i.val, by … omega⟩ : Fin n)`.
+
+## A `Namespace.foo` definition body auto-opens `Namespace`
+
+`def Prim.matrix : (g : Prim) → QMatrix g.arity | H => H | …` elaborates its body with the
+`Prim` namespace open, so unqualified RHS names like `H`, `Z`, `SWAP`, `Rk` resolve to the
+**constructors** `Prim.H`/`Prim.Z`/… (which shadow the gates of the same name from
+`Gate/Standard.lean`), giving "type mismatch: has type `Prim` but expected `QMatrix …`".
+Fix: `_root_`-qualify the intended gate — `| H => _root_.QLean.H`. (The pattern side is fine;
+there the names are unambiguously the inductive's constructors.)
+
+## A `def` with a dependent return motive does not reduce in another def's match branches
+
+`Prim.matrix : (g : Prim) → QMatrix g.arity` has a return type depending on `g`. Proving
+`Prim.isUnitary : (g) → IsUnitary g.matrix` in **term-mode** by `| H => isUnitary_H` fails:
+the branch's expected type `IsUnitary (Prim.matrix Prim.H)` is not reduced to `IsUnitary H`, so
+`isUnitary_H : IsUnitary H` mismatches. Prove it in **tactic mode** instead — `cases g` then one
+`exact isUnitary_*` per constructor; there the `exact`'s `isDefEq` does iota-reduce the matcher.
+(Avoid `cases g <;> simp only [matcher] <;> first | exact … | …`: the brute-force `first` over
+~14 alternatives × matrix `whnf` blew the 200000-heartbeat limit.)
+
+## `Fin.cast_injective` takes the equality explicitly; `Nodup` → injective `get`
+
+`Fin.cast_injective (h : n = m) : Function.Injective (Fin.cast h)` — the proof `h` is an
+**explicit** argument, so write `Fin.cast_injective h.symm (proof_of_cast_eq)`, not
+`Fin.cast_injective proof`. For a list, the lemma is `List.Nodup.injective_get`
+(`l.Nodup → Function.Injective l.get`), not `…get_injective`; call it as
+`List.Nodup.injective_get h` (dot notation `h.get_injective` mis-resolves through the
+`Nodup = Pairwise (· ≠ ·)` unfolding to a nonexistent `List.Pairwise.get_injective`).

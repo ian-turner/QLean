@@ -4,6 +4,17 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-06-30] (22)
+
+### Added
+- `Program/Angle.lean`: `Angle := ℚ` (multiples of `π`) with `Angle.denote : Angle → ℝ` (`a · π`) and `Angle.toQASM` (π-aware string, `1/4 ↦ "pi/4"`)
+- `Program/Basis.lean`: `Prim` basis-gate enum (`H/X/Y/Z/S/T`, `Rz/Rx/Ry (Angle)`, `Rk ℕ`, `CX/CZ/SWAP`, `CRk ℕ`; `deriving DecidableEq, Repr`) with `arity`/`matrix`/`isUnitary`/`rkAngle`/`toQASM` — a serializable alternative to `QCircuit.gate`'s opaque matrix
+- `Program/Type.lean`: the `Program` IR (`id/prim/seq`, `1`/`*` notation, operands as a bundled `Fin g.arity ↪ Fin n`), `Program.denote : Program n → QCircuit n` with `@[simp]` homomorphism lemmas, **unconditional** `denote_WF`/`denote_unitary`, and the decidable smart constructor `Program.ofList`
+- `Program/QASM.lean`: computable `Program.toQASM : Program n → String` emitting OpenQASM 3.0 (`qasmQubit`/`instrLine`/`bodyLines`); reads only names/angles/indices, never `denote`/matrices; trusted (OpenQASM semantics not formalized)
+- `docs/`: `Program/*` sections in `api.md`, module map + overview in `index.md`, *The `Program` IR and OpenQASM compilation* in `architecture.md`; three new pitfalls in `lean-api.md` (namespace auto-open in `Namespace.foo` bodies; dependent-motive matcher not reducing in term-mode branches; `Fin.cast_injective`/`List.Nodup.injective_get` shapes)
+
+---
+
 ## [2026-06-28] (21)
 
 ### Added

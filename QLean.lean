@@ -9,6 +9,10 @@ import QLean.Circuit.Type
 import QLean.Circuit.Semantics
 import QLean.Circuit.Rewrite
 import QLean.Circuit.Embed
+import QLean.Program.Angle
+import QLean.Program.Basis
+import QLean.Program.Type
+import QLean.Program.QASM
 import QLean.State.Type
 import QLean.State.Semantics
 import QLean.State.Rewrite
