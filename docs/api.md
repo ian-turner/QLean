@@ -129,7 +129,7 @@ Standard gate matrices, unitarity proofs, and `QCircuit` abbreviations.
 
 All gate matrices follow the LSB-first qubit convention (see [conventions.md](conventions.md)).
 
-**Unitarity theorems:** `isUnitary_H`, `isUnitary_X`, `isUnitary_Y`, `isUnitary_Z`, `isUnitary_S`, `isUnitary_T`, `isUnitary_CNOT`, `isUnitary_CZ`, `isUnitary_SWAP`, `isUnitary_controlled`, `isUnitary_Rz`, `isUnitary_Rx`, `isUnitary_Ry`, `isUnitary_Rk`
+**Unitarity theorems:** `isUnitary_H`, `isUnitary_X`, `isUnitary_Y`, `isUnitary_Z`, `isUnitary_S`, `isUnitary_T`, `isUnitary_CNOT`, `isUnitary_CZ`, `isUnitary_SWAP`, `isUnitary_Toffoli`, `isUnitary_controlled`, `isUnitary_Rz`, `isUnitary_Rx`, `isUnitary_Ry`, `isUnitary_Rk`
 
 **State-action lemmas:** `Rz_ket_zero`, `Rz_ket_one`, `Rz_ket_diag`, `CNOT_ket_pair`, `CNOT_tensorState_smul_ket`; single-qubit actions `X_ket_zero`, `X_ket_one`, `Y_ket_zero`, `Y_ket_one`, `Z_ket_zero`, `Z_ket_one`, `S_ket_zero`, `S_ket_one`, `H_ket_zero`, `H_ket_one`
 
@@ -142,6 +142,8 @@ All gate matrices follow the LSB-first qubit convention (see [conventions.md](co
 | `CNOTGate`, `CZGate`, `SWAPGate` | `QCircuit 2` |
 | `ToffoliGate` | `QCircuit 3` |
 | `ControlledGate U` | `QCircuit 2` |
+
+**WF lemmas** (`@[simp]`, one per abbreviation): `wf_HGate` … `wf_ToffoliGate` discharge `QCircuit.WF` for each gate abbreviation; `wf_ControlledGate` takes the unitarity hypothesis `IsUnitary U`.
 
 ---
 

@@ -6,11 +6,12 @@ import Mathlib.LinearAlgebra.Matrix.IsDiag
 open scoped Matrix
 
 -- Close a concrete `IsUnitary M` goal after `unfold IsUnitary M`.
--- Including both sum_univ_two and sum_univ_four is harmless: the wrong one won't fire.
+-- Including sum_univ_two/four/eight together is harmless: the wrong ones won't fire.
 macro "prove_unitary" : tactic =>
   `(tactic| ext i j <;> fin_cases i <;> fin_cases j
         <;> simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
-                Fin.sum_univ_four, Matrix.cons_val_zero, Matrix.cons_val_one])
+                Fin.sum_univ_four, Fin.sum_univ_eight,
+                Matrix.cons_val_zero, Matrix.cons_val_one])
 
 noncomputable section
 
@@ -95,16 +96,17 @@ def SWAP : QMatrix 2 :=
      0, 0, 0, 1]
 
 /-- Toffoli (CCX): controls = qubits 0,1, target = qubit 2; flips the target when both
-    controls are set. -/
+    controls are set. In the LSB convention this swaps basis indices `3` (both controls set,
+    target clear) and `7` (all set); the MSB textbook matrix differs. -/
 def Toffoli : QMatrix 3 :=
   !![1, 0, 0, 0, 0, 0, 0, 0;
      0, 1, 0, 0, 0, 0, 0, 0;
      0, 0, 1, 0, 0, 0, 0, 0;
-     0, 0, 0, 1, 0, 0, 0, 0;
+     0, 0, 0, 0, 0, 0, 0, 1;
      0, 0, 0, 0, 1, 0, 0, 0;
      0, 0, 0, 0, 0, 1, 0, 0;
-     0, 0, 0, 0, 0, 0, 0, 1;
-     0, 0, 0, 0, 0, 0, 1, 0]
+     0, 0, 0, 0, 0, 0, 1, 0;
+     0, 0, 0, 1, 0, 0, 0, 0]
 
 -- ── Controlled-U (2-qubit); ctrl=qubit0, tgt=qubit1 ─────────────────────────
 
@@ -130,6 +132,8 @@ theorem isUnitary_Z    : IsUnitary Z    := by unfold IsUnitary Z;    prove_unita
 theorem isUnitary_CNOT : IsUnitary CNOT := by unfold IsUnitary CNOT; prove_unitary
 theorem isUnitary_CZ   : IsUnitary CZ   := by unfold IsUnitary CZ;   prove_unitary
 theorem isUnitary_SWAP : IsUnitary SWAP := by unfold IsUnitary SWAP; prove_unitary
+
+theorem isUnitary_Toffoli : IsUnitary Toffoli := by unfold IsUnitary Toffoli; prove_unitary
 
 set_option maxHeartbeats 800000 in
 /-- Unitarity of `controlled U` lifted from unitarity of `U`. -/
@@ -433,6 +437,8 @@ abbrev ControlledGate (U : QMatrix 1) : QCircuit 2 := .gate (controlled U)
 @[simp] theorem wf_CNOTGate : QCircuit.WF CNOTGate := isUnitary_CNOT
 @[simp] theorem wf_CZGate   : QCircuit.WF CZGate   := isUnitary_CZ
 @[simp] theorem wf_SWAPGate : QCircuit.WF SWAPGate := isUnitary_SWAP
+
+@[simp] theorem wf_ToffoliGate : QCircuit.WF ToffoliGate := isUnitary_Toffoli
 
 @[simp] theorem wf_ControlledGate {U : QMatrix 1} (hu : IsUnitary U) :
     QCircuit.WF (ControlledGate U) := isUnitary_controlled hu

@@ -4,6 +4,16 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-07-06] (24)
+
+### Fixed
+- `Gate/Standard.lean`: the `Toffoli` matrix now matches its docstring (controls = qubits 0,1, target = qubit 2; LSB convention): it swaps basis indices 3 ↔ 7. The previous matrix swapped 6 ↔ 7, i.e. controls = qubits 1,2 with target = qubit 0
+
+### Added
+- `Gate/Standard.lean`: `isUnitary_Toffoli` and `@[simp]` `wf_ToffoliGate` — the previously missing unitarity/WF pair for `Toffoli`/`ToffoliGate`; `prove_unitary` gains `Fin.sum_univ_eight` so it closes 3-qubit gates
+
+---
+
 ## [2026-06-30] (23)
 
 ### Added
