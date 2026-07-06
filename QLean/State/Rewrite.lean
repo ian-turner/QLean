@@ -63,15 +63,11 @@ theorem smul_add (a : ℂ) (s t : QState n) : a • (s + t) ≈ a • s + a • 
 
 theorem add_tensor_left (s t : QState j) (u : QState k) :
     (s + t) ⊗ u ≈ s ⊗ u + t ⊗ u := by
-  simp only [Equiv, eval_tensor, eval_add]
-  funext i c; fin_cases c
-  simp [tensorState_apply, Matrix.add_apply, add_mul]
+  simp only [Equiv, eval_tensor, eval_add, tensorState_add_left]
 
 theorem tensor_add_right (s : QState j) (t u : QState k) :
     s ⊗ (t + u) ≈ s ⊗ t + s ⊗ u := by
-  simp only [Equiv, eval_tensor, eval_add]
-  funext i c; fin_cases c
-  simp [tensorState_apply, Matrix.add_apply, mul_add]
+  simp only [Equiv, eval_tensor, eval_add, tensorState_add_right]
 
 theorem smul_tensor_left (α : ℂ) (s : QState j) (t : QState k) :
     (α • s) ⊗ t ≈ α • (s ⊗ t) := by
@@ -79,10 +75,7 @@ theorem smul_tensor_left (α : ℂ) (s : QState j) (t : QState k) :
 
 theorem tensor_smul_right (α : ℂ) (s : QState j) (t : QState k) :
     s ⊗ (α • t) ≈ α • (s ⊗ t) := by
-  simp only [Equiv, eval_tensor, eval_smul]
-  funext r c
-  simp only [tensorState, Matrix.smul_apply, smul_eq_mul]
-  ring
+  simp only [Equiv, eval_tensor, eval_smul, tensorState_smul_right]
 
 -- ── Tensor algebra and basis splits ───────────────────────────────────────────
 

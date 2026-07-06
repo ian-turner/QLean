@@ -7,25 +7,11 @@ noncomputable section
 
 namespace QLean
 
--- ── QVector and action ─────────────────────────────────────────────────────────
+-- ── QVector ───────────────────────────────────────────────────────────────────
 
-/-- `n`-qubit quantum state: a column vector in `ℂ^(2^n)`. -/
+/-- `n`-qubit quantum state: a column vector in `ℂ^(2^n)`. A gate acts on a state by
+    plain matrix multiplication `U * ψ`. -/
 abbrev QVector (n : ℕ) := Matrix (Fin (2^n)) (Fin 1) ℂ
-
-namespace QMatrix
-
-/-- Act on a quantum state: matrix-vector multiplication as matrix multiplication. -/
-def act {n : ℕ} (U : QMatrix n) (ψ : QVector n) : QVector n := U * ψ
-
-@[simp] theorem act_def {n : ℕ} (U : QMatrix n) (ψ : QVector n) : U.act ψ = U * ψ := rfl
-
-theorem act_mul {n : ℕ} (U V : QMatrix n) (ψ : QVector n) :
-    QMatrix.act (U * V) ψ = U.act (V.act ψ) := by
-  simp only [act_def, Matrix.mul_assoc]
-
-theorem act_one {n : ℕ} (ψ : QVector n) : (1 : QMatrix n).act ψ = ψ := by simp
-
-end QMatrix
 
 -- ── Normalization predicate ───────────────────────────────────────────────────
 
@@ -46,22 +32,10 @@ theorem ket_normalized {n : ℕ} (i : Fin (2^n)) : IsNormalized (ket i) := by
     intro j; simp only [ket_apply]; split_ifs <;> simp
   simp_rw [key, Finset.sum_ite_eq', Finset.mem_univ, if_true]
 
-/-- Inner product of basis states via the conjugate-transpose product. -/
-theorem ket_inner {n : ℕ} (i j : Fin (2^n)) :
-    ((ket i)ᴴ * ket j) 0 0 = if i = j then 1 else 0 := by
-  simp only [Matrix.mul_apply, Matrix.conjTranspose_apply, ket_apply]
-  by_cases h : i = j
-  · subst h
-    simp_rw [show ∀ k : Fin (2^n),
-        star (if k = i then (1:ℂ) else 0) * (if k = i then 1 else 0) = if k = i then 1 else 0
-        from fun k => by split_ifs <;> simp [star_one, star_zero]]
-    simp [Finset.sum_ite_eq', Finset.mem_univ]
-  · simp only [if_neg h]
-    apply Finset.sum_eq_zero
-    intro k _
-    rcases eq_or_ne k i with h1 | h1
-    · subst h1; rw [if_pos rfl, star_one, if_neg h, mul_zero]
-    · rw [if_neg h1, star_zero, zero_mul]
+/-- `(M * ket i) r 0 = M r i`: multiplying by a basis ket reads off a single column. -/
+theorem mul_ket_apply {n : ℕ} (M : QMatrix n) (i r : Fin (2 ^ n)) :
+    (M * ket i) r 0 = M r i := by
+  simp [Matrix.mul_apply, ket_apply, mul_ite, Finset.sum_ite_eq', Finset.mem_univ]
 
 /-- The all-ones computational basis index on `n` qubits: `2^n - 1`, the top index of
     `Fin (2^n)`. `ket (allOnes n)` is the all-ones ket `|1…1⟩`. -/
@@ -115,6 +89,12 @@ theorem tensorState_smul_right {j k : ℕ} (c : ℂ) (ψ : QVector j) (φ : QVec
   simp only [tensorState, Matrix.smul_apply, smul_eq_mul]
   ring
 
+theorem tensorState_add_left {j k : ℕ} (ψ χ : QVector j) (φ : QVector k) :
+    tensorState (ψ + χ) φ = tensorState ψ φ + tensorState χ φ := by
+  funext r s
+  simp only [tensorState, Matrix.add_apply]
+  ring
+
 theorem tensorState_add_right {j k : ℕ} (ψ : QVector j) (φ χ : QVector k) :
     tensorState ψ (φ + χ) = tensorState ψ φ + tensorState ψ χ := by
   funext r s
@@ -142,12 +122,6 @@ theorem kron_tensorState {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
       (fun _ => rfl)]
   -- Factor ∑_(a,b) fa·ga·(fb·gb) into (∑_a fa·ga)·(∑_b fb·gb); `mul_mul_mul_comm` separates the factors.
   simp_rw [Fintype.sum_prod_type, mul_mul_mul_comm, ← Finset.mul_sum, ← Finset.sum_mul]
-
-/-- `(A⊗B)|a,b⟩ = (A|a⟩)⊗(B|b⟩)`: Kronecker product distributes over basis kets. -/
-theorem kron_mul_ket {j k : ℕ} (A : QMatrix j) (B : QMatrix k)
-    (a : Fin (2^j)) (b : Fin (2^k)) :
-    kron A B * ket (tensorIndexEquiv j k ⟨a, b⟩) = tensorState (A * ket a) (B * ket b) := by
-  rw [← ket_tensorState]; exact kron_tensorState A B (ket a) (ket b)
 
 -- ── Tensor product associativity (right-unit case) ───────────────────────────
 

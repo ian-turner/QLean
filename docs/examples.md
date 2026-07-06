@@ -4,6 +4,16 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 
 ---
 
+## `Examples/RzPlus.lean` — Rz rotation angles add
+
+**Theorem:** `rz_plus (θ φ : ℝ)` — `RzGate φ * RzGate θ ≈ RzGate (θ + φ)`: running `Rz θ` then `Rz φ` (the rightmost factor acts first) is a single Z-rotation by `θ + φ`.
+
+**Technique:** The one example proved directly at the matrix level rather than in the `QState` layer: unfold `QCircuit.Equiv`/`QCircuit.eval`/`Rz` with `simp`, then `ring_nf` and `Complex.exp_add` merge the diagonal phase factors entrywise. A minimal template for gate-fusion identities where both sides are literally the same `2×2` matrix.
+
+**Key lemmas/tactics used:** `QCircuit.Equiv`, `QCircuit.eval`, `Rz`, `Complex.exp_add`, `simp`, `ring_nf`
+
+---
+
 ## `Examples/RzCNOT.lean` — Commutativity of Rz and CNOT
 
 **Theorem:** `rz_commutes_cnot (θ : ℝ)` — `Rz(θ)` on qubit 0 (the CNOT control) commutes with CNOT.
@@ -23,7 +33,7 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 
 **Theorem:** `hadamardTransform_prepares (n : ℕ)` — `hadamardTransform n * ❘0⟩ ≈ uniformSuperState n`.
 
-**Technique:** Symbolic equational reasoning in the `QState` layer, like `rz_commutes_cnot`. Induction on `n` whose inductive step is a single `grw` chain (`rw` modulo `≈`, descending under the tensor/apply congruences): split the input `❘0⟩ ≈ ❘0⟩ ⊗ ❘0⟩` (`QState.ket_zero_tensor`), act componentwise (`QCircuit.par_action_tensor`), apply the inductive hypothesis to the low `n` qubits and `HGate_bit0` to the high qubit, landing on `uniformSuperState n ⊗ plusState = uniformSuperState (n+1)`. This replaces the earlier index-chasing through `tensorIndexEquiv`/`kron_mul_ket` and a concrete `1/√(2^n)` amplitude vector.
+**Technique:** Symbolic equational reasoning in the `QState` layer, like `rz_commutes_cnot`. Induction on `n` whose inductive step is a single `grw` chain (`rw` modulo `≈`, descending under the tensor/apply congruences): split the input `❘0⟩ ≈ ❘0⟩ ⊗ ❘0⟩` (`QState.ket_zero_tensor`), act componentwise (`QCircuit.par_action_tensor`), apply the inductive hypothesis to the low `n` qubits and `HGate_bit0` to the high qubit, landing on `uniformSuperState n ⊗ plusState = uniformSuperState (n+1)`. This replaces the earlier index-chasing through `tensorIndexEquiv` and a concrete `1/√(2^n)` amplitude vector.
 
 **Key lemmas/tactics used:** `QState.ket_zero_tensor`, `QCircuit.par_action_tensor`, `HGate_bit0`, `QCircuit.id_action`, `grw`
 
@@ -32,7 +42,7 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 ## `Examples/BellState.lean` — Bell state preparation
 
 **Definitions:**
-- `bellCircuit : QCircuit (1 + 1)` — `(HGate ⊗ (1 : QCircuit 1)) * CNOTGate`: a Hadamard on qubit 0 (the low qubit) followed by a CNOT with control qubit 0 and target qubit 1. Typed at `1 + 1` (not `2`) so the `QState.ket_zero_tensor 1 1` split matches the goal syntactically.
+- `bellCircuit : QCircuit (1 + 1)` — `CNOTGate * (HGate ⊗ (1 : QCircuit 1))`: a Hadamard on qubit 0 (the low qubit) followed by a CNOT with control qubit 0 and target qubit 1 (the rightmost factor acts first). Typed at `1 + 1` (not `2`) so the `QState.ket_zero_tensor 1 1` split matches the goal syntactically.
 - `bellState : QState (1 + 1)` — the symbolic Bell state `|Φ⁺⟩ = (❘00⟩ + ❘11⟩)/√2`. Unlike `uniformSuperState`, it is *entangled*: it does not factor as a tensor product.
 
 **Theorem:** `bellCircuit_prepares` — `bellCircuit * ❘00⟩ ≈ bellState`.
@@ -70,7 +80,7 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 
 **Theorems:** `wf_qftCircuit n`/`isUnitary_qftCircuit n` — the circuit is well-formed / unitary; **`qftCore_correct n j`** — `qftCore n * ❘j⟩ ≈ qftProductState n j`, the product-form correctness of the QFT network (before the reversal swaps); **`denote_qftProgram n`** — `(qftProgram n).denote ≈ qftCircuit n`, the acid test that the serializable program denotes to exactly the verified circuit (with `isUnitary_qftProgram n` following directly from `Program.denote_unitary`).
 
-**Technique (well-formedness):** Exercises the positional `embed` *constructor* rather than the structural `par`/`⊗`: each layer's H and controlled rotations live on non-adjacent qubits, which `par` cannot express. Every leaf is `QCircuit.embed qs (gate U)`, so well-formedness is structural — `WF (embed qs (gate U))` reduces to `IsUnitary U` (`isUnitary_H`/`isUnitary_controlled (isUnitary_Rk _)`/`isUnitary_SWAP`) with no `embed_unitary` at the use site; the local `wf_foldr_seq` carries the WF induction over each layer's gate list.
+**Technique (well-formedness):** Exercises the positional `embed` *constructor* rather than the structural `par`/`⊗`: each layer's H and controlled rotations live on non-adjacent qubits, which `par` cannot express. Every leaf is `QCircuit.embed qs (gate U)`, so well-formedness is structural — `WF (embed qs (gate U))` reduces to `IsUnitary U` (`isUnitary_H`/`isUnitary_controlled (isUnitary_Rk _)`/`isUnitary_SWAP`) with no `embed_unitary` at the use site; `wf_foldr_seq` (from `Circuit/Semantics.lean`) carries the WF induction over each layer's gate list.
 
 **Technique (correctness):** Kept **entirely** in the `QState` syntax layer (see the GHZ/Bell pattern) — no matrix entry appears in the example. Every gate-specific fact enters through the two phase-form action lemmas in `Gate/StateActions.lean`: `embed_H_action` (H splits a ket, the `❘1⟩` branch carrying the sign `(-1)ᵇ` as a phase) and `embed_controlled_Rk_action` (the embedded controlled rotation scales by `e^{2πi/2ᵏ}` when both addressed bits are set). Those wrap the gate-agnostic `QCircuit.embed_single_action`/`embed_diag_action` and the matrix-entry atoms `H_row0`/`H_row1`/`controlled_Rk_diag` (now in `Gate/Standard.lean`), so the example bottoms out only at index-arithmetic (`selectIdx_qftCR_merge`, `selectIdx_singleEmb_last_val`) and the scalar/binary-fraction arithmetic (`qft_frac` via `digit_recon`, `prodMerge1` via `Complex.exp_sum`). The per-stage actions are stated as symbolic phases: `qftCR_merge0` (fixes the top-bit-`0` branch) / `qftCR_merge1` (`crPhase`), with `hPhase` the Hadamard's contribution. Everything structural is symbolic: `stage_apply` inducts over the control list threading the rotation phase with `seq_action`/`apply_add`/`apply_smul` + `QState.smul_smul`; `qftStageTop_apply` combines `hPhase · prodMerge1` into the single output phase `qftPhase` via `qft_frac`, then repackages into a tensor with `basis_tensor_split` + `tensor_smul_right`/`tensor_add_right`; and `qftCore_correct` is a clean induction with `seq_action` → `qftStageTop_apply` → `par_action_tensor` → IH → `id_action`. The phase works out to exactly `e^{2πi·j/2^{m+1}}` (the binary fraction `0.jₘ…j₀`). The qubit-reversal swap layer is not yet folded into the correctness statement.
 

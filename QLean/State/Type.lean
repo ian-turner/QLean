@@ -16,18 +16,14 @@ inductive QState : ℕ → Type where
 
 namespace QState
 
-/-- Transport a state expression across a propositional equality of qubit counts. -/
-def castN (h : m = n) (s : QState m) : QState n := h ▸ s
-
 instance : Add (QState n)    := ⟨.add⟩
 instance : SMul ℂ (QState n) := ⟨.smul⟩
 instance : HMul (QCircuit n) (QState n) (QState n) := ⟨.apply⟩
 
 -- `s ⊗ t` is the tensor product of state expressions (qubit counts sum).
-infixl:70 " ⊗ " => QState.tensor
-
-abbrev bit0 : QState 1 := .basis ⟨0, by norm_num⟩
-abbrev bit1 : QState 1 := .basis ⟨1, by norm_num⟩
+-- `infixl:100` binds tighter than `*` (70) and `•` (73), matching Mathlib's `⊗ₖ`
+-- and the circuit-layer `⊗` in `Circuit/Type.lean`.
+infixl:100 " ⊗ " => QState.tensor
 
 end QState
 

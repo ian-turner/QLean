@@ -25,10 +25,6 @@ namespace QLean
 
 variable {n k : ℕ}
 
-/-- `(M * ket i) r 0 = M r i`: multiplying by a basis ket reads off a single column. -/
-theorem mul_ket_apply (M : QMatrix n) (i r : Fin (2 ^ n)) : (M * ket i) r 0 = M r i := by
-  simp [Matrix.mul_apply, ket_apply, mul_ite, Finset.sum_ite_eq', Finset.mem_univ]
-
 /-- A diagonal matrix acts on a basis ket by its eigenvalue: `M * ket i = M i i • ket i`. The
     general fact behind every diagonal gate's action on a computational basis state; the embedded
     specialization `embed_diag_mul_ket` is one line away. -/

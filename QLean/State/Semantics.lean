@@ -26,9 +26,6 @@ def eval : QState n → QVector n
 @[simp] theorem eval_apply (C : QCircuit n) (s : QState n) :
     eval (C * s) = QCircuit.eval C * eval s := rfl
 
-theorem eval_castN (h : m = n) (s : QState m) : eval (castN h s) = h ▸ eval s := by
-  cases h; rfl
-
 -- ── Normalization ─────────────────────────────────────────────────────────────
 
 /-- A state expression is normalized when its denotation is a unit vector. -/

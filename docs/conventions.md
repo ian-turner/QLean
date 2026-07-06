@@ -28,8 +28,8 @@ All definitions involving `ℝ`, `ℂ`, `Real.sqrt`, `Complex.exp`, or `Euclidea
 ## `@[simp]` set design
 
 **Mark `@[simp]`:**
-- `eval_id`, `eval_gate`, `eval_seq`, `eval_par`, `eval_castN` — unfolding rules for `eval`
-- `wf_id`, `wf_gate`, `wf_seq`, `wf_par` — iff-style WF decomposition lemmas (not the constructors)
+- `eval_id`, `eval_gate`, `eval_seq`, `eval_par`, `eval_embed`, `eval_castN` — unfolding rules for `eval`
+- `wf_id`, `wf_gate`, `wf_seq`, `wf_par`, `wf_embed` — iff-style WF decomposition lemmas (not the constructors)
 
 **Do not mark `@[simp]`:**
 - `kron_mul` — risks looping against matrix ring lemmas
@@ -47,7 +47,7 @@ ring   -- or norm_num for goals with Real.sqrt entries
 - Parametric gates: `Rz`, `Rx`, `Ry` (mixed case)
 - Gate circuits (abbrevs): `HGate`, `CNOTGate`, `RzGate θ`, etc.
 - Unitarity theorems: `isUnitary_H`, `isUnitary_CNOT`, `IsUnitary.kron`, etc.
-- `WF` decomposition lemmas: `wf_id`, `wf_gate`, `wf_seq`, `wf_par`
+- `WF` decomposition lemmas: `wf_id`, `wf_gate`, `wf_seq`, `wf_par`, `wf_embed`
 - QCircuit rewrite rules (under the `QCircuit` namespace): `QCircuit.seq_id_left`, `QCircuit.par_assoc`, `QCircuit.interchange_law`
 
 ## `QVector` representation

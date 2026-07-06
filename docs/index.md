@@ -26,7 +26,7 @@ QLean/
     Tensor.lean       — kron (reindexed Kronecker product) and its algebra
     Embed.lean        — embed (gate on selected, possibly non-adjacent qubits); embed_* algebra,
                         composition (embed_embed) + tensor split (embed_kron_factor), lowEmb/highEmb
-    Hilbert.lean      — QVector, ket, tensorState, act
+    Hilbert.lean      — QVector, ket, tensorState
     EmbedState.lean   — bridge: embed acting on basis kets (embed_diag_mul_ket, embed_single_mul_ket)
   Gate/
     Standard.lean     — H, X, Y, Z, S, T, Rz, Rx, Ry, Rk, CNOT, CZ, SWAP, Toffoli, controlled;
@@ -48,10 +48,11 @@ QLean/
     QASM.lean         — Program.toQASM : Program n → String (OpenQASM 3.0)
     Rewrite.lean      — denote_foldr_seq, denote_relabel (re-addressing), embed_congr
   State/
-    Type.lean         — QState inductive type, castN, ⊗ notation, bit0/bit1
+    Type.lean         — QState inductive type, ⊗ and ❘i⟩ notation
     Semantics.lean    — QState.eval, QState.IsNormalized
     Rewrite.lean      — QState.Equiv, congruence/distributivity lemmas, tensor/basis splits
 Examples/
+  RzPlus.lean         — sequential Z-rotations fuse: Rz(φ)·Rz(θ) ≈ Rz(θ+φ)
   RzCNOT.lean         — Rz(θ) commutes with CNOT on the control qubit
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition
   BellState.lean      — H then CNOT prepares the entangled Bell state |Φ⁺⟩
@@ -78,8 +79,8 @@ lake build           # also builds Examples
 import QLean
 open QLean
 
--- 2-qubit Bell circuit: H on qubit 0, then CNOT
-def bellCircuit : QCircuit (1 + 1) := (HGate ⊗ (1 : QCircuit 1)) * CNOTGate
+-- 2-qubit Bell circuit: H on qubit 0, then CNOT (the rightmost factor acts first)
+def bellCircuit : QCircuit (1 + 1) := CNOTGate * (HGate ⊗ (1 : QCircuit 1))
 
 theorem wf_bellCircuit : QCircuit.WF bellCircuit := by
   simp [bellCircuit, isUnitary_H, isUnitary_CNOT]

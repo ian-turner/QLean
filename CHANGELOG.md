@@ -4,6 +4,26 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-07-06] (25)
+
+### Added
+- `Basic/Hilbert.lean`: `tensorState_add_left` (completing `tensorState` bilinearity alongside `smul_left`/`smul_right`/`add_right`); `mul_ket_apply` moved here from `Basic/EmbedState.lean` as the single shared copy (the private duplicate in `Circuit/Rewrite.lean` is gone)
+- `Circuit/Semantics.lean`: `wf_foldr_seq` — the `WF` induction for `foldr`-built gate layers, promoted from `Examples/QFT.lean`
+- `docs/lean-api.md`: pitfall — dot notation on the `Angle := ℚ` abbrev fails when the receiver's inferred head type is already `Rat`; call `Angle.toQASM` qualified
+
+### Changed
+- `⊗` is now `infixl:100` in both layers (was 65 for `QCircuit.par`, 70 for `QState.tensor`), binding tighter than `*`/`•` and matching Mathlib's `⊗ₖ`; every existing use site was parenthesized, so nothing reparses
+- `State/Rewrite.lean`: `add_tensor_left`/`tensor_add_right`/`tensor_smul_right` are now one-line delegations to the `tensorState_*` Hilbert lemmas (matching `smul_tensor_left`)
+- `README.md`: expanded from a one-liner to description, build instructions, and docs pointers
+- `docs/`: synced drift — `❘i⟩` ket-notation claims (`api.md`), `HasEquiv` instance rather than `notation:50` for `≈` (`architecture.md`), Bell-circuit factor order in the `index.md` quick start and `examples.md`, `Examples/RzPlus.lean` documented in `index.md`/`examples.md`, `tensorState_assoc_one` documented, `eval_embed`/`wf_embed` added to the `@[simp]` lists in `conventions.md`
+- `Examples/RzPlus.lean`: docstring typo fixed (`--/` → `-/`) and wording tightened
+
+### Removed
+- Dead code: `QMatrix.act`/`act_def`/`act_mul`/`act_one`, `ket_inner`, `kron_mul_ket` (`Basic/Hilbert.lean`); `QState.castN`/`QState.eval_castN`, `QState.bit0`/`bit1` (`State/`); `CNOT_tensorState_smul_ket` (`Gate/Standard.lean`)
+- `lakefile.toml`: the unused, unpinned `LeanPrism` dependency (nothing imports it; its transitive `JsonSchemaToLean` also leaves the manifest)
+
+---
+
 ## [2026-07-06] (24)
 
 ### Fixed

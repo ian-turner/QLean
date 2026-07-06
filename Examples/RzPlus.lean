@@ -8,8 +8,8 @@ open QLean
 
 noncomputable section
 
-/-- `Rz(θ) followed by Rz(φ) is equivalent to Rz(θ + φ)`.
-    Proof works by reducing the statement to matrix equality. --/
+/-- `Rz θ` followed by `Rz φ` is equivalent to `Rz (θ + φ)`: Z-rotation angles add.
+    Proved by reducing the statement to matrix equality. -/
 theorem rz_plus (θ φ : ℝ) : (RzGate φ * RzGate θ ≈ RzGate (θ + φ)) := by
   simp [RzGate, QCircuit.Equiv, QCircuit.eval, Rz]
   ring_nf

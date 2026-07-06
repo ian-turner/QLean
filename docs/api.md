@@ -32,7 +32,6 @@ The Kronecker product lifted to `QMatrix`.
 - `kron_one_one` — `kron 1 1 = 1`
 - `kron_assoc` — associativity of `kron` up to `reindex` (used in `QCircuit.par_assoc`)
 - `IsUnitary.kron` — `IsUnitary A → IsUnitary B → IsUnitary (kron A B)`
-- `kron_mul_ket` — `kron A B * ket (tensorIndexEquiv j k ⟨a, b⟩) = tensorState (A * ket a) (B * ket b)`
 - `tensorIndexEquiv_symm_fst_val`, `tensorIndexEquiv_symm_snd_val` — decompose an index into its low and high parts
 - `tensorIndexEquiv_apply_val` — forward value `(tensorIndexEquiv j k p).val = p.1 + p.2 * 2^j` (companion to the symm decomposition)
 
@@ -78,7 +77,6 @@ inputs and intermediate states are (superpositions of) basis kets. Imports `Basi
 `Basic/Hilbert.lean`, and Mathlib's `Matrix.IsDiag`.
 
 **Key theorems:**
-- `mul_ket_apply` — `(M * ket i) r 0 = M r i` (reads off a single column)
 - `isDiag_mul_ket` — generic: any diagonal matrix acts on a basis ket by its eigenvalue, `M * ket i = M i i • ket i`. The reusable fact behind every diagonal gate's action (Rz, S, T, CZ, controlled-Rₖ), not just embedded ones
 - `embed_isDiag` — `Matrix.IsDiag U → Matrix.IsDiag (embed qs U)` (diagonal gates stay diagonal when embedded)
 - `embed_diag_mul_ket` — **the workhorse**: a diagonal gate, embedded, acts on `ket i` by the scalar `U (selectIdx qs i) (selectIdx qs i)`, with no superposition: `embed qs U * ket i = U (selectIdx qs i) (selectIdx qs i) • ket i`. One line from `isDiag_mul_ket` + `embed_isDiag`; collapses an entire layer of controlled-phase/rotation gates, however addressed, into a phase read off the index bits
@@ -95,21 +93,20 @@ inputs and intermediate states are (superpositions of) basis kets. Imports `Basi
 State-level layer: quantum states, basis kets, tensor product of states.
 
 **Key definitions:**
-- `QVector n` — `Matrix (Fin (2^n)) (Fin 1) ℂ`; column-vector representation of a quantum state
+- `QVector n` — `Matrix (Fin (2^n)) (Fin 1) ℂ`; column-vector representation of a quantum state (a gate acts by plain matrix multiplication `U * ψ`)
 - `IsNormalized ψ` — `∑ i, ‖ψ i 0‖^2 = 1`
-- `ket i : QVector n` — basis state at index `i`; `ket i j _ = if j = i then 1 else 0`; notation `|i⟩`
+- `ket i : QVector n` — basis state at index `i`; `ket i j _ = if j = i then 1 else 0` (no notation at this layer; the symbolic `❘i⟩` belongs to `QState.basis`)
 - `allOnes n : Fin (2^n)` — the all-ones index `2^n - 1` (top index of `Fin (2^n)`); `ket (allOnes n)` is `|1…1⟩`. `@[simp]` lemma `allOnes_val : (allOnes n).val = 2^n - 1`
 - `tensorState ψ φ : QVector (j+k)` — tensor product of two states
-- `act U ψ` — matrix-vector action `U * ψ`
 
 **Key theorems:**
 - `ket_normalized` — every basis ket is normalized
-- `ket_inner` — `(ket i)ᴴ * ket j = if i = j then 1 else 0`
+- `mul_ket_apply` — `(M * ket i) r 0 = M r i` (multiplying by a basis ket reads off a single column)
 - `ket_tensorState` — `tensorState (ket a) (ket b) = ket (tensorIndexEquiv j k ⟨a, b⟩)`
-- `tensorState_smul_left`/`tensorState_smul_right`/`tensorState_add_right` — linearity of `tensorState` in each factor
+- `tensorState_smul_left`/`tensorState_smul_right`/`tensorState_add_left`/`tensorState_add_right` — bilinearity of `tensorState`
+- `tensorState_assoc_one` — `tensorState (tensorState ψ φ) χ = tensorState ψ (tensorState φ χ)` for a 1-qubit third factor (types agree because `(j+k)+1 = j+(k+1)` definitionally); the fact behind `QState.tensor_assoc`
 - `kron_tensorState` — `kron A B * tensorState ψ φ = tensorState (A * ψ) (B * φ)`
 - `IsNormalized.tensorState` — tensor product preserves normalization
-- `act_mul`, `act_one`
 
 ---
 
@@ -131,7 +128,7 @@ All gate matrices follow the LSB-first qubit convention (see [conventions.md](co
 
 **Unitarity theorems:** `isUnitary_H`, `isUnitary_X`, `isUnitary_Y`, `isUnitary_Z`, `isUnitary_S`, `isUnitary_T`, `isUnitary_CNOT`, `isUnitary_CZ`, `isUnitary_SWAP`, `isUnitary_Toffoli`, `isUnitary_controlled`, `isUnitary_Rz`, `isUnitary_Rx`, `isUnitary_Ry`, `isUnitary_Rk`
 
-**State-action lemmas:** `Rz_ket_zero`, `Rz_ket_one`, `Rz_ket_diag`, `CNOT_ket_pair`, `CNOT_tensorState_smul_ket`; single-qubit actions `X_ket_zero`, `X_ket_one`, `Y_ket_zero`, `Y_ket_one`, `Z_ket_zero`, `Z_ket_one`, `S_ket_zero`, `S_ket_one`, `H_ket_zero`, `H_ket_one`
+**State-action lemmas:** `Rz_ket_zero`, `Rz_ket_one`, `Rz_ket_diag`, `CNOT_ket_pair`; single-qubit actions `X_ket_zero`, `X_ket_one`, `Y_ket_zero`, `Y_ket_one`, `Z_ket_zero`, `Z_ket_one`, `S_ket_zero`, `S_ket_one`, `H_ket_zero`, `H_ket_one`
 
 **QCircuit abbreviations** — `abbrev` wrappers that lift gate matrices into `QCircuit`:
 
@@ -149,7 +146,7 @@ All gate matrices follow the LSB-first qubit convention (see [conventions.md](co
 
 ## `Gate/StateActions.lean`
 
-Symbolic gate actions: `QState.Equiv` theorems for standard gates acting on `QState.bit0`/`bit1` and tensor products. These are the building blocks for correctness proofs that use `QCircuit.Equiv.basis_iff_state` to reduce a circuit equivalence to per-basis-state obligations.
+Symbolic gate actions: `QState.Equiv` theorems for standard gates acting on the single-qubit basis kets `❘0⟩`/`❘1⟩` and tensor products (the `_bit0`/`_bit1` theorem-name suffixes refer to the acted-on bit value). These are the building blocks for correctness proofs that use `QCircuit.Equiv.basis_iff_state` to reduce a circuit equivalence to per-basis-state obligations.
 
 Imports `Gate/Standard.lean`, `State/Rewrite.lean`, and `Circuit/Embed.lean` (for the embedded actions below); no circular dependency.
 
@@ -157,18 +154,18 @@ Imports `Gate/Standard.lean`, `State/Rewrite.lean`, and `Circuit/Embed.lean` (fo
 
 | Theorem | Statement |
 |---|---|
-| `XGate_bit0` | `XGate * bit0 ≈ bit1` |
-| `XGate_bit1` | `XGate * bit1 ≈ bit0` |
-| `YGate_bit0` | `YGate * bit0 ≈ I • bit1` |
-| `YGate_bit1` | `YGate * bit1 ≈ (-I) • bit0` |
-| `ZGate_bit0` | `ZGate * bit0 ≈ bit0` |
-| `ZGate_bit1` | `ZGate * bit1 ≈ (-1) • bit1` |
-| `SGate_bit0` | `SGate * bit0 ≈ bit0` |
-| `SGate_bit1` | `SGate * bit1 ≈ I • bit1` |
-| `HGate_bit0` | `HGate * bit0 ≈ (√2)⁻¹ • (bit0 + bit1)` |
-| `HGate_bit1` | `HGate * bit1 ≈ (√2)⁻¹ • (bit0 + (-1) • bit1)` |
+| `XGate_bit0` | `XGate * ❘0⟩ ≈ ❘1⟩` |
+| `XGate_bit1` | `XGate * ❘1⟩ ≈ ❘0⟩` |
+| `YGate_bit0` | `YGate * ❘0⟩ ≈ I • ❘1⟩` |
+| `YGate_bit1` | `YGate * ❘1⟩ ≈ (-I) • ❘0⟩` |
+| `ZGate_bit0` | `ZGate * ❘0⟩ ≈ ❘0⟩` |
+| `ZGate_bit1` | `ZGate * ❘1⟩ ≈ (-1) • ❘1⟩` |
+| `SGate_bit0` | `SGate * ❘0⟩ ≈ ❘0⟩` |
+| `SGate_bit1` | `SGate * ❘1⟩ ≈ I • ❘1⟩` |
+| `HGate_bit0` | `HGate * ❘0⟩ ≈ (√2)⁻¹ • (❘0⟩ + ❘1⟩)` |
+| `HGate_bit1` | `HGate * ❘1⟩ ≈ (√2)⁻¹ • (❘0⟩ + (-1) • ❘1⟩)` |
 
-Parameterized over the basis index rather than `bit0`/`bit1`:
+Parameterized over the basis index rather than fixed kets:
 - `RzGate_basis (θ : ℝ) (a : Fin (2^1))` — `RzGate θ * ❘a⟩ ≈ exp((2a-1)·iθ/2) • ❘a⟩` (phase `exp(-iθ/2)` on `❘0⟩`, `exp(iθ/2)` on `❘1⟩`)
 
 **Two-qubit actions:**
@@ -187,7 +184,7 @@ The `QCircuit` inductive type and the type-cast combinator.
 **Key definitions:**
 - `QCircuit n` — inductive type with constructors `id`, `gate`, `seq`, `par`, `embed`
   - `embed (qs : Fin k ↪ Fin n) (c : QCircuit k) : QCircuit n` — places the `k`-qubit sub-circuit `c` at the qubits selected by `qs` (arbitrary injection); the addressing primitive `par` cannot express
-  - Notation: `1` for `id`, `c₁ * c₂` for `seq`, `c₁ ⊗ c₂` for `par`; `embed` has no infix
+  - Notation: `1` for `id`, `c₁ * c₂` for `seq`, `c₁ ⊗ c₂` for `par` (`infixl:100`, binding tighter than `*` at 70, matching Mathlib's `⊗ₖ` and the state-layer `⊗`); `embed` has no infix
 - `QCircuit.castN (h : m = n) (c : QCircuit m) : QCircuit n` — transport a circuit along a propositional equality of qubit counts
 
 `castN` is used to state `QCircuit.par_assoc`: `par (par c₁ c₂) c₃` and `par c₁ (par c₂ c₃)` live in different types, so associativity is an eval-level statement involving `castN`.
@@ -205,6 +202,7 @@ Denotational semantics and well-formedness.
 
 **Key theorems:**
 - `QCircuit.eval_unitary` — `WF c → IsUnitary (eval c)`
+- `wf_foldr_seq` — a `foldr` of sequenced well-formed factors over a list is well-formed: the `WF` induction for gate layers built as `l.foldr (fun a acc => f a * acc) init` (used by the QFT stage/swap layers)
 
 ---
 
@@ -214,13 +212,11 @@ The `QState` inductive type and supporting infrastructure.
 
 **Key definitions:**
 - `QState n` — inductive syntax tree for `n`-qubit states; constructors:
-  - `.basis i : QState n` — computational basis state for `i : Fin (2^n)`; notation `|i⟩` (opt-in via `open scoped QLean.Notation`)
+  - `.basis i : QState n` — computational basis state for `i : Fin (2^n)`; notation `❘i⟩` (U+2758 light vertical bar; opt-in via `open scoped QLean.Notation`)
   - `.smul α s` — scalar multiple; `α • s` notation via `SMul ℂ` instance
   - `.add s t`  — superposition; `s + t` notation via `Add` instance
-  - `.tensor s t` — tensor product; `s ⊗ t` notation (qubit count sums)
+  - `.tensor s t` — tensor product; `s ⊗ t` notation (qubit count sums; `infixl:100`, aligned with the circuit-layer `⊗`)
   - `.apply C s` — circuit `C` acting on state expression `s`; `C * s` notation via `HMul (QCircuit n) (QState n) (QState n)` instance
-- `QState.castN (h : m = n) : QState m → QState n` — transport along a qubit-count equality
-- `QState.bit0 : QState 1`, `QState.bit1 : QState 1` — single-qubit `|0⟩` and `|1⟩` shorthands
 
 ---
 
@@ -229,7 +225,7 @@ The `QState` inductive type and supporting infrastructure.
 Denotational semantics and normalization for state expressions.
 
 **Key definitions:**
-- `QState.eval : QState n → QVector n` — denotational semantics; `@[simp]` lemmas `eval_basis`, `eval_smul`, `eval_add`, `eval_tensor`, `eval_apply`; plus the non-`simp` `eval_castN`
+- `QState.eval : QState n → QVector n` — denotational semantics; `@[simp]` lemmas `eval_basis`, `eval_smul`, `eval_add`, `eval_tensor`, `eval_apply`
 - `QState.IsNormalized s` — `QLean.IsNormalized (eval s)`; predicate lifted from `QVector`
 
 **Key theorems:**

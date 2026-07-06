@@ -293,3 +293,13 @@ the branch's expected type `IsUnitary (Prim.matrix Prim.H)` is not reduced to `I
 (`l.Nodup → Function.Injective l.get`), not `…get_injective`; call it as
 `List.Nodup.injective_get h` (dot notation `h.get_injective` mis-resolves through the
 `Nodup = Pairwise (· ≠ ·)` unfolding to a nonexistent `List.Pairwise.get_injective`).
+
+## Dot notation on an `abbrev` alias fails when the inferred head type is the underlying type
+
+`Angle := ℚ` is an `abbrev`, and dot notation resolves its namespace from the *head symbol of
+the receiver's inferred type* — which is whatever the elaborator landed on, not the ascription.
+`(0 : Angle).toQASM` works (the literal elaborates with `Angle` as its recorded type), but
+`((1:ℚ)/4 : Angle).toQASM` fails with "environment does not contain `Rat.toQASM`": the inner
+arithmetic forces the type down to the head `Rat`, and `Angle.toQASM` is not in the `Rat`
+namespace. Call it qualified — `Angle.toQASM ((1:ℚ)/4)` — or bind the value to a variable
+annotated `: Angle` first.

@@ -67,7 +67,7 @@ A `def` by structural recursion (not an `inductive`), which sidesteps dependent-
 
 ```lean
 def QCircuit.Equiv (c₁ c₂ : QCircuit n) : Prop := eval c₁ = eval c₂
-notation:50 c₁ " ≈ " c₂ => QCircuit.Equiv c₁ c₂
+@[reducible] instance : HasEquiv (QCircuit n) := ⟨Equiv⟩   -- `c₁ ≈ c₂`
 ```
 
 All circuit equalities reduce to matrix equality, closed by `ring`, `simp`, or basis-state reasoning.

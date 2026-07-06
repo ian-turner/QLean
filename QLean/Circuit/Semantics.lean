@@ -58,6 +58,18 @@ def QCircuit.WF : QCircuit n → Prop
 @[simp] theorem wf_embed {k : ℕ} {qs : Fin k ↪ Fin n} {c : QCircuit k} :
     QCircuit.WF (.embed qs c) ↔ QCircuit.WF c := Iff.rfl
 
+/-- Prepending a list of well-formed gates onto a well-formed initial circuit is well-formed:
+    the `WF` induction for circuits built as a `foldr` of sequenced factors (gate layers). -/
+theorem wf_foldr_seq {n : ℕ} {α : Type} (l : List α) (f : α → QCircuit n) (init : QCircuit n)
+    (hinit : QCircuit.WF init) (hf : ∀ a ∈ l, QCircuit.WF (f a)) :
+    QCircuit.WF (l.foldr (fun a acc => f a * acc) init) := by
+  induction l with
+  | nil => exact hinit
+  | cons x xs ih =>
+    simp only [List.foldr_cons]
+    exact ⟨hf x (List.mem_cons.mpr (Or.inl rfl)),
+           ih (fun a ha => hf a (List.mem_cons.mpr (Or.inr ha)))⟩
+
 -- ── WF implies unitarity ──────────────────────────────────────────────────────
 
 /-- A well-formed circuit evaluates to a unitary matrix. -/

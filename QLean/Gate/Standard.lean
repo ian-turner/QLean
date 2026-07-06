@@ -319,14 +319,6 @@ theorem Rz_ket_diag (θ : ℝ) (a : Fin 2) : Rz θ * ket a = Rz θ a a • ket a
   · rw [Rz_ket_zero]; simp [Rz, Matrix.cons_val_zero]
   · rw [Rz_ket_one]; simp [Rz, Matrix.cons_val_one]
 
-/-- When the control qubit is in state `c • |a⟩`, CNOT acts on `|a,b⟩` by XORing the target.
-    Uses `Fin (2^1)` explicitly so that `ket_tensorState` can infer `j = k = 1` without having
-    to solve the non-linear equation `2 = 2^?j` from a compound expression type `Fin 2`. -/
-theorem CNOT_tensorState_smul_ket (c : ℂ) (a b : Fin (2^1)) :
-    CNOT * tensorState (c • ket a) (ket b) = tensorState (c • ket a) (ket (a + b)) := by
-  rw [tensorState_smul_left, Matrix.mul_smul, ket_tensorState, CNOT_ket_pair]
-  conv_rhs => rw [tensorState_smul_left, ket_tensorState]
-
 -- ── Single-qubit basis-state actions ──────────────────────────────────────────
 
 theorem X_ket_zero : X * ket (0 : Fin 2) = ket 1 := by

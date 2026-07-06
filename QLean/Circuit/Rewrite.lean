@@ -69,10 +69,6 @@ theorem par_assoc (c₁ : QCircuit j) (c₂ : QCircuit k) (c₃ : QCircuit l) :
 
 -- ── Basis characterization ───────────────────────────────────────────────────
 
-private lemma mul_ket_apply {n : ℕ} (M : QMatrix n) (i r : Fin (2^n)) :
-    (M * ket i) r 0 = M r i := by
-  simp [Matrix.mul_apply, ket_apply, mul_ite, Finset.sum_ite_eq', Finset.mem_univ]
-
 /-- Two circuits are equivalent iff they act identically on every computational basis state. -/
 theorem Equiv.basis_iff {n : ℕ} (c₁ c₂ : QCircuit n) :
     c₁ ≈ c₂ ↔ ∀ i : Fin (2^n), eval c₁ * ket i = eval c₂ * ket i := by

@@ -21,10 +21,11 @@ def QCircuit.castN (h : m = n) (c : QCircuit m) : QCircuit n := h ▸ c
 
 -- `c₁ * c₂` sequences c₂ then c₁ (matrix-multiplication order: the rightmost factor
 -- acts first); `c₁ ⊗ c₂` places them in parallel; `1` is the identity.
--- `*` has precedence 70 and `⊗` has precedence 65, so `*` binds tighter.
+-- `⊗` is `infixl:100`, binding tighter than `*` (70), matching Mathlib's `⊗ₖ`
+-- and the state-layer `⊗` in `State/Type.lean`.
 instance : One  (QCircuit n)                         := ⟨.id⟩
 instance : HMul (QCircuit n) (QCircuit n) (QCircuit n) := ⟨.seq⟩
 
-infixl:65 " ⊗ " => QCircuit.par
+infixl:100 " ⊗ " => QCircuit.par
 
 end QLean

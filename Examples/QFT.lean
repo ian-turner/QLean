@@ -36,19 +36,6 @@ open QLean
 
 noncomputable section
 
--- ── Folding a list of gates into a sequential circuit preserves WF ────────────
-
-/-- Prepending a list of well-formed gates onto a well-formed initial circuit is well-formed. -/
-theorem wf_foldr_seq {n : ℕ} {α : Type} (l : List α) (f : α → QCircuit n) (init : QCircuit n)
-    (hinit : QCircuit.WF init) (hf : ∀ a ∈ l, QCircuit.WF (f a)) :
-    QCircuit.WF (l.foldr (fun a acc => f a * acc) init) := by
-  induction l with
-  | nil => exact hinit
-  | cons x xs ih =>
-    simp only [List.foldr_cons]
-    exact ⟨hf x (List.mem_cons.mpr (Or.inl rfl)),
-           ih (fun a ha => hf a (List.mem_cons.mpr (Or.inr ha)))⟩
-
 -- ── One QFT layer: H on the top qubit, then controlled rotations ──────────────
 
 /-- The controlled-rotation gate between the top qubit `Fin.last m` and a lower qubit `c`,
