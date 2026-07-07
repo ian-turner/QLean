@@ -358,6 +358,7 @@ The `Program` IR and its denotation. Imports `Program/Basis.lean`, `Circuit/Sema
 - `Program.denote_WF (p) : p.denote.WF` and `Program.denote_unitary (p) : IsUnitary (eval p.denote)` — **unconditional** (always-unitary primitives + injective operands ⇒ no side condition)
 - `Program.ofList (g : Prim) (qs : List (Fin n)) : Option (Program n)` — smart constructor; succeeds iff `qs.length = g.arity ∧ qs.Nodup` (both decidable), building the `↪` from the deduped list
 - `Program.relabel (f : Fin n ↪ Fin m) : Program n → Program m` — re-address every gate through `f` (move a sub-block onto a chosen qubit window: `prim g qs ↦ prim g (qs.trans f)`)
+- `⟦p⟧` — scoped notation (`QLean.Notation`) for `Program.denote p`; `priority := high` shadows core's `Quotient.mk` brackets within the opened scope (see `docs/lean-api.md`)
 
 ## `Program/QASM.lean`
 
@@ -372,8 +373,12 @@ The emitter is **trusted** (we do not formalize OpenQASM's semantics); what is v
 
 ## `Program/Rewrite.lean`
 
-Equational lemmas about `Program.denote`, used to relate a program to a target circuit. Imports `Program/Type.lean`, `Circuit/Embed.lean`.
+Equational lemmas about `Program.denote` and program-level equivalence. Imports `Program/Type.lean`, `Circuit/Embed.lean`.
 
+- `p ⇓ c` — scoped notation (`QLean.Notation`): program `p` denotes a circuit equivalent to `c`. Pure sugar for `⟦p⟧ ≈ c` (no new relation — the head is the circuit-level `≈`, so `calc`/`grw`/`.symm`/`.trans` and all `≈`-lemmas apply directly; goals may display in the desugared form)
 - `QCircuit.embed_congr (qs) (h : c₁ ≈ c₂) : embed qs c₁ ≈ embed qs c₂` — embedding respects `≈` (`@[gcongr]`, so `grw` can rewrite under an `embed`)
-- `Program.denote_foldr_seq (l) (P) (init)` — `denote` commutes with a right-fold of sequenced gates: `(l.foldr (P · * ·) init).denote = l.foldr ((P ·).denote * ·) init.denote` (an equality; each step is `denote_seq`)
-- `Program.denote_relabel (f) (p) : (p.relabel f).denote ≈ embed f p.denote` — re-addressing denotes to the embedding of the denotation (via `embed_id`/`embed_comp`/`embed_seq`)
+- `Program.denote_foldr_seq (l) (P) (init)` — `denote` commutes with a right-fold of sequenced gates: `⟦l.foldr (P · * ·) init⟧ = l.foldr (⟦P ·⟧ * ·) ⟦init⟧` (an equality; each step is `denote_seq`)
+- `Program.denote_relabel (f) (p) : p.relabel f ⇓ embed f ⟦p⟧` — re-addressing denotes to the embedding of the denotation (via `embed_id`/`embed_comp`/`embed_seq`)
+- `Program.Equiv (p q) : Prop` — `⟦p⟧ ≈ ⟦q⟧`, with `HasEquiv` instance so `p ≈ q` works at the program layer; `Equiv.refl`/`symm`/`trans` + `Trans` instance mirror `QCircuit.Equiv`
+- `Program.denote_congr (h : p ≈ q) : ⟦p⟧ ≈ ⟦q⟧`, `Program.Equiv.seq_congr`, `Program.Equiv.relabel_congr` — congruence kit, all `@[gcongr]` (program-level `grw` rewriting)
+- `Program.seq_id_left`/`seq_id_right`/`seq_assoc` — monoid laws for `*` up to `≈`, delegating to the `QCircuit` counterparts

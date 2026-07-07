@@ -208,11 +208,18 @@ and the only noncomputable part.
   omitting `par` keeps `denote` a clean monoid homomorphism (`denote (p*q) = denote p * denote q`,
   `denote 1 = 1`). Where a sub-block must be placed on a qubit window (e.g. the QFT's recursive
   `core ⊗ id₁`), `Program.relabel (f : Fin n ↪ Fin m)` re-addresses every gate through `f`, with
-  `denote_relabel : denote (relabel f p) ≈ embed f (denote p)` bridging it to the `embed` algebra.
+  `denote_relabel : p.relabel f ⇓ embed f ⟦p⟧` bridging it to the `embed` algebra.
+- *Denotation notation and program equivalence.* Scoped in `QLean.Notation`: `⟦p⟧` is
+  `Program.denote p` (declared `priority := high` to shadow core's `Quotient.mk` brackets), and
+  `p ⇓ c` ("`p` denotes a circuit equivalent to `c`") is *pure sugar* for `⟦p⟧ ≈ c` — no new
+  relation, so every circuit-`≈` tool (`calc`, `grw`, `.symm`/`.trans`) applies unchanged.
+  `Program.Equiv` (`p ≈ q` iff `⟦p⟧ ≈ ⟦q⟧`, in `Program/Rewrite.lean`) adds the program-level
+  equivalence with a `@[gcongr]` congruence kit, so peephole-style program rewriting can stay
+  in the IR layer and drop to circuits only at the leaves.
 
 **Trust boundary.** `Program.toQASM` is *trusted* — we do not formalize OpenQASM's semantics.
 Everything upstream is verified: `denote_unitary` unconditionally, and per-program
-`denote p ≈ target` theorems (e.g. `denote_qftProgram : denote (qftProgram n) ≈ qftCircuit n`,
+`p ⇓ target` theorems (e.g. `denote_qftProgram : qftProgram n ⇓ qftCircuit n`,
 the acid test in `Examples/QFT.lean`) tie a syntactic program to its intended unitary.
 Out of scope (v2+): measurement / classical control, hardware topology, optimization passes,
 a QASM *parser*, and a computable simulator.

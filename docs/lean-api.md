@@ -303,3 +303,14 @@ the receiver's inferred type* — which is whatever the elaborator landed on, no
 arithmetic forces the type down to the head `Rat`, and `Angle.toQASM` is not in the `Rat`
 namespace. Call it qualified — `Angle.toQASM ((1:ℚ)/4)` — or bind the value to a variable
 annotated `: Angle` first.
+
+## Overloading `⟦·⟧` requires `(priority := high)` — the `Quotient.mk` parse never fails
+
+Core declares `notation:max "⟦" a "⟧" => Quotient.mk _ a`. The `Setoid` argument is an
+**explicit hole**, not an instance-search — so `⟦x⟧ : Quotient ?s` elaborates against *any*
+(or no) expected type, leaving `?s` unassigned. A same-priority overload therefore produces
+"Ambiguous term … : QCircuit n / … : Quotient ?m" at every unpinned use site (theorem
+statements, `def` bodies); type-directed disambiguation never rules the quotient parse out.
+Declare the overload with `scoped notation:max (priority := high) …` — the higher-priority
+parser shadows core's entirely within the opened scope (write `Quotient.mk _ x` explicitly
+if a quotient is ever needed there). Used for `⟦p⟧` = `Program.denote p` in `Program/Type.lean`.

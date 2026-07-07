@@ -372,13 +372,13 @@ def qftProgram (n : ℕ) : Program n := swapLayerProg n * qftCoreProg n
 
 -- ── Each program piece denotes to the corresponding circuit ───────────────────
 
-theorem denote_qftStageTopProg (m : ℕ) : (qftStageTopProg m).denote = qftStageTop m := by
+theorem denote_qftStageTopProg (m : ℕ) : ⟦qftStageTopProg m⟧ = qftStageTop m := by
   rw [qftStageTopProg, Program.denote_foldr_seq]; rfl
 
-theorem denote_swapLayerProg (n : ℕ) : (swapLayerProg n).denote = swapLayer n := by
+theorem denote_swapLayerProg (n : ℕ) : ⟦swapLayerProg n⟧ = swapLayer n := by
   rw [swapLayerProg, Program.denote_foldr_seq]; rfl
 
-theorem denote_qftCoreProg : (n : ℕ) → (qftCoreProg n).denote ≈ qftCore n
+theorem denote_qftCoreProg : (n : ℕ) → qftCoreProg n ⇓ qftCore n
   | 0 => by rfl
   | (n + 1) => by
     have ih := denote_qftCoreProg n
@@ -388,14 +388,17 @@ theorem denote_qftCoreProg : (n : ℕ) → (qftCoreProg n).denote ≈ qftCore n
          QCircuit.par_as_embed, QCircuit.embed_id, QCircuit.seq_id_right]
 
 /-- **Acid test.** The serializable `qftProgram n` denotes to exactly the verified `qftCircuit n`. -/
-theorem denote_qftProgram (n : ℕ) : (qftProgram n).denote ≈ qftCircuit n := by
+theorem denote_qftProgram (n : ℕ) : qftProgram n ⇓ qftCircuit n := by
   show (swapLayerProg n).denote * (qftCoreProg n).denote ≈ swapLayer n * qftCore n
   rw [denote_swapLayerProg]
   grw [denote_qftCoreProg n]
 
 /-- The program is unitary directly via `Program.denote_unitary` (and agrees with `qftCircuit`). -/
-theorem isUnitary_qftProgram (n : ℕ) : IsUnitary (QCircuit.eval (qftProgram n).denote) :=
+theorem isUnitary_qftProgram (n : ℕ) : IsUnitary (QCircuit.eval ⟦qftProgram n⟧) :=
   Program.denote_unitary _
+
+def main : IO Unit :=
+  IO.println "test"
 
 end
 

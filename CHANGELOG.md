@@ -4,6 +4,18 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-07-06] (26)
+
+### Added
+- Denotation notation, scoped in `QLean.Notation`: `⟦p⟧` for `Program.denote p` (`Program/Type.lean`) and `p ⇓ c` for "`p` denotes a circuit equivalent to `c`" (`Program/Rewrite.lean`; pure sugar for `⟦p⟧ ≈ c`, so all circuit-`≈` machinery applies unchanged)
+- `Program.Equiv` (`p ≈ q` iff `⟦p⟧ ≈ ⟦q⟧`) with `HasEquiv`/`Trans` instances, `Equiv.refl`/`symm`/`trans`, a `@[gcongr]` congruence kit (`denote_congr`, `Equiv.seq_congr`, `Equiv.relabel_congr`), and monoid laws `seq_id_left`/`seq_id_right`/`seq_assoc` — enables program-level `calc`/`grw` rewriting
+- `docs/lean-api.md`: pitfall — overloading `⟦·⟧` needs `(priority := high)`; core's `Quotient.mk _ a` takes the `Setoid` as an explicit hole, so the quotient parse elaborates against any expected type and same-priority overloads are ambiguous at every unpinned use
+
+### Changed
+- `Program.denote_relabel`/`denote_foldr_seq` and the QFT program-bridge theorems (`denote_qftCoreProg`, `denote_qftProgram`, `isUnitary_qftProgram`, …) restated with `⟦·⟧`/`⇓` (same propositions — the notation is definitional sugar; proofs untouched)
+
+---
+
 ## [2026-07-06] (25)
 
 ### Added

@@ -75,3 +75,14 @@ def Program.ofList (g : Prim) (qs : List (Fin n)) : Option (Program n) :=
     none
 
 end QLean
+
+namespace QLean.Notation
+
+/-- `⟦p⟧` is the circuit the program `p` denotes (`Program.denote p`). Opt in with
+    `open scoped QLean.Notation`. Declared `priority := high` to shadow core's `⟦·⟧`
+    for `Quotient.mk` (whose explicit-`Setoid` hole elaborates against *any* expected
+    type, so the two parses would otherwise be ambiguous). QLean uses no quotients;
+    where one is ever needed under this scope, write `Quotient.mk _ x` explicitly. -/
+scoped notation:max (priority := high) "⟦" p "⟧" => QLean.Program.denote p
+
+end QLean.Notation
