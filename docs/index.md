@@ -71,6 +71,7 @@ See [api.md](api.md) for per-module detail.
 lake exe cache get   # fetch prebuilt Mathlib oleans
 lake build QLean     # build the library
 lake build           # also builds Examples
+lake exe qft         # print the verified 8-qubit QFT as OpenQASM 3.0
 ```
 
 ## Quick start

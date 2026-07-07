@@ -397,12 +397,16 @@ theorem denote_qftProgram (n : ℕ) : qftProgram n ⇓ qftCircuit n := by
 theorem isUnitary_qftProgram (n : ℕ) : IsUnitary (QCircuit.eval ⟦qftProgram n⟧) :=
   Program.denote_unitary _
 
-def main : IO Unit :=
-  IO.println "test"
-
 end
 
 end QLean.Examples
+
+/-- Entry point for `lake exe qft`: print the OpenQASM 3.0 source of the 8-qubit QFT.
+    Everything upstream of the (trusted) emitter is verified — `denote_qftProgram` ties
+    this exact program to `qftCircuit`. Must live at top level (outside the namespace)
+    for Lake to find it. -/
+def main : IO Unit :=
+  IO.println (QLean.Examples.qftProgram 8).toQASM
 
 
 

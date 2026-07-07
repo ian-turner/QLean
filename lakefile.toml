@@ -1,7 +1,7 @@
 name = "QLean"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["QLean"]
+defaultTargets = ["QLean", "Examples"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -19,3 +19,7 @@ name = "QLean"
 
 [[lean_lib]]
 name = "Examples"
+
+[[lean_exe]]
+name = "qft"
+root = "Examples.QFT"

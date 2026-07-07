@@ -4,6 +4,17 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-07-06] (27)
+
+### Added
+- `lake exe qft` — executable target (`[[lean_exe]] qft` in `lakefile.toml`, top-level `main` in `Examples/QFT.lean`) printing the OpenQASM 3.0 source of the verified 8-qubit QFT via `(qftProgram 8).toQASM` (8 `h`, 28 `cp`, 4 `swap`); replaces the placeholder `main` stub, which also sat inside the namespace where Lake cannot find an entry point
+
+### Changed
+- `defaultTargets` now includes `Examples` — `lake build` previously built only the `QLean` lib, despite CLAUDE.md/`docs/index.md` documenting otherwise
+- `docs/examples.md`: `denote_qftProgram` statement synced to the `⇓` notation (missed in the previous commit's sweep)
+
+---
+
 ## [2026-07-06] (26)
 
 ### Added
