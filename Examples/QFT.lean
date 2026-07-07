@@ -382,14 +382,14 @@ theorem denote_qftCoreProg : (n : ℕ) → qftCoreProg n ⇓ qftCore n
   | 0 => by rfl
   | (n + 1) => by
     have ih := denote_qftCoreProg n
-    show ((qftCoreProg n).relabel (lowEmb n 1)).denote * (qftStageTopProg n).denote
+    show ⟦(qftCoreProg n).relabel (lowEmb n 1)⟧ * ⟦qftStageTopProg n⟧
         ≈ (qftCore n ⊗ (1 : QCircuit 1)) * qftStageTop n
     grw [Program.denote_relabel (lowEmb n 1) (qftCoreProg n), ih, denote_qftStageTopProg,
          QCircuit.par_as_embed, QCircuit.embed_id, QCircuit.seq_id_right]
 
 /-- **Acid test.** The serializable `qftProgram n` denotes to exactly the verified `qftCircuit n`. -/
 theorem denote_qftProgram (n : ℕ) : qftProgram n ⇓ qftCircuit n := by
-  show (swapLayerProg n).denote * (qftCoreProg n).denote ≈ swapLayer n * qftCore n
+  show ⟦swapLayerProg n⟧ * ⟦qftCoreProg n⟧ ≈ swapLayer n * qftCore n
   rw [denote_swapLayerProg]
   grw [denote_qftCoreProg n]
 

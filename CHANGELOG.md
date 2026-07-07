@@ -4,6 +4,14 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-07-06] (28)
+
+### Changed
+- Swept the remaining `Program.denote` applications into the `⟦·⟧` notation: the `denote_id`/`denote_prim`/`denote_seq`/`denote_WF`/`denote_unitary` statements in `Program/Type.lean`, the `show` lines in `denote_relabel` (`Program/Rewrite.lean`) and the QFT bridge proofs (`Examples/QFT.lean`), plus statement quotes in `docs/api.md`/`docs/architecture.md` and the `Program/QASM.lean` docstring (`denote ≈ target` → `p ⇓ target`). Same terms — proofs unaffected.
+- The `⟦·⟧` notation block moved from the end of `Program/Type.lean` to directly after the `denote` definition (nested `namespace Notation` + `open scoped`), so the defining file can use it. Still `QLean.Notation`-scoped. What remains as `.denote` is only the definition's own `seq` equation, the two notations' expansion targets, and `Angle.denote` (a different function, `Angle → ℝ`)
+
+---
+
 ## [2026-07-06] (27)
 
 ### Added

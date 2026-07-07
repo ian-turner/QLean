@@ -9,7 +9,8 @@ named basis-gate applications, each placed at a chosen (injective) set of qubits
 `QCircuit` it stores no matrices — only `Prim` names, symbolic `Angle`s, and qubit indices —
 so it serializes to OpenQASM (see `Program/QASM.lean`).
 
-`denote : Program n → QCircuit n` bridges to the semantic layer for reasoning; it is the
+`denote : Program n → QCircuit n` (notation `⟦p⟧`, scoped in `QLean.Notation`) bridges to
+the semantic layer for reasoning; it is the
 *only* noncomputable part. Because every `prim` is an always-unitary named gate and its
 operands form an injection, `denote_unitary` holds with **no** well-formedness hypothesis.
 -/
@@ -37,23 +38,36 @@ noncomputable def Program.denote : Program n → QCircuit n
   | .prim g qs => QCircuit.embed qs (.gate g.matrix)
   | .seq p q   => p.denote * q.denote
 
-@[simp] theorem Program.denote_id : (1 : Program n).denote = 1 := rfl
+namespace Notation
+
+/-- `⟦p⟧` is the circuit the program `p` denotes (`Program.denote p`). Opt in with
+    `open scoped QLean.Notation`. Declared `priority := high` to shadow core's `⟦·⟧`
+    for `Quotient.mk` (whose explicit-`Setoid` hole elaborates against *any* expected
+    type, so the two parses would otherwise be ambiguous). QLean uses no quotients;
+    where one is ever needed under this scope, write `Quotient.mk _ x` explicitly. -/
+scoped notation:max (priority := high) "⟦" p "⟧" => QLean.Program.denote p
+
+end Notation
+
+open scoped QLean.Notation
+
+@[simp] theorem Program.denote_id : ⟦(1 : Program n)⟧ = 1 := rfl
 
 @[simp] theorem Program.denote_prim (g : Prim) (qs : Fin g.arity ↪ Fin n) :
-    (Program.prim g qs).denote = QCircuit.embed qs (.gate g.matrix) := rfl
+    ⟦Program.prim g qs⟧ = QCircuit.embed qs (.gate g.matrix) := rfl
 
 @[simp] theorem Program.denote_seq (p q : Program n) :
-    (p * q).denote = p.denote * q.denote := rfl
+    ⟦p * q⟧ = ⟦p⟧ * ⟦q⟧ := rfl
 
 /-- The denotation of every program is well-formed: gates are always-unitary primitives and
     operands are always injective, so there is no side condition to discharge. -/
-theorem Program.denote_WF : (p : Program n) → p.denote.WF
+theorem Program.denote_WF : (p : Program n) → ⟦p⟧.WF
   | .id       => trivial
   | .prim g _ => g.isUnitary
   | .seq p q  => ⟨p.denote_WF, q.denote_WF⟩
 
 /-- Every program denotes to a unitary matrix — unconditionally. -/
-theorem Program.denote_unitary (p : Program n) : IsUnitary (QCircuit.eval p.denote) :=
+theorem Program.denote_unitary (p : Program n) : IsUnitary (QCircuit.eval ⟦p⟧) :=
   QCircuit.eval_unitary _ p.denote_WF
 
 /-- Re-address a program through an injection `f`: every gate placed at qubits `qs` is moved to
@@ -75,14 +89,3 @@ def Program.ofList (g : Prim) (qs : List (Fin n)) : Option (Program n) :=
     none
 
 end QLean
-
-namespace QLean.Notation
-
-/-- `⟦p⟧` is the circuit the program `p` denotes (`Program.denote p`). Opt in with
-    `open scoped QLean.Notation`. Declared `priority := high` to shadow core's `⟦·⟧`
-    for `Quotient.mk` (whose explicit-`Setoid` hole elaborates against *any* expected
-    type, so the two parses would otherwise be ambiguous). QLean uses no quotients;
-    where one is ever needed under this scope, write `Quotient.mk _ x` explicitly. -/
-scoped notation:max (priority := high) "⟦" p "⟧" => QLean.Program.denote p
-
-end QLean.Notation

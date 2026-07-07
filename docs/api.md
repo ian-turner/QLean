@@ -355,7 +355,7 @@ The `Program` IR and its denotation. Imports `Program/Basis.lean`, `Circuit/Sema
 - `Program : ℕ → Type` — `id`, `prim (g : Prim) (Fin g.arity ↪ Fin n)`, `seq`; `1 = id`, `* = seq` (no `par` — flat, QASM-aligned). Stores no matrices, only names/angles/indices (computable, serializable).
 - `Program.denote : Program n → QCircuit n` — `prim g qs ↦ embed qs (gate g.matrix)`, `seq ↦ *`, `id ↦ 1` (noncomputable; the only bridge to the semantic layer)
 - `Program.denote_id`/`denote_prim`/`denote_seq` — `@[simp]` homomorphism lemmas
-- `Program.denote_WF (p) : p.denote.WF` and `Program.denote_unitary (p) : IsUnitary (eval p.denote)` — **unconditional** (always-unitary primitives + injective operands ⇒ no side condition)
+- `Program.denote_WF (p) : ⟦p⟧.WF` and `Program.denote_unitary (p) : IsUnitary (eval ⟦p⟧)` — **unconditional** (always-unitary primitives + injective operands ⇒ no side condition)
 - `Program.ofList (g : Prim) (qs : List (Fin n)) : Option (Program n)` — smart constructor; succeeds iff `qs.length = g.arity ∧ qs.Nodup` (both decidable), building the `↪` from the deduped list
 - `Program.relabel (f : Fin n ↪ Fin m) : Program n → Program m` — re-address every gate through `f` (move a sub-block onto a chosen qubit window: `prim g qs ↦ prim g (qs.trans f)`)
 - `⟦p⟧` — scoped notation (`QLean.Notation`) for `Program.denote p`; `priority := high` shadows core's `Quotient.mk` brackets within the opened scope (see `docs/lean-api.md`)

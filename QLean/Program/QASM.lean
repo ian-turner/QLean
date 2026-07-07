@@ -6,7 +6,7 @@ import QLean.Program.Type
 `Program.toQASM` compiles a program to an OpenQASM 3.0 source string. It is fully
 *computable* and reads only gate names, symbolic angles, and qubit indices — never a matrix,
 never `denote`. We do not formalize OpenQASM's semantics, so the emitter is trusted; what is
-verified is everything upstream of it (`denote_unitary`, and per-program `denote ≈ target`
+verified is everything upstream of it (`denote_unitary`, and per-program `p ⇓ target`
 theorems).
 -/
 

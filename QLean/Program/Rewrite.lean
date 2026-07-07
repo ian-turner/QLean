@@ -74,9 +74,9 @@ theorem denote_relabel (f : Fin n ↪ Fin m) (p : Program n) :
   | id => exact (QCircuit.embed_id f).symm
   | prim g qs => exact (QCircuit.embed_comp f qs (.gate g.matrix)).symm
   | seq p q ihp ihq =>
-    show (relabel f p).denote * (relabel f q).denote ≈ QCircuit.embed f (p.denote * q.denote)
+    show ⟦relabel f p⟧ * ⟦relabel f q⟧ ≈ QCircuit.embed f (⟦p⟧ * ⟦q⟧)
     grw [ihp, ihq]
-    exact (QCircuit.embed_seq f p.denote q.denote).symm
+    exact (QCircuit.embed_seq f ⟦p⟧ ⟦q⟧).symm
 
 -- ── Program equivalence ───────────────────────────────────────────────────────
 

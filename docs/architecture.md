@@ -205,8 +205,8 @@ and the only noncomputable part.
   rebuilds the `↪` from a raw operand list with decidable length+`Nodup` checks (the path for
   parsed / model-emitted programs).
 - *No `par`.* OpenQASM is flat; disjoint-qubit `prim`s under `seq` cover tensor placement, and
-  omitting `par` keeps `denote` a clean monoid homomorphism (`denote (p*q) = denote p * denote q`,
-  `denote 1 = 1`). Where a sub-block must be placed on a qubit window (e.g. the QFT's recursive
+  omitting `par` keeps `denote` a clean monoid homomorphism (`⟦p*q⟧ = ⟦p⟧ * ⟦q⟧`,
+  `⟦1⟧ = 1`). Where a sub-block must be placed on a qubit window (e.g. the QFT's recursive
   `core ⊗ id₁`), `Program.relabel (f : Fin n ↪ Fin m)` re-addresses every gate through `f`, with
   `denote_relabel : p.relabel f ⇓ embed f ⟦p⟧` bridging it to the `embed` algebra.
 - *Denotation notation and program equivalence.* Scoped in `QLean.Notation`: `⟦p⟧` is
