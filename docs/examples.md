@@ -16,6 +16,24 @@ The N&C Exercise 4.13 "circuit identities" (`HXH ≈ Z`, `HZH ≈ X`, `HYH = −
 
 The payoff theorems are proved **purely at the circuit level** by `grw`-rewriting sub-circuits with earlier equivalences — no basis kets: `t_pow_8` (`T⁸ ≈ 1`, via `T² ≈ S` → `S² ≈ Z` → `Z² ≈ 1`) and `x_eq_h_ss_h` (`H S² H ≈ X`, via `S² ≈ Z` then `HZH ≈ X`). This is the intended equational-reasoning workflow for derived identities.
 
+## `Examples/SwapFromCNOT.lean` — SWAP from three CNOTs
+
+`SWAP ≈ CNOT · CNOTRev · CNOT` (N&C Fig. 1.7; Fenner Ex 11.2) and `SWAP² ≈ 1`. Basis-tensor reduction; the `Fin 2` XOR arithmetic (`a + (a + b) = b`) is discharged by `decide` inside the `grw` chain.
+
+## `Examples/CNOTCZ.lean` — CNOT ↔ CZ conjugation
+
+`CNOT = (1⊗H)·CZ·(1⊗H)`, `CZ = (1⊗H)·CNOT·(1⊗H)`, `CNOTRev = (H⊗1)·CZ·(H⊗1)` (N&C Ex 4.17), CZ control/target symmetry `SWAP·CZ·SWAP ≈ CZ` (Ex 4.18), the reversal `(H⊗H)·CNOT·(H⊗H) ≈ CNOTRev` (Ex 4.20), and the polarity flip `(X⊗1)·CNOT·(X⊗1)·CNOT ≈ 1⊗X` (Fig. 4.11).
+
+The key idiom: control-split atoms keep the target factor symbolic, so each control value reduces to a 1-qubit identity (`H² = 1`, `HZH = X`) applied under the tensor — no superposition is ever expanded. `cnot_reversed` is then pure circuit-level algebra: rewrite CNOT via its CZ bridge, fuse Hadamard layers with the interchange law, and recognize the reversed bridge.
+
+## `Examples/CNOTPauli.lean` — CNOT–Pauli conjugation table
+
+The six-entry table of N&C Ex 4.31 (`C(X⊗1)C = X⊗X`, `C(1⊗Z)C = Z⊗Z`, `C(Y⊗1)C = Y⊗X`, …) — the algebra behind stabilizer propagation. X/Z cases run on the uniform phase-form atoms (`XGate_basis`, `ZGate_basis`); Y cases split on the control bit.
+
+## `Examples/ControlledConj.lean` — controlled-gate conjugation
+
+`C-(U A U†) ≈ (1 ⊗ U) · C-A · (1 ⊗ U†)` parametric in a unitary `U` and arbitrary `A` (Fenner Ex 11.4(3)) — the general principle behind the CNOT↔CZ bridge — and the controlled-S decomposition `C-S ≈ (T⊗T)·CNOT·(1⊗T†)·CNOT` (Fenner Ex 13.2(1)), the inner step of the standard Toffoli decomposition. Control-splits throughout; the `❘0⟩` branch of the conjugation theorem is unitarity cancellation in action form.
+
 ## `Examples/RzPlus.lean` — Rz rotation angles add
 
 **Theorem:** `rz_plus (θ φ : ℝ)` — `RzGate φ * RzGate θ ≈ RzGate (θ + φ)`: running `Rz θ` then `Rz φ` (the rightmost factor acts first) is a single Z-rotation by `θ + φ`.

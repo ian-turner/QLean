@@ -4,6 +4,17 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-07-10] (30)
+
+### Added
+- **Circuit-identity library, phase 2 (Tier 2, two-qubit identities)** — four new example files, all in the QState/`grw` control-split style:
+  - `Examples/SwapFromCNOT.lean`: `SWAP ≈ CNOT·CNOTRev·CNOT` (N&C Fig 1.7), `SWAP² ≈ 1`
+  - `Examples/CNOTCZ.lean`: `CNOT ↔ CZ` Hadamard bridges (both directions + CNOTRev variant), CZ control/target symmetry, `(H⊗H)·CNOT·(H⊗H) ≈ CNOTRev` (proved by circuit-level algebra: bridge + interchange-law fusion), polarity flip `(X⊗1)·CNOT·(X⊗1)·CNOT ≈ 1⊗X`
+  - `Examples/CNOTPauli.lean`: the full CNOT–Pauli conjugation table (N&C Ex 4.31, six identities)
+  - `Examples/ControlledConj.lean`: `C-(UAU†) ≈ (1⊗U)·C-A·(1⊗U†)` parametric in unitary `U`, and `C-S ≈ (T⊗T)·CNOT·(1⊗T†)·CNOT` (Fenner Ex 13.2(1))
+
+---
+
 ## [2026-07-10] (29)
 
 ### Added

@@ -6,3 +6,7 @@ import Examples.GHZState
 import Examples.QFT
 import Examples.PauliAlgebra
 import Examples.CliffordConjugation
+import Examples.SwapFromCNOT
+import Examples.CNOTCZ
+import Examples.CNOTPauli
+import Examples.ControlledConj

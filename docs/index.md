@@ -61,6 +61,10 @@ Examples/
   PauliAlgebra.lean   — Pauli relations: X²=Y²=Z²=H²=1, XY=iZ (and cyclic), anticommutation,
                         Y=iXZ, H=(X+Z)/√2 (N&C Ex 2.41–2.43)
   CliffordConjugation.lean — HXH=Z, HZH=X, HYH=−Y (N&C Ex 4.13); T²=S, S²=Z, T⁸=1, X=HS²H
+  SwapFromCNOT.lean   — SWAP = CNOT·CNOTRev·CNOT (N&C Fig 1.7); SWAP² = 1
+  CNOTCZ.lean         — CNOT ↔ CZ Hadamard bridge, CZ symmetry, (H⊗H)-reversal, polarity flip
+  CNOTPauli.lean      — CNOT–Pauli conjugation table (N&C Ex 4.31, six identities)
+  ControlledConj.lean — C-(UAU†) = (1⊗U)·C-A·(1⊗U†); C-S = (T⊗T)·CNOT·(1⊗T†)·CNOT
   RzPlus.lean         — sequential Z-rotations fuse: Rz(φ)·Rz(θ) ≈ Rz(θ+φ)
   RzCNOT.lean         — Rz(θ) commutes with CNOT on the control qubit
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition
