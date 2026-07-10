@@ -65,6 +65,9 @@ Examples/
   CNOTCZ.lean         — CNOT ↔ CZ Hadamard bridge, CZ symmetry, (H⊗H)-reversal, polarity flip
   CNOTPauli.lean      — CNOT–Pauli conjugation table (N&C Ex 4.31, six identities)
   ControlledConj.lean — C-(UAU†) = (1⊗U)·C-A·(1⊗U†); C-S = (T⊗T)·CNOT·(1⊗T†)·CNOT
+  RotationIdentities.lean — Ry/Rx additivity, X·R(θ)·X = R(−θ), Z ≈ₚ Rz(π), S ≈ₚ Rz(π/2), T ≈ₚ Rz(π/4)
+  ControlledRz.lean   — C-Rz(φ) = (1⊗Rz(φ/2))·CNOT·(1⊗Rz(−φ/2))·CNOT; Rx commutes through target
+  EulerABC.lean       — ABC decomposition: A·B·C = 1 and A·X·B·X·C = Rz(β)·Ry(γ)·Rz(δ) (N&C Cor 4.2)
   RzPlus.lean         — sequential Z-rotations fuse: Rz(φ)·Rz(θ) ≈ Rz(θ+φ)
   RzCNOT.lean         — Rz(θ) commutes with CNOT on the control qubit
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition

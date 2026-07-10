@@ -10,3 +10,6 @@ import Examples.SwapFromCNOT
 import Examples.CNOTCZ
 import Examples.CNOTPauli
 import Examples.ControlledConj
+import Examples.RotationIdentities
+import Examples.ControlledRz
+import Examples.EulerABC

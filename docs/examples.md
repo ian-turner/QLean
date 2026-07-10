@@ -34,6 +34,18 @@ The six-entry table of N&C Ex 4.31 (`C(X⊗1)C = X⊗X`, `C(1⊗Z)C = Z⊗Z`, `C
 
 `C-(U A U†) ≈ (1 ⊗ U) · C-A · (1 ⊗ U†)` parametric in a unitary `U` and arbitrary `A` (Fenner Ex 11.4(3)) — the general principle behind the CNOT↔CZ bridge — and the controlled-S decomposition `C-S ≈ (T⊗T)·CNOT·(1⊗T†)·CNOT` (Fenner Ex 13.2(1)), the inner step of the standard Toffoli decomposition. Control-splits throughout; the `❘0⟩` branch of the conjugation theorem is unitarity cancellation in action form.
 
+## `Examples/RotationIdentities.lean` — rotation-gate identities
+
+Ry/Rx additivity (`ry_plus`, `rx_plus`) and the zero rotations — parametric 1-qubit matrix atoms whose irreducible content is trig addition; the X-conjugation angle flips `X·Ry(θ)·X ≈ Ry(−θ)`, `X·Rz(θ)·X ≈ Rz(−θ)` (N&C Ex 4.7); and the global-phase ladder `Z ≈ₚ Rz(π)`, `S ≈ₚ Rz(π/2)`, `T ≈ₚ Rz(π/4)` (N&C Ex 4.3) via `PhaseEquiv.of_basis`, with exp-product helper lemmas absorbing the phase bookkeeping.
+
+## `Examples/ControlledRz.lean` — controlled-Rz decomposition
+
+`C-Rz(φ) ≈ (1⊗Rz(φ/2))·CNOT·(1⊗Rz(−φ/2))·CNOT` (Fenner Ex 13.2(2)) — the standard compiler decomposition of controlled rotations, proved per basis pair with the phases combined by `Complex.exp_add`. Also `X·Rx(θ)·X ≈ Rx(θ)` and its consequence that Rx commutes with CNOT through the *target* qubit (N&C eq. 4.39), the dual of `RzCNOT.lean`.
+
+## `Examples/EulerABC.lean` — the ABC decomposition
+
+The equational core of N&C Corollary 4.2: with `A = Rz(β)Ry(γ/2)`, `B = Ry(−γ/2)Rz(−(δ+β)/2)`, `C = Rz((δ−β)/2)`, both `A·B·C ≈ 1` and `A·X·B·X·C ≈ Rz(β)·Ry(γ)·Rz(δ)`. Pure circuit-level `calc`/`grw` reasoning: rotation fusion + X-conjugation; the re-association steps unfold `eval` to the matrix monoid. This is the identity that powers the controlled-U construction (N&C Fig 4.6).
+
 ## `Examples/RzPlus.lean` — Rz rotation angles add
 
 **Theorem:** `rz_plus (θ φ : ℝ)` — `RzGate φ * RzGate θ ≈ RzGate (θ + φ)`: running `Rz θ` then `Rz φ` (the rightmost factor acts first) is a single Z-rotation by `θ + φ`.

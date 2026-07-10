@@ -4,6 +4,16 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-07-10] (31)
+
+### Added
+- **Circuit-identity library, phase 3 (Tier 3, parametric angles)**:
+  - `Examples/RotationIdentities.lean`: `ry_plus`/`rx_plus` additivity, zero rotations, `X·Ry(θ)·X ≈ Ry(−θ)`, `X·Rz(θ)·X ≈ Rz(−θ)`, and the phase ladder `Z ≈ₚ Rz(π)`, `S ≈ₚ Rz(π/2)`, `T ≈ₚ Rz(π/4)`
+  - `Examples/ControlledRz.lean`: `C-Rz(φ) ≈ (1⊗Rz(φ/2))·CNOT·(1⊗Rz(−φ/2))·CNOT` (Fenner Ex 13.2(2)); `X·Rx(θ)·X ≈ Rx(θ)`; Rx commutes with CNOT through the target (N&C eq 4.39)
+  - `Examples/EulerABC.lean`: the ABC decomposition (N&C Cor 4.2 equational core) — `A·B·C ≈ 1` and `A·X·B·X·C ≈ Rz(β)·Ry(γ)·Rz(δ)`, all circuit-level `calc`/`grw`
+
+---
+
 ## [2026-07-10] (30)
 
 ### Added
