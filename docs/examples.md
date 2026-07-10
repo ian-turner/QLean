@@ -4,6 +4,18 @@ Each file in `Examples/` demonstrates a self-contained quantum circuit result us
 
 ---
 
+## `Examples/PauliAlgebra.lean` — Pauli algebra identities
+
+The single-qubit Pauli relations (N&C Ex 2.41–2.43; Fenner §8): involutions `X² = Y² = Z² = H² = 1`, the products `XY = iZ`, `YZ = iX`, `ZX = iY`, anticommutation `XY = −YX`, `Y = iXZ`, and `H = (X+Z)/√2`.
+
+Proof style for the whole identity library: reduce to basis kets with `QCircuit.Equiv.basis_iff_state`, then `grw`-chain the gate-action atoms from `Gate/StateActions.lean`; scalar bookkeeping ends in `QState.smul_scalar_congr` with a numeric ℂ-fact. Identities with a scalar on one side (`XY = iZ`) are stated in basis-action form (`(XGate * YGate) * ❘a⟩ ≈ I • (ZGate * ❘a⟩)`) — `QCircuit` has no scalar multiplication — with a circuit-level `≈ₚ` (global-phase) corollary via `PhaseEquiv.of_basis` (`xy_phase_z`). `h_mul_h` is the one identity here whose branches interfere, needing a vector-level collection leaf.
+
+## `Examples/CliffordConjugation.lean` — Hadamard conjugation and the phase-gate ladder
+
+The N&C Exercise 4.13 "circuit identities" (`HXH ≈ Z`, `HZH ≈ X`, `HYH = −Y` in basis form + `≈ₚ`), and the phase-gate ladder `T² ≈ S`, `S² ≈ Z` (Fenner §11).
+
+The payoff theorems are proved **purely at the circuit level** by `grw`-rewriting sub-circuits with earlier equivalences — no basis kets: `t_pow_8` (`T⁸ ≈ 1`, via `T² ≈ S` → `S² ≈ Z` → `Z² ≈ 1`) and `x_eq_h_ss_h` (`H S² H ≈ X`, via `S² ≈ Z` then `HZH ≈ X`). This is the intended equational-reasoning workflow for derived identities.
+
 ## `Examples/RzPlus.lean` — Rz rotation angles add
 
 **Theorem:** `rz_plus (θ φ : ℝ)` — `RzGate φ * RzGate θ ≈ RzGate (θ + φ)`: running `Rz θ` then `Rz φ` (the rightmost factor acts first) is a single Z-rotation by `θ + φ`.

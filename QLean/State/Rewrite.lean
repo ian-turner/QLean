@@ -59,6 +59,20 @@ theorem smul_smul (a b : ℂ) (s : QState n) : a • (b • s) ≈ (a * b) • s
 theorem smul_add (a : ℂ) (s t : QState n) : a • (s + t) ≈ a • s + a • t := by
   simp only [Equiv, eval_smul, eval_add, _root_.smul_add]
 
+/-- Rewrite a scalar factor by a ℂ-equality: the finishing move when a `grw` chain has
+    reduced both sides to `α • s` and `β • s` with `α = β` a numeric fact. -/
+theorem smul_scalar_congr {α β : ℂ} (h : α = β) (s : QState n) : α • s ≈ β • s := by
+  rw [h]
+
+-- ── Additive commutativity/associativity (modulo ≈) ──────────────────────────
+-- `QState.add` is a raw constructor, so the additive-monoid lemmas do not fire on it.
+
+theorem add_comm (s t : QState n) : s + t ≈ t + s := by
+  simp only [Equiv, eval_add]; exact _root_.add_comm _ _
+
+theorem add_assoc (s t u : QState n) : s + t + u ≈ s + (t + u) := by
+  simp only [Equiv, eval_add]; exact _root_.add_assoc _ _ _
+
 -- ── Distributivity rules ──────────────────────────────────────────────────────
 
 theorem add_tensor_left (s t : QState j) (u : QState k) :

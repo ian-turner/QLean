@@ -5,6 +5,7 @@ import QLean.Basic.Hilbert
 import QLean.Basic.EmbedState
 import QLean.Gate.Standard
 import QLean.Gate.StateActions
+import QLean.Gate.Tactics
 import QLean.Circuit.Type
 import QLean.Circuit.Semantics
 import QLean.Circuit.Rewrite

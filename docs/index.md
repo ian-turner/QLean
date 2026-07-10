@@ -29,10 +29,16 @@ QLean/
     Hilbert.lean      — QVector, ket, tensorState
     EmbedState.lean   — bridge: embed acting on basis kets (embed_diag_mul_ket, embed_single_mul_ket)
   Gate/
-    Standard.lean     — H, X, Y, Z, S, T, Rz, Rx, Ry, Rk, CNOT, CZ, SWAP, Toffoli, controlled;
-                        unitarity proofs; QCircuit abbreviations (HGate, CNOTGate, …);
-                        QVector-level gate action lemmas (X_ket_zero, H_ket_zero, CNOT_ket_pair, …)
-    StateActions.lean — symbolic gate actions: XGate_bit0, HGate_bit0, CNOTGate_basis_tensor, …
+    Standard.lean     — H, X, Y, Z, S, T, Tdg, Rz, Rx, Ry, Rk, sqrtX, CNOT, CNOTRev, CZ, SWAP,
+                        sqrtSWAP, Toffoli, CCZ, Fredkin, controlled; unitarity proofs;
+                        QCircuit abbreviations (HGate, CNOTGate, …);
+                        QVector-level gate action lemmas (X_ket_zero, CNOT_ket_pair,
+                        controlled_tensorState_zero/one, SWAP_tensorState, Toffoli_ket_triple, …)
+    StateActions.lean — symbolic gate actions: XGate_bit0, HGate_bit0, CNOTGate_basis_tensor,
+                        control-splits (ControlledGate_zero/one, CNOTGate_zero/one, CZGate_*),
+                        SWAPGate_tensor, ToffoliGate/CCZGate_basis_tensor, FredkinGate_zero/one, …
+    Tactics.lean      — circuit_eq: entrywise decision tactic for concrete circuit identities
+                        (escape hatch for irreducible atoms; prefer grw/state-layer proofs)
   Circuit/
     Type.lean         — QCircuit inductive type (id/gate/seq/par/embed), castN
     Semantics.lean    — eval, QCircuit.WF, QCircuit.eval_unitary (all covering the embed case)
@@ -52,6 +58,9 @@ QLean/
     Semantics.lean    — QState.eval, QState.IsNormalized
     Rewrite.lean      — QState.Equiv, congruence/distributivity lemmas, tensor/basis splits
 Examples/
+  PauliAlgebra.lean   — Pauli relations: X²=Y²=Z²=H²=1, XY=iZ (and cyclic), anticommutation,
+                        Y=iXZ, H=(X+Z)/√2 (N&C Ex 2.41–2.43)
+  CliffordConjugation.lean — HXH=Z, HZH=X, HYH=−Y (N&C Ex 4.13); T²=S, S²=Z, T⁸=1, X=HS²H
   RzPlus.lean         — sequential Z-rotations fuse: Rz(φ)·Rz(θ) ≈ Rz(θ+φ)
   RzCNOT.lean         — Rz(θ) commutes with CNOT on the control qubit
   HadamardTransform.lean — n-qubit Hadamard transform prepares the uniform superposition

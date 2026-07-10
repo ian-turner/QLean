@@ -115,6 +115,34 @@ theorem kron_assoc {j k l : ℕ} (A : QMatrix j) (B : QMatrix k) (C : QMatrix l)
       Fin.ext (assoc_snd_val' j k l i _ hiv), Fin.ext (assoc_snd_val' j k l p _ hpv),
       mul_assoc]
 
+-- ── Concrete tensor-index values ──────────────────────────────────────────────
+-- Ground values of `(tensorIndexEquiv j k).symm` on the small shapes used by concrete
+-- 2- and 3-qubit identities. With these, an entrywise `simp` can evaluate `kron` at
+-- literal indices (see the `circuit_eq` tactic in `Gate/Standard.lean`).
+
+theorem te11_symm_0 : (tensorIndexEquiv 1 1).symm 0 = (0, 0) := by decide
+theorem te11_symm_1 : (tensorIndexEquiv 1 1).symm 1 = (1, 0) := by decide
+theorem te11_symm_2 : (tensorIndexEquiv 1 1).symm 2 = (0, 1) := by decide
+theorem te11_symm_3 : (tensorIndexEquiv 1 1).symm 3 = (1, 1) := by decide
+
+theorem te21_symm_0 : (tensorIndexEquiv 2 1).symm 0 = (0, 0) := by decide
+theorem te21_symm_1 : (tensorIndexEquiv 2 1).symm 1 = (1, 0) := by decide
+theorem te21_symm_2 : (tensorIndexEquiv 2 1).symm 2 = (2, 0) := by decide
+theorem te21_symm_3 : (tensorIndexEquiv 2 1).symm 3 = (3, 0) := by decide
+theorem te21_symm_4 : (tensorIndexEquiv 2 1).symm 4 = (0, 1) := by decide
+theorem te21_symm_5 : (tensorIndexEquiv 2 1).symm 5 = (1, 1) := by decide
+theorem te21_symm_6 : (tensorIndexEquiv 2 1).symm 6 = (2, 1) := by decide
+theorem te21_symm_7 : (tensorIndexEquiv 2 1).symm 7 = (3, 1) := by decide
+
+theorem te12_symm_0 : (tensorIndexEquiv 1 2).symm 0 = (0, 0) := by decide
+theorem te12_symm_1 : (tensorIndexEquiv 1 2).symm 1 = (1, 0) := by decide
+theorem te12_symm_2 : (tensorIndexEquiv 1 2).symm 2 = (0, 1) := by decide
+theorem te12_symm_3 : (tensorIndexEquiv 1 2).symm 3 = (1, 1) := by decide
+theorem te12_symm_4 : (tensorIndexEquiv 1 2).symm 4 = (0, 2) := by decide
+theorem te12_symm_5 : (tensorIndexEquiv 1 2).symm 5 = (1, 2) := by decide
+theorem te12_symm_6 : (tensorIndexEquiv 1 2).symm 6 = (0, 3) := by decide
+theorem te12_symm_7 : (tensorIndexEquiv 1 2).symm 7 = (1, 3) := by decide
+
 end QLean
 
 end

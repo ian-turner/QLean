@@ -4,6 +4,22 @@ One entry per commit. Newest first. Categories: `Added`, `Changed`, `Fixed`, `Re
 
 ---
 
+## [2026-07-10] (29)
+
+### Added
+- **Circuit-identity library, phase 1 (Tier 1)** — `Examples/PauliAlgebra.lean` (X²=Y²=Z²=H²=1, XY=iZ + cyclic, XY=−YX, Y=iXZ, H=(X+Z)/√2; N&C Ex 2.41–2.43) and `Examples/CliffordConjugation.lean` (HXH=Z, HZH=X, HYH=−Y, T²=S, S²=Z, T⁸=1, X=HS²H; N&C Ex 4.13), all in the QState/`grw` syntax layer; composite results (`t_pow_8`, `x_eq_h_ss_h`) proved purely by circuit-level rewriting
+- New gates in `Gate/Standard.lean`: `Tdg` (T†), `sqrtX`, `CNOTRev`, `sqrtSWAP`, `CCZ`, `Fredkin` — matrices, unitarity theorems, `*Gate` abbrevs, `wf_*` simp lemmas
+- Gate-action atoms: matrix level (`T/Tdg/sqrtX/Rx/Ry_ket_*`, `CZ_ket_pair`, `CNOTRev_ket_pair`, `controlled_tensorState_zero/one`, `SWAP_tensorState`, `CZ_tensorState_*_right`, `Toffoli_ket_triple`, `CCZ_ket_triple`, `Fredkin_tensorState_*`, `qvector1_expand`, `CNOT_eq_controlled_X`, `CZ_eq_controlled_Z`, `CNOTRev_eq_swap_conj`) and QState level (`TGate/TdgGate/SqrtXGate/RxGate/RyGate_bit*`, `XGate/ZGate/SGate_basis`, `CZGate_basis_tensor`, `SWAPGate_tensor`, control-splits `ControlledGate/CNOTGate/CZGate_zero/one`, `CZGate_*_right`, `ToffoliGate/CCZGate_basis_tensor`, `FredkinGate_zero/one`)
+- `QCircuit.PhaseEquiv` (`≈ₚ`, global-phase equivalence) with refl/symm/trans/of_equiv/seq_congr and the basis-action bridge `PhaseEquiv.of_basis`; `QCircuit.gate_seq`
+- `QState.smul_scalar_congr`, `QState.add_comm`, `QState.add_assoc` in `State/Rewrite.lean`
+- `Gate/Tactics.lean` — `circuit_eq` entrywise decision tactic (escape hatch for irreducible concrete atoms); `te11/te21/te12_symm_*` ground lemmas in `Basic/Tensor.lean`
+- `docs/lean-api.md`: whnf-blow-up pitfall (global decide-lemmas vs local haves), `grw` all-occurrences/hard-failure behaviors
+
+### Changed
+- `sqrt2_sq_cast`/`sqrt2_ne_zero` made public (were `private`) — every H-on-both-sides identity bottoms out at them
+
+---
+
 ## [2026-07-06] (28)
 
 ### Changed

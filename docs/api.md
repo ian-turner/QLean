@@ -37,6 +37,8 @@ The Kronecker product lifted to `QMatrix`.
 
 ---
 
+**Concrete tensor-index values:** `te11_symm_0` … `te11_symm_3`, `te21_symm_0` … `te21_symm_7`, `te12_symm_0` … `te12_symm_7` — ground values of `(tensorIndexEquiv j k).symm` on the (1,1), (2,1), (1,2) shapes, proved by `decide`. Used by the `circuit_eq` tactic; in hand-written proofs prefer *local* `have`-copies (see [lean-api.md](lean-api.md) on the `whnf` pitfall).
+
 ## `Basic/Embed.lean`
 
 Positional embedding: lifting a `k`-qubit gate onto `k` chosen qubits of an `n`-qubit
@@ -114,33 +116,39 @@ State-level layer: quantum states, basis kets, tensor product of states.
 
 Standard gate matrices, unitarity proofs, and `QCircuit` abbreviations.
 
-**Single-qubit gates** (`QMatrix 1`): `H`, `X`, `Y`, `Z`, `S`, `T`, `Rz θ`, `Rx θ`, `Ry θ`, `Rk k`
+**Single-qubit gates** (`QMatrix 1`): `H`, `X`, `Y`, `Z`, `S`, `T`, `Tdg` (= T†), `Rz θ`, `Rx θ`, `Ry θ`, `Rk k`, `sqrtX` (√X, the `V` gate of N&C Fig. 4.8)
 
 `Rk k = diag(1, e^{2πi/2ᵏ})` is the QFT phase gate (N&C §5.1); `R₁ = Z`, `R₂ = S`, `R₃ = T`. `Rk_isDiag` proves it diagonal; `controlled_isDiag` lifts diagonality through `controlled` (so `controlled (Rk k)` is diagonal — the fact the QFT rotation layers rely on).
 
 **Phase-form matrix entries** (the only matrix-level facts the QFT correctness proof bottoms out at — wrapped by the embedded actions in `Gate/StateActions.lean`, so callers never touch raw entries): `H_row0 (t) : H 0 t = (√2)⁻¹` and `H_row1 (t) : H 1 t = (√2)⁻¹ · e^{2πi·t/2}` give the Hadamard's two rows in phase form; `controlled_Rk_diag (k) (idx) : (controlled (Rk k)) idx idx = if idx = 3 then e^{2πi/2ᵏ} else 1` gives the controlled-rotation eigenphase.
 
-**Two-qubit gates** (`QMatrix 2`): `CNOT`, `CZ`, `SWAP`, `controlled U`
+**Two-qubit gates** (`QMatrix 2`): `CNOT`, `CNOTRev` (control = qubit 1, target = qubit 0), `CZ`, `SWAP`, `sqrtSWAP`, `controlled U`
 
-**Three-qubit gate** (`QMatrix 3`): `Toffoli`
+`CNOT_eq_controlled_X : CNOT = controlled X`, `CZ_eq_controlled_Z : CZ = controlled Z`, and `CNOTRev_eq_swap_conj : CNOTRev = SWAP * CNOT * SWAP` pin the derived gates to their definitions.
+
+**Three-qubit gates** (`QMatrix 3`): `Toffoli`, `CCZ`, `Fredkin` (control = qubit 0, swaps qubits 1,2)
 
 All gate matrices follow the LSB-first qubit convention (see [conventions.md](conventions.md)).
 
-**Unitarity theorems:** `isUnitary_H`, `isUnitary_X`, `isUnitary_Y`, `isUnitary_Z`, `isUnitary_S`, `isUnitary_T`, `isUnitary_CNOT`, `isUnitary_CZ`, `isUnitary_SWAP`, `isUnitary_Toffoli`, `isUnitary_controlled`, `isUnitary_Rz`, `isUnitary_Rx`, `isUnitary_Ry`, `isUnitary_Rk`
+**Unitarity theorems:** `isUnitary_H`, `isUnitary_X`, `isUnitary_Y`, `isUnitary_Z`, `isUnitary_S`, `isUnitary_T`, `isUnitary_Tdg`, `isUnitary_sqrtX`, `isUnitary_CNOT`, `isUnitary_CNOTRev`, `isUnitary_CZ`, `isUnitary_SWAP`, `isUnitary_sqrtSWAP`, `isUnitary_Toffoli`, `isUnitary_CCZ`, `isUnitary_Fredkin`, `isUnitary_controlled`, `isUnitary_Rz`, `isUnitary_Rx`, `isUnitary_Ry`, `isUnitary_Rk`
 
-**State-action lemmas:** `Rz_ket_zero`, `Rz_ket_one`, `Rz_ket_diag`, `CNOT_ket_pair`; single-qubit actions `X_ket_zero`, `X_ket_one`, `Y_ket_zero`, `Y_ket_one`, `Z_ket_zero`, `Z_ket_one`, `S_ket_zero`, `S_ket_one`, `H_ket_zero`, `H_ket_one`
+`sqrt2_sq_cast : (√2 : ℂ)² = 2` and `sqrt2_ne_zero` are public — every identity with H factors on both sides bottoms out at them.
+
+**State-action lemmas:** `Rz_ket_zero`, `Rz_ket_one`, `Rz_ket_diag`, `CNOT_ket_pair`, `CNOTRev_ket_pair`, `CZ_ket_pair` (phase form `(-1)^(a·b)`); single-qubit actions `X_ket_zero/one`, `Y_ket_zero/one`, `Z_ket_zero/one`, `S_ket_zero/one`, `T_ket_zero/one`, `Tdg_ket_zero/one`, `H_ket_zero/one`, `sqrtX_ket_zero/one`, `Rx_ket_zero/one`, `Ry_ket_zero/one`
+
+**Arbitrary-vector tensor actions** (the matrix side of the control-split state lemmas): `qvector1_expand` (basis expansion of a `QVector 1`), `controlled_tensorState_zero/one` (`controlled U` on `|0⟩⊗v` / `|1⟩⊗v`), `SWAP_tensorState` (`SWAP · (v⊗w) = w⊗v`), `CZ_tensorState_zero_right/one_right` (target-side CZ split), `Toffoli_ket_triple` (`|a,b,c⟩ ↦ |a,b,ab+c⟩`), `CCZ_ket_triple` (phase `(-1)^(abc)`), `Fredkin_tensorState_zero/one`
 
 **QCircuit abbreviations** — `abbrev` wrappers that lift gate matrices into `QCircuit`:
 
 | Abbrev | Type |
 |---|---|
-| `HGate`, `XGate`, `YGate`, `ZGate`, `SGate`, `TGate` | `QCircuit 1` |
-| `RzGate θ`, `RxGate θ`, `RyGate θ`, `RkGate k` | `QCircuit 1` |
-| `CNOTGate`, `CZGate`, `SWAPGate` | `QCircuit 2` |
-| `ToffoliGate` | `QCircuit 3` |
+| `HGate`, `XGate`, `YGate`, `ZGate`, `SGate`, `TGate`, `TdgGate` | `QCircuit 1` |
+| `RzGate θ`, `RxGate θ`, `RyGate θ`, `RkGate k`, `SqrtXGate` | `QCircuit 1` |
+| `CNOTGate`, `CNOTRevGate`, `CZGate`, `SWAPGate`, `SqrtSWAPGate` | `QCircuit 2` |
+| `ToffoliGate`, `CCZGate`, `FredkinGate` | `QCircuit 3` |
 | `ControlledGate U` | `QCircuit 2` |
 
-**WF lemmas** (`@[simp]`, one per abbreviation): `wf_HGate` … `wf_ToffoliGate` discharge `QCircuit.WF` for each gate abbreviation; `wf_ControlledGate` takes the unitarity hypothesis `IsUnitary U`.
+**WF lemmas** (`@[simp]`, one per abbreviation): `wf_HGate` … `wf_FredkinGate` discharge `QCircuit.WF` for each gate abbreviation; `wf_ControlledGate` takes the unitarity hypothesis `IsUnitary U`.
 
 ---
 
@@ -165,17 +173,35 @@ Imports `Gate/Standard.lean`, `State/Rewrite.lean`, and `Circuit/Embed.lean` (fo
 | `HGate_bit0` | `HGate * ❘0⟩ ≈ (√2)⁻¹ • (❘0⟩ + ❘1⟩)` |
 | `HGate_bit1` | `HGate * ❘1⟩ ≈ (√2)⁻¹ • (❘0⟩ + (-1) • ❘1⟩)` |
 
+Further fixed-ket actions in the same style: `TGate_bit0/1`, `TdgGate_bit0/1`, `SqrtXGate_bit0/1`, `RxGate_bit0/1 (θ)`, `RyGate_bit0/1 (θ)`.
+
 Parameterized over the basis index rather than fixed kets:
 - `RzGate_basis (θ : ℝ) (a : Fin (2^1))` — `RzGate θ * ❘a⟩ ≈ exp((2a-1)·iθ/2) • ❘a⟩` (phase `exp(-iθ/2)` on `❘0⟩`, `exp(iθ/2)` on `❘1⟩`)
+- `XGate_basis (a)` — `XGate * ❘a⟩ ≈ ❘a + 1⟩` (`Fin 2` addition = bit flip)
+- `ZGate_basis (a)` — `ZGate * ❘a⟩ ≈ (-1)^a • ❘a⟩`; `SGate_basis (a)` — `SGate * ❘a⟩ ≈ iᵃ • ❘a⟩`
 
 **Two-qubit actions:**
 - `CNOTGate_basis_tensor (a b : Fin 2)` — `CNOTGate * (basis a ⊗ basis b) ≈ basis a ⊗ basis (a + b)`
+- `CNOTRevGate_basis_tensor (a b)` — `CNOTRevGate * (❘a⟩ ⊗ ❘b⟩) ≈ ❘a+b⟩ ⊗ ❘b⟩`
+- `CZGate_basis_tensor (a b)` — `CZGate * (❘a⟩ ⊗ ❘b⟩) ≈ (-1)^(a·b) • (❘a⟩ ⊗ ❘b⟩)`
+- `SWAPGate_tensor (s t : QState 1)` — `SWAPGate * (s ⊗ t) ≈ t ⊗ s` (arbitrary symbolic states)
+
+**Control-split actions** (the workhorses for two-qubit identities — the target factor stays an *arbitrary* symbolic state, so identities like `CNOT = (1⊗H)·CZ·(1⊗H)` decompose per control value with no superposition expansion):
+- `ControlledGate_zero/one (U) (s)` — `ControlledGate U * (❘0⟩ ⊗ s) ≈ ❘0⟩ ⊗ s` / `… * (❘1⟩ ⊗ s) ≈ ❘1⟩ ⊗ (gate U * s)`
+- `CNOTGate_zero/one (s)`, `CZGate_zero/one (s)` — instances for CNOT (target gate `X`) and CZ (target gate `Z`)
+- `CZGate_zero_right/one_right (s)` — target-side splits (`s ⊗ ❘b⟩`), witnessing CZ's control/target symmetry
+
+**Three-qubit actions:** `ToffoliGate_basis_tensor (a b c)` — `ToffoliGate * (❘a⟩ ⊗ ❘b⟩ ⊗ ❘c⟩) ≈ ❘a⟩ ⊗ ❘b⟩ ⊗ ❘a·b + c⟩`; `CCZGate_basis_tensor (a b c)` — phase `(-1)^(abc)`; `FredkinGate_zero/one (s t)` — control-split, swapping the (arbitrary) target pair when the control is `❘1⟩`
 
 **Embedded gate actions in phase form** — these lift the gate-agnostic `QCircuit.embed_single_action` / `embed_diag_action` (from `Circuit/Embed.lean`) to the two specific gates a positional algorithm like the QFT addresses, resolving the gate matrix entries to explicit phases *once*. Downstream proofs (e.g. `Examples/QFT.lean`) then stay entirely in the `QState` layer and never see a matrix entry:
 - `embed_H_action (qs : Fin 1 ↪ Fin n) (x)` — `embed qs HGate * ❘x⟩ ≈ (√2)⁻¹ • ❘mergeBits qs x 0⟩ + ((√2)⁻¹ · e^{2πi·b/2}) • ❘mergeBits qs x 1⟩` where `b = selectIdx qs x` (the addressed bit); the `❘1⟩` branch carries the sign `(-1)ᵇ`
 - `embed_controlled_Rk_action (qs : Fin 2 ↪ Fin n) (k) (x)` — `embed qs (ControlledGate (Rk k)) * ❘x⟩ ≈ (if selectIdx qs x = 3 then e^{2πi/2ᵏ} else 1) • ❘x⟩`; the embedded controlled rotation is diagonal, scaling by the phase exactly when both addressed qubits are set
 
 ---
+
+## `Gate/Tactics.lean`
+
+`circuit_eq` — a terminal tactic closing a concrete `QCircuit.Equiv` goal (circuits built from `gate`/`seq`/`par`/`id` over the standard 1–3-qubit gates) by unfolding `eval` and checking the matrix identity entrywise; `circuit_eq [l₁, …]` threads extra simp lemmas through both the entrywise pass and the arithmetic closer. **Escape hatch only**: structured identities should be proved in the `QState` layer with `grw` over the `Gate/StateActions.lean` atoms; `circuit_eq` is for irreducible concrete matrix facts.
 
 ## `Circuit/Type.lean`
 
@@ -252,6 +278,8 @@ State expression equivalence and equational rewrite rules. Holds the `QState.*` 
 - `QState.one_smul` — `(1 : ℂ) • s ≈ s`
 - `QState.smul_smul` — `a • (b • s) ≈ (a * b) • s`
 - `QState.smul_add` — `a • (s + t) ≈ a • s + a • t`
+- `QState.smul_scalar_congr (h : α = β)` — `α • s ≈ β • s`; the finishing move when a `grw` chain leaves both sides as scalar multiples of the same state and the scalars agree by a ℂ-computation
+- `QState.add_comm` — `s + t ≈ t + s`; `QState.add_assoc` — `s + t + u ≈ s + (t + u)`
 
 **Distributivity rules:**
 - `QState.add_tensor_left` — `(s + t) ⊗ u ≈ s ⊗ u + t ⊗ u`
@@ -284,8 +312,14 @@ QCircuit equivalence and equational rewrite rules.
 - `QCircuit.seq_id_left` — `1 * c ≈ c`
 - `QCircuit.seq_id_right` — `c * 1 ≈ c`
 - `QCircuit.seq_assoc` — `(c₁ * c₂) * c₃ ≈ c₁ * (c₂ * c₃)`
+- `QCircuit.gate_seq` — `gate (M * N) ≈ gate M * gate N`
 - `QCircuit.par_assoc` — associativity of `⊗` up to `castN` (eval-level equality)
 - `QCircuit.interchange_law` — `(a * b) ⊗ (c * d) ≈ (a ⊗ c) * (b ⊗ d)`
+
+**Global-phase equivalence:**
+- `QCircuit.PhaseEquiv (c₁ c₂ : QCircuit n) : Prop` — `∃ γ : ℝ, eval c₁ = e^{iγ} • eval c₂`; scoped notation `c₁ ≈ₚ c₂` (in `QLean.Notation`). Captures textbook identities that hold only up to a global phase (`T ∼ Rz(π/4)`, `X ∼ Rx π`, `HYH ∼ Y`)
+- `PhaseEquiv.refl` / `.symm` / `.trans` / `.of_equiv` (strict `≈` implies `≈ₚ` with phase 0) / `.seq_congr` (phases add)
+- `PhaseEquiv.of_basis (γ) (h : ∀ i, c₁ * ❘i⟩ ≈ e^{iγ} • (c₂ * ❘i⟩)) : c₁ ≈ₚ c₂` — establish phase equivalence from basis actions, keeping the proof in the `QState` layer
 
 **Basis characterization:**
 - `QCircuit.Equiv.basis_iff` — `c₁ ≈ c₂ ↔ ∀ i, eval c₁ * ket i = eval c₂ * ket i`; useful for basis-state proofs

@@ -2,6 +2,7 @@ import QLean.Circuit.Semantics
 import QLean.Basic.Hilbert
 import QLean.State.Rewrite
 import Mathlib.Tactic.GCongr
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 
 open scoped QLean.Notation
 
@@ -59,6 +60,11 @@ theorem seq_assoc (c₁ c₂ c₃ : QCircuit n) :
     (c₁ * c₂) * c₃ ≈ c₁ * (c₂ * c₃) := by
   simp [Equiv, mul_assoc]
 
+/-- A gate carrying a matrix product is the sequence of the factor gates. -/
+theorem gate_seq (M N : QMatrix n) :
+    (QCircuit.gate (M * N) : QCircuit n) ≈ QCircuit.gate M * QCircuit.gate N := by
+  simp [Equiv]
+
 -- ── par_assoc ─────────────────────────────────────────────────────────────────
 
 /-- Parallel composition is associative up to `castN` and `≈`. -/
@@ -66,6 +72,76 @@ theorem par_assoc (c₁ : QCircuit j) (c₂ : QCircuit k) (c₃ : QCircuit l) :
     castN (Nat.add_assoc j k l) ((c₁ ⊗ c₂) ⊗ c₃) ≈ c₁ ⊗ (c₂ ⊗ c₃) := by
   simp only [Equiv, eval_castN, eval_par]
   exact kron_assoc (eval c₁) (eval c₂) (eval c₃)
+
+-- ── Global-phase equivalence ──────────────────────────────────────────────────
+
+/-- Two circuits are equivalent up to a global phase: their evaluations differ by a unit
+    scalar `e^{iγ}`. Many textbook identities (`T ∼ Rz (π/4)`, `X ∼ Rx π`, `HTH ∼ Rx (π/4)`)
+    hold only in this sense — the phase is unobservable, but the matrices differ. -/
+def PhaseEquiv (c₁ c₂ : QCircuit n) : Prop :=
+  ∃ γ : ℝ, eval c₁ = Complex.exp (γ * Complex.I) • eval c₂
+
+theorem PhaseEquiv.refl (c : QCircuit n) : PhaseEquiv c c :=
+  ⟨0, by simp⟩
+
+/-- Strict equivalence implies phase equivalence (with phase `0`). -/
+theorem PhaseEquiv.of_equiv {c₁ c₂ : QCircuit n} (h : c₁ ≈ c₂) : PhaseEquiv c₁ c₂ :=
+  ⟨0, by simpa using h⟩
+
+theorem PhaseEquiv.symm {c₁ c₂ : QCircuit n} : PhaseEquiv c₁ c₂ → PhaseEquiv c₂ c₁ := by
+  rintro ⟨γ, h⟩
+  refine ⟨-γ, ?_⟩
+  rw [h, smul_smul, ← Complex.exp_add]
+  have : ((-γ : ℝ) : ℂ) * Complex.I + (γ : ℝ) * Complex.I = 0 := by push_cast; ring
+  rw [this, Complex.exp_zero, one_smul]
+
+theorem PhaseEquiv.trans {c₁ c₂ c₃ : QCircuit n} :
+    PhaseEquiv c₁ c₂ → PhaseEquiv c₂ c₃ → PhaseEquiv c₁ c₃ := by
+  rintro ⟨γ₁, h₁⟩ ⟨γ₂, h₂⟩
+  refine ⟨γ₁ + γ₂, ?_⟩
+  rw [h₁, h₂, smul_smul, ← Complex.exp_add]
+  congr 2
+  push_cast; ring
+
+/-- Sequencing phase-equivalent circuits is phase-equivalent: the phases add. -/
+theorem PhaseEquiv.seq_congr {c₁ c₁' c₂ c₂' : QCircuit n}
+    (h₁ : PhaseEquiv c₁ c₁') (h₂ : PhaseEquiv c₂ c₂') :
+    PhaseEquiv (c₁ * c₂) (c₁' * c₂') := by
+  obtain ⟨γ₁, e₁⟩ := h₁; obtain ⟨γ₂, e₂⟩ := h₂
+  refine ⟨γ₁ + γ₂, ?_⟩
+  simp only [eval_seq, e₁, e₂, Matrix.smul_mul, Matrix.mul_smul, smul_smul,
+    ← Complex.exp_add]
+  congr 2
+  push_cast; ring
+
+/-- Establish phase equivalence from the basis actions: if `c₁` acts on every basis ket
+    as `e^{iγ}` times the `c₂` action, then `c₁ ≈ₚ c₂`. The `PhaseEquiv` analogue of
+    `Equiv.basis_iff_state`, letting phase-equivalence proofs stay in the `QState` layer. -/
+theorem PhaseEquiv.of_basis {n : ℕ} {c₁ c₂ : QCircuit n} (γ : ℝ)
+    (h : ∀ i : Fin (2^n), c₁ * (❘i⟩ : QState n)
+          ≈ Complex.exp (γ * Complex.I) • (c₂ * ❘i⟩)) :
+    PhaseEquiv c₁ c₂ := by
+  refine ⟨γ, ?_⟩
+  ext r i
+  have hh := h i
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_smul, QState.eval_basis] at hh
+  have := congr_fun (congr_fun hh r) 0
+  simpa [mul_ket_apply, Matrix.smul_apply] using this
+
+end  -- noncomputable (temporarily closed for notation; reopened below)
+
+end QCircuit
+
+namespace Notation
+
+/-- `c₁ ≈ₚ c₂`: circuit equivalence up to a global phase. -/
+scoped infix:50 " ≈ₚ " => QLean.QCircuit.PhaseEquiv
+
+end Notation
+
+namespace QCircuit
+
+noncomputable section
 
 -- ── Basis characterization ───────────────────────────────────────────────────
 

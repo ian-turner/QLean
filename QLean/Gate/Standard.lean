@@ -17,12 +17,14 @@ noncomputable section
 
 namespace QLean
 
--- (Real.sqrt 2 : ℂ)^2 = 2; prerequisite for H unitarity
-private lemma sqrt2_sq_cast : (Real.sqrt 2 : ℂ) ^ 2 = 2 := by
+-- (Real.sqrt 2 : ℂ)^2 = 2; prerequisite for H unitarity and for every identity with
+-- H factors on both sides. Public: the `circuit_eq` closer below and the example files
+-- need it to discharge leftover √2 arithmetic.
+lemma sqrt2_sq_cast : (Real.sqrt 2 : ℂ) ^ 2 = 2 := by
   rw [← Complex.ofReal_pow, Real.sq_sqrt (by norm_num : (2 : ℝ) ≥ 0)]
   norm_cast
 
-private lemma sqrt2_ne_zero : (Real.sqrt 2 : ℂ) ≠ 0 :=
+lemma sqrt2_ne_zero : (Real.sqrt 2 : ℂ) ≠ 0 :=
   Complex.ofReal_ne_zero.mpr (Real.sqrt_ne_zero'.mpr (by norm_num))
 
 -- exp(z) * conj(exp(z)) = 1 when z + conj(z) = 0 (z purely imaginary)
@@ -54,6 +56,10 @@ def S : QMatrix 1 := !![1, 0; 0, Complex.I]
 /-- T gate: diagonal phase gate, π/4 rotation around Z. -/
 def T : QMatrix 1 := !![1, 0; 0, Complex.exp (Complex.I * Real.pi / 4)]
 
+/-- T† (T-dagger): the adjoint of `T`, `diag(1, e^{-iπ/4})`. A first-class gate because
+    the standard Toffoli and controlled-S decompositions use it directly. -/
+def Tdg : QMatrix 1 := !![1, 0; 0, Complex.exp (-(Complex.I * Real.pi / 4))]
+
 /-- Z-rotation by angle `θ`: diagonal with eigenphases ∓θ/2 on |0⟩, |1⟩. -/
 noncomputable def Rz (θ : ℝ) : QMatrix 1 :=
   !![Complex.exp (-Complex.I * θ / 2), 0;
@@ -70,6 +76,11 @@ noncomputable def Ry (θ : ℝ) : QMatrix 1 :=
   let c : ℂ := Real.cos (θ / 2)
   let s : ℂ := Real.sin (θ / 2)
   !![c, -s; s, c]
+
+/-- Square root of X (the `V` gate of Nielsen & Chuang Figure 4.8): `sqrtX * sqrtX = X`. -/
+def sqrtX : QMatrix 1 :=
+  !![(1 + Complex.I) / 2, (1 - Complex.I) / 2;
+     (1 - Complex.I) / 2, (1 + Complex.I) / 2]
 
 -- ── Two-qubit gates (LSB convention: qubit 0 = low bit) ───────────────────────
 
@@ -95,6 +106,22 @@ def SWAP : QMatrix 2 :=
      0, 1, 0, 0;
      0, 0, 0, 1]
 
+/-- Reversed CNOT: control = qubit 1 (high bit), target = qubit 0; flips the low qubit
+    when the high qubit is set. The mirror image of `CNOT` under qubit exchange. -/
+def CNOTRev : QMatrix 2 :=
+  !![1, 0, 0, 0;
+     0, 1, 0, 0;
+     0, 0, 0, 1;
+     0, 0, 1, 0]
+
+/-- Square root of SWAP: `sqrtSWAP * sqrtSWAP = SWAP`, fixing `|00⟩` and `|11⟩`.
+    Symmetric, so identical in the LSB and MSB conventions. -/
+def sqrtSWAP : QMatrix 2 :=
+  !![1, 0, 0, 0;
+     0, (1 + Complex.I) / 2, (1 - Complex.I) / 2, 0;
+     0, (1 - Complex.I) / 2, (1 + Complex.I) / 2, 0;
+     0, 0, 0, 1]
+
 /-- Toffoli (CCX): controls = qubits 0,1, target = qubit 2; flips the target when both
     controls are set. In the LSB convention this swaps basis indices `3` (both controls set,
     target clear) and `7` (all set); the MSB textbook matrix differs. -/
@@ -107,6 +134,31 @@ def Toffoli : QMatrix 3 :=
      0, 0, 0, 0, 0, 1, 0, 0;
      0, 0, 0, 0, 0, 0, 1, 0;
      0, 0, 0, 1, 0, 0, 0, 0]
+
+/-- CCZ: phase flip on `|111⟩` (index 7). Fully symmetric among its three qubits, so
+    identical in the LSB and MSB conventions. -/
+def CCZ : QMatrix 3 :=
+  !![1, 0, 0, 0, 0, 0, 0, 0;
+     0, 1, 0, 0, 0, 0, 0, 0;
+     0, 0, 1, 0, 0, 0, 0, 0;
+     0, 0, 0, 1, 0, 0, 0, 0;
+     0, 0, 0, 0, 1, 0, 0, 0;
+     0, 0, 0, 0, 0, 1, 0, 0;
+     0, 0, 0, 0, 0, 0, 1, 0;
+     0, 0, 0, 0, 0, 0, 0, -1]
+
+/-- Fredkin (controlled-SWAP): control = qubit 0 (low bit), exchanges qubits 1 and 2 when
+    the control is set. In the LSB convention this swaps basis indices `3` (`q₀q₁ = 11`)
+    and `5` (`q₀q₂ = 11`); the MSB textbook matrix differs. -/
+def Fredkin : QMatrix 3 :=
+  !![1, 0, 0, 0, 0, 0, 0, 0;
+     0, 1, 0, 0, 0, 0, 0, 0;
+     0, 0, 1, 0, 0, 0, 0, 0;
+     0, 0, 0, 0, 0, 1, 0, 0;
+     0, 0, 0, 0, 1, 0, 0, 0;
+     0, 0, 0, 1, 0, 0, 0, 0;
+     0, 0, 0, 0, 0, 0, 1, 0;
+     0, 0, 0, 0, 0, 0, 0, 1]
 
 -- ── Controlled-U (2-qubit); ctrl=qubit0, tgt=qubit1 ─────────────────────────
 
@@ -130,10 +182,40 @@ theorem isUnitary_X    : IsUnitary X    := by unfold IsUnitary X;    prove_unita
 theorem isUnitary_Y    : IsUnitary Y    := by unfold IsUnitary Y;    prove_unitary
 theorem isUnitary_Z    : IsUnitary Z    := by unfold IsUnitary Z;    prove_unitary
 theorem isUnitary_CNOT : IsUnitary CNOT := by unfold IsUnitary CNOT; prove_unitary
+theorem isUnitary_CNOTRev : IsUnitary CNOTRev := by unfold IsUnitary CNOTRev; prove_unitary
+
+theorem isUnitary_Tdg : IsUnitary Tdg := by
+  unfold IsUnitary Tdg
+  ext i j; fin_cases i <;> fin_cases j <;>
+    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
+          Matrix.cons_val_zero, Matrix.cons_val_one]
+  apply exp_mul_conj_eq_one
+  have : -(Complex.I * ↑Real.pi / 4) = Complex.I * ↑(-(Real.pi / 4)) := by push_cast; ring
+  rw [this, map_mul, Complex.conj_I, Complex.conj_ofReal]; ring
 theorem isUnitary_CZ   : IsUnitary CZ   := by unfold IsUnitary CZ;   prove_unitary
 theorem isUnitary_SWAP : IsUnitary SWAP := by unfold IsUnitary SWAP; prove_unitary
 
 theorem isUnitary_Toffoli : IsUnitary Toffoli := by unfold IsUnitary Toffoli; prove_unitary
+
+theorem isUnitary_CCZ : IsUnitary CCZ := by unfold IsUnitary CCZ; prove_unitary
+
+theorem isUnitary_Fredkin : IsUnitary Fredkin := by unfold IsUnitary Fredkin; prove_unitary
+
+theorem isUnitary_sqrtX : IsUnitary sqrtX := by
+  unfold IsUnitary sqrtX
+  ext i j; fin_cases i <;> fin_cases j <;>
+    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
+          Matrix.cons_val_zero, Matrix.cons_val_one, map_div₀, map_ofNat,
+          Complex.conj_I] <;>
+    ring_nf <;> simp [Complex.I_sq] <;> ring_nf
+
+theorem isUnitary_sqrtSWAP : IsUnitary sqrtSWAP := by
+  unfold IsUnitary sqrtSWAP
+  ext i j; fin_cases i <;> fin_cases j <;>
+    simp [Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_four,
+          Matrix.cons_val_zero, Matrix.cons_val_one, map_div₀, map_ofNat,
+          Complex.conj_I] <;>
+    ring_nf <;> simp [Complex.I_sq] <;> ring_nf
 
 set_option maxHeartbeats 800000 in
 /-- Unitarity of `controlled U` lifted from unitarity of `U`. -/
@@ -384,6 +466,273 @@ theorem H_row1 (t : Fin (2 ^ 1)) :
           simp only [Fin.val_one, Nat.cast_one]; ring, Complex.exp_pi_mul_I]
     simp [H, Matrix.cons_val_one]
 
+-- ── Further single-qubit basis-state actions ──────────────────────────────────
+
+theorem T_ket_zero : T * ket (0 : Fin 2) = ket 0 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [T, ket_apply, Matrix.mul_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem T_ket_one :
+    T * ket (1 : Fin 2) = Complex.exp (Complex.I * Real.pi / 4) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [T, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem sqrtX_ket_zero :
+    sqrtX * ket (0 : Fin 2) = ((1 + Complex.I) / 2) • ket 0 + ((1 - Complex.I) / 2) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [sqrtX, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem sqrtX_ket_one :
+    sqrtX * ket (1 : Fin 2) = ((1 - Complex.I) / 2) • ket 0 + ((1 + Complex.I) / 2) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [sqrtX, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem Ry_ket_zero (θ : ℝ) :
+    Ry θ * ket (0 : Fin 2)
+      = (Real.cos (θ/2) : ℂ) • ket 0 + (Real.sin (θ/2) : ℂ) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Ry, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem Ry_ket_one (θ : ℝ) :
+    Ry θ * ket (1 : Fin 2)
+      = (-(Real.sin (θ/2) : ℂ)) • ket 0 + (Real.cos (θ/2) : ℂ) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Ry, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem Rx_ket_zero (θ : ℝ) :
+    Rx θ * ket (0 : Fin 2)
+      = (Real.cos (θ/2) : ℂ) • ket 0 + (-Complex.I * Real.sin (θ/2)) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Rx, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one]
+
+theorem Rx_ket_one (θ : ℝ) :
+    Rx θ * ket (1 : Fin 2)
+      = (-Complex.I * Real.sin (θ/2)) • ket 0 + (Real.cos (θ/2) : ℂ) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Rx, ket_apply, Matrix.mul_apply, Matrix.smul_apply, Matrix.add_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one]
+
+/-- Basis expansion of an arbitrary 1-qubit vector: the bridge from basis-pair actions to
+    arbitrary-vector actions (`controlled_tensorState_*` below). -/
+theorem qvector1_expand (v : QVector 1) : v = v 0 0 • ket 0 + v 1 0 • ket 1 := by
+  ext r s; obtain rfl : s = 0 := Subsingleton.elim s 0
+  fin_cases r <;>
+  simp [ket_apply, Matrix.smul_apply, Matrix.add_apply]
+
+-- ── Two-qubit gate actions on tensor states ───────────────────────────────────
+-- Control-split lemmas: `controlled U` (and its instances CNOT = controlled X,
+-- CZ = controlled Z) acts on `|0⟩ ⊗ v` as the identity and on `|1⟩ ⊗ v` as `U` on the
+-- target factor. Stated for an arbitrary target vector so the state layer can rewrite
+-- without decomposing the target into basis kets. LSB convention: the control (qubit 0)
+-- is the LOW factor of `tensorState`.
+
+/-- CNOT is `controlled X` (control = qubit 0, target = qubit 1). -/
+theorem CNOT_eq_controlled_X : CNOT = controlled X := by
+  ext i j; fin_cases i <;> fin_cases j <;>
+    simp [CNOT, controlled, X, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+/-- CZ is `controlled Z`. -/
+theorem CZ_eq_controlled_Z : CZ = controlled Z := by
+  ext i j; fin_cases i <;> fin_cases j <;>
+    simp [CZ, controlled, Z, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+private lemma controlled_ket_pair_zero (U : QMatrix 1) (b : Fin 2) :
+    controlled U * ket (tensorIndexEquiv 1 1 ⟨0, b⟩) = ket (tensorIndexEquiv 1 1 ⟨0, b⟩) := by
+  have hb : b = 0 ∨ b = 1 := by omega
+  rcases hb with rfl | rfl <;>
+    [rw [te11_00]; rw [te11_01]] <;>
+    (ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+     rw [mul_ket_apply]
+     fin_cases r <;>
+       simp [controlled, ket_apply, Matrix.cons_val_zero, Matrix.cons_val_one])
+
+private lemma controlled_ket_pair_one (U : QMatrix 1) (b : Fin 2) :
+    controlled U * ket (tensorIndexEquiv 1 1 ⟨1, b⟩)
+      = tensorState (ket 1) (U * ket b) := by
+  have hb : b = 0 ∨ b = 1 := by omega
+  rcases hb with rfl | rfl <;>
+    [rw [te11_10]; rw [te11_11]] <;>
+    (ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+     rw [mul_ket_apply]
+     have t111 : (tensorIndexEquiv 1 1).symm 1 = (1, 0) := by decide
+     have t113 : (tensorIndexEquiv 1 1).symm 3 = (1, 1) := by decide
+     fin_cases r <;>
+       simp [controlled, ket_apply, tensorState_apply, mul_ket_apply, t111, t113,
+             (by decide : (tensorIndexEquiv 1 1).symm 0 = (0, 0)),
+             (by decide : (tensorIndexEquiv 1 1).symm 2 = (0, 1)),
+             Matrix.cons_val_zero, Matrix.cons_val_one])
+
+/-- `controlled U` fixes any product state whose control qubit is `|0⟩`. -/
+theorem controlled_tensorState_zero (U : QMatrix 1) (v : QVector 1) :
+    controlled U * tensorState (ket 0) v = tensorState (ket 0) v := by
+  rw [qvector1_expand v]
+  simp only [tensorState_add_right, tensorState_smul_right, Matrix.mul_add, Matrix.mul_smul,
+             ket_tensorState]
+  rw [controlled_ket_pair_zero, controlled_ket_pair_zero]
+
+/-- `controlled U` applies `U` to the target factor when the control qubit is `|1⟩`. -/
+theorem controlled_tensorState_one (U : QMatrix 1) (v : QVector 1) :
+    controlled U * tensorState (ket 1) v = tensorState (ket 1) (U * v) := by
+  conv_lhs => rw [qvector1_expand v]
+  conv_rhs => rw [qvector1_expand v]
+  simp only [tensorState_add_right, tensorState_smul_right, Matrix.mul_add, Matrix.mul_smul,
+             ket_tensorState]
+  rw [controlled_ket_pair_one, controlled_ket_pair_one]
+
+/-- SWAP exchanges the two factors of any product state. -/
+theorem SWAP_tensorState (v w : QVector 1) :
+    SWAP * tensorState v w = tensorState w v := by
+  ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+  have t110 : (tensorIndexEquiv 1 1).symm 0 = (0, 0) := by decide
+  have t111 : (tensorIndexEquiv 1 1).symm 1 = (1, 0) := by decide
+  have t112 : (tensorIndexEquiv 1 1).symm 2 = (0, 1) := by decide
+  have t113 : (tensorIndexEquiv 1 1).symm 3 = (1, 1) := by decide
+  fin_cases r <;>
+    simp [SWAP, Matrix.mul_apply, tensorState_apply, Fin.sum_univ_four,
+          t110, t111, t112, t113,
+          Matrix.cons_val_zero, Matrix.cons_val_one] <;>
+    ring
+
+/-- `CNOTRev` is CNOT conjugated by SWAP. -/
+theorem CNOTRev_eq_swap_conj : CNOTRev = SWAP * CNOT * SWAP := by
+  ext i j; fin_cases i <;> fin_cases j <;>
+    simp [CNOTRev, SWAP, CNOT, Matrix.mul_apply, Fin.sum_univ_four,
+          Matrix.cons_val_zero, Matrix.cons_val_one]
+
+/-- Reversed CNOT maps `|a, b⟩` to `|a+b, b⟩` (high qubit controls, low qubit targets).
+    Derived from the CNOT action by SWAP conjugation. -/
+theorem CNOTRev_ket_pair (a b : Fin 2) :
+    CNOTRev * ket (tensorIndexEquiv 1 1 ⟨a, b⟩)
+      = ket (tensorIndexEquiv 1 1 ⟨a + b, b⟩) := by
+  rw [CNOTRev_eq_swap_conj, ← ket_tensorState, Matrix.mul_assoc, SWAP_tensorState,
+      Matrix.mul_assoc, ket_tensorState, CNOT_ket_pair, ← ket_tensorState,
+      SWAP_tensorState, ket_tensorState, add_comm b a]
+
+/-- Tdg fixes `|0⟩`. -/
+theorem Tdg_ket_zero : Tdg * ket (0 : Fin 2) = ket 0 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Tdg, ket_apply, Matrix.mul_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+/-- Tdg phases `|1⟩` by `e^{-iπ/4}`. -/
+theorem Tdg_ket_one :
+    Tdg * ket (1 : Fin 2) = Complex.exp (-(Complex.I * Real.pi / 4)) • ket 1 := by
+  ext r s; fin_cases r <;> fin_cases s <;>
+  simp [Tdg, ket_apply, Matrix.mul_apply, Matrix.smul_apply,
+        Matrix.cons_val_zero, Matrix.cons_val_one]
+
+/-- CZ fixes any product state whose HIGH qubit is `|0⟩` (target-side split; CZ is
+    control/target symmetric, so both splits exist). -/
+theorem CZ_tensorState_zero_right (v : QVector 1) :
+    CZ * tensorState v (ket 0 : QVector 1) = tensorState v (ket 0 : QVector 1) := by
+  ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+  have h11 : ∀ i : Fin (2^(1+1)), (tensorIndexEquiv 1 1).symm i
+      = (⟨i.val % 2, by omega⟩, ⟨i.val / 2, by omega⟩) := by decide
+  fin_cases r <;>
+    simp [CZ, Matrix.mul_apply, tensorState_apply, Fin.sum_univ_four, h11, ket_apply,
+          Matrix.cons_val_zero, Matrix.cons_val_one]
+
+/-- CZ applies `Z` to the low factor when the HIGH qubit is `|1⟩`. -/
+theorem CZ_tensorState_one_right (v : QVector 1) :
+    CZ * tensorState v (ket 1 : QVector 1) = tensorState (Z * v) (ket 1 : QVector 1) := by
+  ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+  have h11 : ∀ i : Fin (2^(1+1)), (tensorIndexEquiv 1 1).symm i
+      = (⟨i.val % 2, by omega⟩, ⟨i.val / 2, by omega⟩) := by decide
+  fin_cases r <;>
+    simp [CZ, Z, Matrix.mul_apply, tensorState_apply, Fin.sum_univ_four, Fin.sum_univ_two,
+          h11, ket_apply, Matrix.vecMul, dotProduct,
+          Matrix.cons_val_zero, Matrix.cons_val_one]
+
+/-- CZ phases a basis pair by `(-1)^(a·b)`: the phase-form action. -/
+theorem CZ_ket_pair (a b : Fin 2) :
+    CZ * ket (tensorIndexEquiv 1 1 ⟨a, b⟩)
+      = ((-1 : ℂ) ^ (a.val * b.val)) • ket (tensorIndexEquiv 1 1 ⟨a, b⟩) := by
+  have ha : a = 0 ∨ a = 1 := by omega
+  have hb : b = 0 ∨ b = 1 := by omega
+  rcases ha with rfl | rfl <;> rcases hb with rfl | rfl <;>
+    simp only [te11_00, te11_01, te11_10, te11_11] <;>
+    (ext r c; obtain rfl : c = 0 := Subsingleton.elim c 0
+     rw [mul_ket_apply]
+     fin_cases r <;>
+       simp [CZ, ket_apply, Matrix.smul_apply,
+             Matrix.cons_val_zero, Matrix.cons_val_one])
+
+-- ── Three-qubit gate actions on tensor states ─────────────────────────────────
+-- Toffoli/CCZ/Fredkin actions in tensor form. Qubit layout per the LSB convention:
+-- for Toffoli/CCZ the state is `(❘a⟩ ⊗ ❘b⟩) ⊗ ❘c⟩` (controls a,b = qubits 0,1); for
+-- Fredkin it is `❘a⟩ ⊗ (v ⊗ w)` (control a = qubit 0, swapped targets = qubits 1,2).
+
+/-- Toffoli in tensor form: the target picks up the AND of the controls,
+    `|a,b,c⟩ ↦ |a,b,ab+c⟩` (all arithmetic in `Fin 2`). -/
+theorem Toffoli_ket_triple (a b c : Fin (2^1)) :
+    Toffoli * tensorState (tensorState (ket a) (ket b)) (ket c)
+      = tensorState (tensorState (ket a) (ket b)) (ket (a * b + c)) := by
+  have h21 : ∀ i : Fin (2^(1+1+1)), (tensorIndexEquiv (1+1) 1).symm i
+      = (⟨i.val % 4, by omega⟩, ⟨i.val / 4, by omega⟩) := by decide
+  have h11 : ∀ i : Fin (2^(1+1)), (tensorIndexEquiv 1 1).symm i
+      = (⟨i.val % 2, by omega⟩, ⟨i.val / 2, by omega⟩) := by decide
+  have ha : a = 0 ∨ a = 1 := by fin_cases a <;> simp
+  have hb : b = 0 ∨ b = 1 := by fin_cases b <;> simp
+  have hc : c = 0 ∨ c = 1 := by fin_cases c <;> simp
+  rcases ha with rfl | rfl <;> rcases hb with rfl | rfl <;> rcases hc with rfl | rfl <;>
+    (ext r s; obtain rfl : s = 0 := Subsingleton.elim s 0
+     fin_cases r <;>
+       simp [Toffoli, Matrix.mul_apply, tensorState_apply, Fin.sum_univ_eight,
+             h21, h11, ket_apply, Matrix.cons_val_zero, Matrix.cons_val_one])
+
+/-- CCZ in tensor form: phase `(-1)^(abc)` on `|a,b,c⟩`. -/
+theorem CCZ_ket_triple (a b c : Fin (2^1)) :
+    CCZ * tensorState (tensorState (ket a) (ket b)) (ket c)
+      = ((-1 : ℂ) ^ (a.val * b.val * c.val))
+          • tensorState (tensorState (ket a) (ket b)) (ket c) := by
+  have h21 : ∀ i : Fin (2^(1+1+1)), (tensorIndexEquiv (1+1) 1).symm i
+      = (⟨i.val % 4, by omega⟩, ⟨i.val / 4, by omega⟩) := by decide
+  have h11 : ∀ i : Fin (2^(1+1)), (tensorIndexEquiv 1 1).symm i
+      = (⟨i.val % 2, by omega⟩, ⟨i.val / 2, by omega⟩) := by decide
+  have ha : a = 0 ∨ a = 1 := by fin_cases a <;> simp
+  have hb : b = 0 ∨ b = 1 := by fin_cases b <;> simp
+  have hc : c = 0 ∨ c = 1 := by fin_cases c <;> simp
+  rcases ha with rfl | rfl <;> rcases hb with rfl | rfl <;> rcases hc with rfl | rfl <;>
+    (ext r s; obtain rfl : s = 0 := Subsingleton.elim s 0
+     fin_cases r <;>
+       simp [CCZ, Matrix.mul_apply, tensorState_apply, Fin.sum_univ_eight,
+             h21, h11, ket_apply, Matrix.smul_apply,
+             Matrix.cons_val_zero, Matrix.cons_val_one])
+
+/-- Fredkin fixes any product state whose control qubit is `|0⟩`. -/
+theorem Fredkin_tensorState_zero (v w : QVector 1) :
+    Fredkin * tensorState (ket 0) (tensorState v w)
+      = tensorState (ket 0) (tensorState v w) := by
+  ext r s; obtain rfl : s = 0 := Subsingleton.elim s 0
+  have h12 : ∀ i : Fin (2^(1+(1+1))), (tensorIndexEquiv 1 (1+1)).symm i
+      = (⟨i.val % 2, by omega⟩, ⟨i.val / 2, by omega⟩) := by decide
+  have h11 : ∀ i : Fin (2^(1+1)), (tensorIndexEquiv 1 1).symm i
+      = (⟨i.val % 2, by omega⟩, ⟨i.val / 2, by omega⟩) := by decide
+  fin_cases r <;>
+    simp [Fredkin, Matrix.mul_apply, tensorState_apply, Fin.sum_univ_eight,
+          h12, h11, ket_apply,
+          Matrix.cons_val_zero, Matrix.cons_val_one]
+
+/-- Fredkin swaps the two target factors when the control qubit is `|1⟩`. -/
+theorem Fredkin_tensorState_one (v w : QVector 1) :
+    Fredkin * tensorState (ket 1) (tensorState v w)
+      = tensorState (ket 1) (tensorState w v) := by
+  ext r s; obtain rfl : s = 0 := Subsingleton.elim s 0
+  have h12 : ∀ i : Fin (2^(1+(1+1))), (tensorIndexEquiv 1 (1+1)).symm i
+      = (⟨i.val % 2, by omega⟩, ⟨i.val / 2, by omega⟩) := by decide
+  have h11 : ∀ i : Fin (2^(1+1)), (tensorIndexEquiv 1 1).symm i
+      = (⟨i.val % 2, by omega⟩, ⟨i.val / 2, by omega⟩) := by decide
+  fin_cases r <;>
+    simp [Fredkin, Matrix.mul_apply, tensorState_apply, Fin.sum_univ_eight,
+          h12, h11, ket_apply,
+          Matrix.cons_val_zero, Matrix.cons_val_one] <;>
+    ring
+
 -- ── Single-qubit circuit gates ────────────────────────────────────────────────
 
 abbrev HGate : QCircuit 1 := .gate H
@@ -392,21 +741,27 @@ abbrev YGate : QCircuit 1 := .gate Y
 abbrev ZGate : QCircuit 1 := .gate Z
 abbrev SGate : QCircuit 1 := .gate S
 abbrev TGate : QCircuit 1 := .gate T
+abbrev TdgGate : QCircuit 1 := .gate Tdg
 
 abbrev RzGate (θ : ℝ) : QCircuit 1 := .gate (Rz θ)
 abbrev RxGate (θ : ℝ) : QCircuit 1 := .gate (Rx θ)
 abbrev RyGate (θ : ℝ) : QCircuit 1 := .gate (Ry θ)
 abbrev RkGate (k : ℕ) : QCircuit 1 := .gate (Rk k)
+abbrev SqrtXGate : QCircuit 1 := .gate sqrtX
 
 -- ── Two-qubit circuit gates ───────────────────────────────────────────────────
 
 abbrev CNOTGate : QCircuit 2 := .gate CNOT
+abbrev CNOTRevGate : QCircuit 2 := .gate CNOTRev
 abbrev CZGate   : QCircuit 2 := .gate CZ
 abbrev SWAPGate : QCircuit 2 := .gate SWAP
+abbrev SqrtSWAPGate : QCircuit 2 := .gate sqrtSWAP
 
 -- ── Three-qubit circuit gate ──────────────────────────────────────────────────
 
 abbrev ToffoliGate : QCircuit 3 := .gate Toffoli
+abbrev CCZGate     : QCircuit 3 := .gate CCZ
+abbrev FredkinGate : QCircuit 3 := .gate Fredkin
 
 -- ── Controlled-U circuit gate ─────────────────────────────────────────────────
 
@@ -427,10 +782,16 @@ abbrev ControlledGate (U : QMatrix 1) : QCircuit 2 := .gate (controlled U)
 @[simp] theorem wf_RkGate (k : ℕ) : QCircuit.WF (RkGate k) := isUnitary_Rk k
 
 @[simp] theorem wf_CNOTGate : QCircuit.WF CNOTGate := isUnitary_CNOT
+@[simp] theorem wf_CNOTRevGate : QCircuit.WF CNOTRevGate := isUnitary_CNOTRev
+@[simp] theorem wf_TdgGate : QCircuit.WF TdgGate := isUnitary_Tdg
 @[simp] theorem wf_CZGate   : QCircuit.WF CZGate   := isUnitary_CZ
 @[simp] theorem wf_SWAPGate : QCircuit.WF SWAPGate := isUnitary_SWAP
 
 @[simp] theorem wf_ToffoliGate : QCircuit.WF ToffoliGate := isUnitary_Toffoli
+@[simp] theorem wf_CCZGate     : QCircuit.WF CCZGate     := isUnitary_CCZ
+@[simp] theorem wf_FredkinGate : QCircuit.WF FredkinGate := isUnitary_Fredkin
+@[simp] theorem wf_SqrtXGate    : QCircuit.WF SqrtXGate    := isUnitary_sqrtX
+@[simp] theorem wf_SqrtSWAPGate : QCircuit.WF SqrtSWAPGate := isUnitary_sqrtSWAP
 
 @[simp] theorem wf_ControlledGate {U : QMatrix 1} (hu : IsUnitary U) :
     QCircuit.WF (ControlledGate U) := isUnitary_controlled hu

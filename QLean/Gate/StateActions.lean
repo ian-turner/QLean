@@ -69,6 +69,81 @@ theorem HGate_bit1 :
              QState.eval_add, QState.eval_basis, ← Complex.ofReal_inv]
   exact H_ket_one
 
+theorem TGate_bit0 : TGate * (❘0⟩ : QState 1) ≈ ❘0⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QCircuit.eval_gate]
+  exact T_ket_zero
+
+theorem TGate_bit1 :
+    TGate * (❘1⟩ : QState 1) ≈ Complex.exp (Complex.I * Real.pi / 4) • ❘1⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QState.eval_smul,
+             QCircuit.eval_gate]
+  exact T_ket_one
+
+theorem SqrtXGate_bit0 :
+    SqrtXGate * (❘0⟩ : QState 1)
+      ≈ ((1 + Complex.I) / 2) • ❘0⟩ + ((1 - Complex.I) / 2) • ❘1⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QState.eval_smul,
+             QState.eval_add, QCircuit.eval_gate]
+  exact sqrtX_ket_zero
+
+theorem SqrtXGate_bit1 :
+    SqrtXGate * (❘1⟩ : QState 1)
+      ≈ ((1 - Complex.I) / 2) • ❘0⟩ + ((1 + Complex.I) / 2) • ❘1⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QState.eval_smul,
+             QState.eval_add, QCircuit.eval_gate]
+  exact sqrtX_ket_one
+
+theorem RyGate_bit0 (θ : ℝ) :
+    RyGate θ * (❘0⟩ : QState 1)
+      ≈ (Real.cos (θ/2) : ℂ) • ❘0⟩ + (Real.sin (θ/2) : ℂ) • ❘1⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QState.eval_smul,
+             QState.eval_add, QCircuit.eval_gate]
+  exact Ry_ket_zero θ
+
+theorem RyGate_bit1 (θ : ℝ) :
+    RyGate θ * (❘1⟩ : QState 1)
+      ≈ (-(Real.sin (θ/2) : ℂ)) • ❘0⟩ + (Real.cos (θ/2) : ℂ) • ❘1⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QState.eval_smul,
+             QState.eval_add, QCircuit.eval_gate]
+  exact Ry_ket_one θ
+
+theorem RxGate_bit0 (θ : ℝ) :
+    RxGate θ * (❘0⟩ : QState 1)
+      ≈ (Real.cos (θ/2) : ℂ) • ❘0⟩ + (-Complex.I * Real.sin (θ/2)) • ❘1⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QState.eval_smul,
+             QState.eval_add, QCircuit.eval_gate]
+  exact Rx_ket_zero θ
+
+theorem RxGate_bit1 (θ : ℝ) :
+    RxGate θ * (❘1⟩ : QState 1)
+      ≈ (-Complex.I * Real.sin (θ/2)) • ❘0⟩ + (Real.cos (θ/2) : ℂ) • ❘1⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QState.eval_smul,
+             QState.eval_add, QCircuit.eval_gate]
+  exact Rx_ket_one θ
+
+/-- Uniform phase form of the X action: `X|a⟩ = |a+1⟩` (`Fin 2` addition = bit flip). -/
+theorem XGate_basis (a : Fin (2^1)) : XGate * ❘a⟩ ≈ ❘a + 1⟩ := by
+  have ha : a = 0 ∨ a = 1 := by fin_cases a <;> simp
+  rcases ha with rfl | rfl
+  · exact XGate_bit0.trans (by rfl)
+  · exact XGate_bit1.trans (by rfl)
+
+/-- Uniform phase form of the Z action: `Z|a⟩ = (-1)^a |a⟩`. -/
+theorem ZGate_basis (a : Fin (2^1)) :
+    ZGate * ❘a⟩ ≈ ((-1 : ℂ) ^ a.val) • ❘a⟩ := by
+  have ha : a = 0 ∨ a = 1 := by fin_cases a <;> simp
+  rcases ha with rfl | rfl
+  · simpa using ZGate_bit0.trans (QState.one_smul _).symm
+  · simpa using ZGate_bit1
+
+/-- Uniform phase form of the S action: `S|a⟩ = i^a |a⟩`. -/
+theorem SGate_basis (a : Fin (2^1)) :
+    SGate * ❘a⟩ ≈ (Complex.I ^ a.val) • ❘a⟩ := by
+  have ha : a = 0 ∨ a = 1 := by fin_cases a <;> simp
+  rcases ha with rfl | rfl
+  · simpa using SGate_bit0.trans (QState.one_smul _).symm
+  · simpa using SGate_bit1
+
 /-- `Rz θ` acts on the basis tensor `❘a⟩` by the complex phase `exp((2a-1)·iθ/2)`:
     `exp(-iθ/2)` on `❘0⟩` and `exp(iθ/2)` on `❘1⟩`.
     `a : Fin (2^1)` matches the ket index directly. -/
@@ -93,6 +168,131 @@ theorem CNOTGate_basis_tensor (a b : Fin (2^1)) :
   simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
              QCircuit.eval_gate, ket_tensorState]
   exact CNOT_ket_pair a b
+
+/-- Reversed CNOT (`CNOTRevGate`) XORs the HIGH qubit into the LOW qubit. -/
+theorem CNOTRevGate_basis_tensor (a b : Fin (2^1)) :
+    CNOTRevGate * (❘a⟩ ⊗ ❘b⟩) ≈ ❘a + b⟩ ⊗ ❘b⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate, ket_tensorState]
+  exact CNOTRev_ket_pair a b
+
+theorem TdgGate_bit0 : TdgGate * (❘0⟩ : QState 1) ≈ ❘0⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QCircuit.eval_gate]
+  exact Tdg_ket_zero
+
+theorem TdgGate_bit1 :
+    TdgGate * (❘1⟩ : QState 1) ≈ Complex.exp (-(Complex.I * Real.pi / 4)) • ❘1⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_basis, QState.eval_smul,
+             QCircuit.eval_gate]
+  exact Tdg_ket_one
+
+/-- CZ fixes any product state whose HIGH qubit is `❘0⟩` (target-side split). -/
+theorem CZGate_zero_right (s : QState 1) :
+    CZGate * (s ⊗ (❘0⟩ : QState 1)) ≈ s ⊗ (❘0⟩ : QState 1) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate]
+  exact CZ_tensorState_zero_right _
+
+/-- CZ applies `Z` to the low factor when the HIGH qubit is `❘1⟩` (target-side split). -/
+theorem CZGate_one_right (s : QState 1) :
+    CZGate * (s ⊗ (❘1⟩ : QState 1)) ≈ (ZGate * s) ⊗ (❘1⟩ : QState 1) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate]
+  exact CZ_tensorState_one_right _
+
+/-- CZ phases a basis tensor by `(-1)^(a·b)`. Control/target symmetric. -/
+theorem CZGate_basis_tensor (a b : Fin (2^1)) :
+    CZGate * (❘a⟩ ⊗ ❘b⟩) ≈ ((-1 : ℂ) ^ (a.val * b.val)) • (❘a⟩ ⊗ ❘b⟩) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QState.eval_smul, QCircuit.eval_gate, ket_tensorState]
+  exact CZ_ket_pair a b
+
+/-- SWAP exchanges the two factors of any symbolic product state. -/
+theorem SWAPGate_tensor (s t : QState 1) :
+    SWAPGate * (s ⊗ t) ≈ t ⊗ s := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QCircuit.eval_gate]
+  exact SWAP_tensorState _ _
+
+-- Control-split actions: a controlled gate with a `❘0⟩` control is the identity; with a
+-- `❘1⟩` control it applies its target gate to the (arbitrary) target factor. The control
+-- (qubit 0) is the LOW tensor factor per the LSB convention.
+
+/-- `controlled U` fixes any product state whose control qubit is `❘0⟩`. -/
+theorem ControlledGate_zero (U : QMatrix 1) (s : QState 1) :
+    ControlledGate U * ((❘0⟩ : QState 1) ⊗ s) ≈ (❘0⟩ : QState 1) ⊗ s := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate]
+  exact controlled_tensorState_zero U _
+
+/-- `controlled U` applies `U` to the target factor when the control qubit is `❘1⟩`. -/
+theorem ControlledGate_one (U : QMatrix 1) (s : QState 1) :
+    ControlledGate U * ((❘1⟩ : QState 1) ⊗ s) ≈ (❘1⟩ : QState 1) ⊗ (QCircuit.gate U * s) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate]
+  exact controlled_tensorState_one U _
+
+/-- CNOT with a `❘0⟩` control fixes any target state. -/
+theorem CNOTGate_zero (s : QState 1) :
+    CNOTGate * ((❘0⟩ : QState 1) ⊗ s) ≈ (❘0⟩ : QState 1) ⊗ s := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate, CNOT_eq_controlled_X]
+  exact controlled_tensorState_zero X _
+
+/-- CNOT with a `❘1⟩` control applies `X` to any target state. -/
+theorem CNOTGate_one (s : QState 1) :
+    CNOTGate * ((❘1⟩ : QState 1) ⊗ s) ≈ (❘1⟩ : QState 1) ⊗ (XGate * s) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate, CNOT_eq_controlled_X]
+  exact controlled_tensorState_one X _
+
+/-- CZ with a `❘0⟩` control fixes any target state. -/
+theorem CZGate_zero (s : QState 1) :
+    CZGate * ((❘0⟩ : QState 1) ⊗ s) ≈ (❘0⟩ : QState 1) ⊗ s := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate, CZ_eq_controlled_Z]
+  exact controlled_tensorState_zero Z _
+
+/-- CZ with a `❘1⟩` control applies `Z` to any target state. -/
+theorem CZGate_one (s : QState 1) :
+    CZGate * ((❘1⟩ : QState 1) ⊗ s) ≈ (❘1⟩ : QState 1) ⊗ (ZGate * s) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate, CZ_eq_controlled_Z]
+  exact controlled_tensorState_one Z _
+
+-- ── Three-qubit gate actions ───────────────────────────────────────────────────
+-- Qubit layout per the LSB convention: for Toffoli/CCZ the state is `(❘a⟩ ⊗ ❘b⟩) ⊗ ❘c⟩`
+-- (controls a,b = qubits 0,1, target c = qubit 2); for Fredkin it is `❘a⟩ ⊗ (s ⊗ t)`
+-- (control a = qubit 0, swapped targets = qubits 1,2).
+
+/-- Toffoli in tensor form: the target picks up the AND of the controls,
+    `|a,b,c⟩ ↦ |a,b,ab+c⟩` (all arithmetic in `Fin 2`). -/
+theorem ToffoliGate_basis_tensor (a b c : Fin (2^1)) :
+    ToffoliGate * (❘a⟩ ⊗ ❘b⟩ ⊗ ❘c⟩) ≈ ❘a⟩ ⊗ ❘b⟩ ⊗ ❘a * b + c⟩ := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate]
+  exact Toffoli_ket_triple a b c
+
+/-- CCZ in tensor form: phase `(-1)^(abc)` on `|a,b,c⟩`. Fully symmetric. -/
+theorem CCZGate_basis_tensor (a b c : Fin (2^1)) :
+    CCZGate * (❘a⟩ ⊗ ❘b⟩ ⊗ ❘c⟩)
+      ≈ ((-1 : ℂ) ^ (a.val * b.val * c.val)) • (❘a⟩ ⊗ ❘b⟩ ⊗ ❘c⟩) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QState.eval_smul, QCircuit.eval_gate]
+  exact CCZ_ket_triple a b c
+
+/-- Fredkin fixes any product state whose control qubit is `❘0⟩`. -/
+theorem FredkinGate_zero (s t : QState 1) :
+    FredkinGate * ((❘0⟩ : QState 1) ⊗ (s ⊗ t)) ≈ (❘0⟩ : QState 1) ⊗ (s ⊗ t) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate]
+  exact Fredkin_tensorState_zero _ _
+
+/-- Fredkin swaps the two target factors when the control qubit is `❘1⟩`. -/
+theorem FredkinGate_one (s t : QState 1) :
+    FredkinGate * ((❘1⟩ : QState 1) ⊗ (s ⊗ t)) ≈ (❘1⟩ : QState 1) ⊗ (t ⊗ s) := by
+  simp only [QState.Equiv, QState.eval_apply, QState.eval_tensor, QState.eval_basis,
+             QCircuit.eval_gate]
+  exact Fredkin_tensorState_one _ _
 
 -- ── Embedded gate actions in phase form (entry points for positional layers) ───
 -- These lift the gate-agnostic `QCircuit.embed_single_action` / `embed_diag_action` to the two

@@ -314,3 +314,26 @@ statements, `def` bodies); type-directed disambiguation never rules the quotient
 Declare the overload with `scoped notation:max (priority := high) …` — the higher-priority
 parser shadows core's entirely within the opened scope (write `Quotient.mk _ x` explicitly
 if a quotient is ever needed there). Used for `⟦p⟧` = `Program.denote p` in `Program/Type.lean`.
+
+## Global `decide`-lemmas about `tensorIndexEquiv` values send simp into a `whnf` blow-up; local `have`s don't
+
+Ground facts like `(tensorIndexEquiv 1 1).symm 3 = (1, 1)` behave very differently as *global
+theorems* vs. *local hypotheses* in an entrywise `simp` after `ext`/`fin_cases` at composite
+dimensions (`Fin (2^(1+1))`): as global simp lemmas they reliably trigger a deterministic
+`whnf` heartbeat timeout (the unifier grinds on matching the `OfNat` literal in the lemma LHS
+against the `Fin.mk` index forms `fin_cases` produces), while the *same statements* introduced
+with `have t : … := by decide` immediately before the `simp` close the goal in seconds. The
+`circuit_eq` tactic (`Gate/Tactics.lean`) therefore generates the 20 ground facts as `have`s on
+every invocation instead of referencing the `te*_symm_*` library lemmas. Symptom to recognize:
+`(deterministic) timeout at whnf` pointing at the theorem's `:= by` while the same proof with
+hypothesis-copies passes.
+
+## `grw` rewrites every occurrence, and fails hard on a non-matching lemma
+
+Two `grw` behaviors that shape proof scripts: (1) like `rw`, one `grw [t_mul_t]` rewrites *all*
+occurrences of the pattern in the goal — `grw [t_mul_t, s_mul_s, z_mul_z]` takes
+`((T*T)*(T*T))*((T*T)*(T*T))` all the way to `1` because each step rewrites every copy at once;
+listing a lemma more times than it can fire is an error, not a no-op. (2) `grw` also rewrites on
+the RHS of a `≈` goal, so after rewriting with an action lemma the "target side" may already be
+in final form — a trailing lemma that no longer matches anything fails with `did not find
+instance of the pattern` rather than being skipped.
